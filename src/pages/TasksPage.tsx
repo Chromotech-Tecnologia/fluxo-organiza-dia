@@ -4,9 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Filter, Calendar } from "lucide-react";
+import { useModalStore } from "@/stores/useModalStore";
+import { useTasks } from "@/hooks/useTasks";
+import { TaskCard } from "@/components/tasks/TaskCard";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { openTaskModal } = useModalStore();
+  const { tasks } = useTasks();
+
+  const filteredTasks = tasks.filter(task =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -18,7 +28,7 @@ const TasksPage = () => {
             Controle e organize suas tarefas diárias
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => openTaskModal()}>
           <Plus className="h-4 w-4" />
           Nova Tarefa
         </Button>
@@ -56,24 +66,32 @@ const TasksPage = () => {
 
       {/* Lista de Tarefas */}
       <div className="grid gap-4">
-        {/* Placeholder para tarefas */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center py-12">
-              <Plus className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                Nenhuma tarefa encontrada
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Comece criando sua primeira tarefa para organizar seu dia
-              </p>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Criar Primeira Tarefa
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {filteredTasks.length === 0 ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center py-12">
+                <Plus className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery 
+                    ? "Tente ajustar sua busca ou criar uma nova tarefa"
+                    : "Comece criando sua primeira tarefa para organizar seu dia"
+                  }
+                </p>
+                <Button className="gap-2" onClick={() => openTaskModal()}>
+                  <Plus className="h-4 w-4" />
+                  {searchQuery ? "Nova Tarefa" : "Criar Primeira Tarefa"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredTasks.map((task) => (
+            <TaskCard key={task.id} task={task} />
+          ))
+        )}
       </div>
     </div>
   );

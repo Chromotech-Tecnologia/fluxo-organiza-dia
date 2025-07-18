@@ -1,4 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useClerk, useUser } from "@clerk/clerk-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Calendar,
   BarChart3,
@@ -8,7 +11,8 @@ import {
   Settings,
   FileText,
   Clock,
-  TrendingUp
+  TrendingUp,
+  LogOut
 } from "lucide-react";
 
 import {
@@ -47,6 +51,8 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+  const { signOut } = useClerk();
+  const { user } = useUser();
 
   const isActive = (path: string) => currentPath === path;
   const isExpanded = menuItems.some((i) => isActive(i.url));
@@ -136,6 +142,19 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Logout Button */}
+        <div className="mt-auto p-4 border-t border-border">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => signOut()}
+            className="w-full justify-start gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span>Sair</span>}
+          </Button>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
