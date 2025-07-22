@@ -1,4 +1,3 @@
-import { SignIn } from "@clerk/clerk-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function SignInPage() {
@@ -9,19 +8,9 @@ export function SignInPage() {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Sistema de Controle de Tarefas</CardTitle>
             <CardDescription>
-              Faça login para acessar seu painel de tarefas
+              Acesso temporário sem autenticação
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <SignIn 
-              appearance={{
-                elements: {
-                  rootBox: "w-full",
-                  card: "shadow-none border-0",
-                }
-              }}
-            />
-          </CardContent>
         </Card>
       </div>
     </div>
