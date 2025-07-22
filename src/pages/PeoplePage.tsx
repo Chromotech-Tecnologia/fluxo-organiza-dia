@@ -6,18 +6,24 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Users, Mail, Phone } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { usePeople } from "@/hooks/usePeople";
+import { useTasks } from "@/hooks/useTasks";
 import { PersonCard } from "@/components/people/PersonCard";
 
 const PeoplePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { openPersonModal } = useModalStore();
   const { people } = usePeople();
+  const { tasks } = useTasks();
 
   const filteredPeople = people.filter(person =>
     person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     person.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
     person.contact.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getTaskCount = (personId: string) => {
+    return tasks.filter(task => task.assignedPersonId === personId).length;
+  };
 
   return (
     <div className="space-y-6">
@@ -77,7 +83,11 @@ const PeoplePage = () => {
           </div>
         ) : (
           filteredPeople.map((person) => (
-            <PersonCard key={person.id} person={person} />
+            <PersonCard 
+              key={person.id} 
+              person={person} 
+              taskCount={getTaskCount(person.id)}
+            />
           ))
         )}
       </div>

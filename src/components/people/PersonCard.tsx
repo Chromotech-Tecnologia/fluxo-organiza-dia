@@ -4,15 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Mail, Phone, Edit, Trash2, Users } from "lucide-react";
 import { Person } from "@/types";
+import { useModalStore } from "@/stores/useModalStore";
 
 interface PersonCardProps {
   person: Person;
   taskCount?: number;
-  onEdit?: () => void;
-  onDelete?: () => void;
 }
 
-export function PersonCard({ person, taskCount = 0, onEdit, onDelete }: PersonCardProps) {
+export function PersonCard({ person, taskCount = 0 }: PersonCardProps) {
+  const { openPersonModal, openDeleteModal } = useModalStore();
+
+  const handleEdit = () => {
+    openPersonModal(person);
+  };
+
+  const handleDelete = () => {
+    openDeleteModal('person', person);
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -63,10 +72,10 @@ export function PersonCard({ person, taskCount = 0, onEdit, onDelete }: PersonCa
               </div>
               
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={onEdit}>
+                <Button variant="ghost" size="sm" onClick={handleEdit}>
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={onDelete}>
+                <Button variant="ghost" size="sm" onClick={handleDelete}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>

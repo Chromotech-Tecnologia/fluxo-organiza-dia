@@ -105,16 +105,12 @@ export interface TaskStats {
 // Form types
 export interface TaskFormValues {
   title: string;
-  description: string;
+  description?: string;
   type: TaskType;
   priority: TaskPriority;
   assignedPersonId?: string;
   scheduledDate: string;
-  deliveryDates: string[];
-  observations: string;
-  isRecurrent: boolean;
-  recurrence?: RecurrenceConfig;
-  subItems: Omit<SubItem, 'id'>[];
+  observations?: string;
 }
 
 export interface PersonFormValues {

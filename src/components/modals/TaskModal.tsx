@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useModalStore } from "@/stores/useModalStore";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { useTasks } from "@/hooks/useTasks";
-import { SubItem } from "@/types";
+import { SubItem, TaskFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export function TaskModal() {
@@ -10,20 +10,13 @@ export function TaskModal() {
   const { addTask, updateTask } = useTasks();
   const { toast } = useToast();
 
-  const handleSubmit = async (data: { 
-    title: string;
-    description?: string;
-    type: 'meeting' | 'own-task' | 'delegated-task';
-    priority: 'simple' | 'urgent' | 'complex';
-    assignedPersonId?: string;
-    scheduledDate: string;
-    observations?: string;
-    subItems: SubItem[];
-  }) => {
+  const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
     try {
       if (taskToEdit) {
         await updateTask(taskToEdit.id, {
           ...data,
+          description: data.description || '',
+          observations: data.observations || '',
           deliveryDates: [],
           isRecurrent: false
         });

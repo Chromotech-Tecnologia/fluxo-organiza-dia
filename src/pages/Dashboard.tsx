@@ -12,20 +12,16 @@ import {
 } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
 import { usePeople } from "@/hooks/usePeople";
+import { useModalStore } from "@/stores/useModalStore";
 
 const Dashboard = () => {
   const { getStats, getTasksByDate } = useTasks();
   const { people } = usePeople();
+  const { openTaskModal, openDailyCloseModal } = useModalStore();
   
   const stats = getStats();
   const today = new Date().toISOString().split('T')[0];
   const todayTasks = getTasksByDate(today);
-
-  const quickActions = [
-    { label: "Nova Tarefa", icon: Plus, href: "/tasks", variant: "default" as const },
-    { label: "Fechamento Diário", icon: Clock, href: "/daily-close", variant: "outline" as const },
-    { label: "Ver Calendário", icon: Calendar, href: "/calendar", variant: "outline" as const },
-  ];
 
   return (
     <div className="space-y-6">
@@ -38,17 +34,33 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {quickActions.map((action) => (
-            <Button 
-              key={action.label}
-              variant={action.variant}
-              size="sm"
-              className="gap-2"
-            >
-              <action.icon className="h-4 w-4" />
-              {action.label}
-            </Button>
-          ))}
+          <Button 
+            variant="default"
+            size="sm"
+            className="gap-2"
+            onClick={() => openTaskModal()}
+          >
+            <Plus className="h-4 w-4" />
+            Nova Tarefa
+          </Button>
+          <Button 
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => openDailyCloseModal()}
+          >
+            <Clock className="h-4 w-4" />
+            Fechamento Diário
+          </Button>
+          <Button 
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => window.location.href = '/calendar'}
+          >
+            <Calendar className="h-4 w-4" />
+            Ver Calendário
+          </Button>
         </div>
       </div>
 
@@ -204,15 +216,30 @@ const Dashboard = () => {
             <div className="pt-4 border-t">
               <h4 className="font-medium mb-2">Ações Rápidas</h4>
               <div className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => openTaskModal()}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Tarefa
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = '/people'}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Gerenciar Pessoas
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => openDailyCloseModal()}
+                >
                   <Clock className="h-4 w-4 mr-2" />
                   Fechar Dia
                 </Button>

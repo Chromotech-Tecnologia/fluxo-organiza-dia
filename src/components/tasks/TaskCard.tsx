@@ -15,21 +15,29 @@ import {
 } from "lucide-react";
 import { Task } from "@/types";
 import { usePeople } from "@/hooks/usePeople";
+import { useModalStore } from "@/stores/useModalStore";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface TaskCardProps {
   task: Task;
-  onEdit?: () => void;
-  onDelete?: () => void;
   onStatusChange?: (status: Task['status']) => void;
   onForward?: () => void;
 }
 
-export function TaskCard({ task, onEdit, onDelete, onStatusChange, onForward }: TaskCardProps) {
+export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
   const { getPersonById } = usePeople();
+  const { openTaskModal, openDeleteModal } = useModalStore();
   const assignedPerson = task.assignedPersonId ? getPersonById(task.assignedPersonId) : null;
+
+  const handleEdit = () => {
+    openTaskModal(task);
+  };
+
+  const handleDelete = () => {
+    openDeleteModal('task', task);
+  };
   
   const completedSubItems = task.subItems.filter(item => item.completed).length;
   const totalSubItems = task.subItems.length;
@@ -111,8 +119,8 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange, onForward }: 
                 {task.forwardCount}x
               </Badge>
             )}
-            <Button variant="ghost" size="sm">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={handleDelete}>
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -202,7 +210,7 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange, onForward }: 
           )}
           
           <div className="ml-auto">
-            <Button size="sm" variant="ghost" onClick={onEdit}>
+            <Button size="sm" variant="ghost" onClick={handleEdit}>
               Editar
             </Button>
           </div>
