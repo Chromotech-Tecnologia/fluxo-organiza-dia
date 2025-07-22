@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useModalStore } from "@/stores/useModalStore";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { useTasks } from "@/hooks/useTasks";
-import { TaskFormValues } from "@/types";
+import { SubItem } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export function TaskModal() {
@@ -10,16 +10,39 @@ export function TaskModal() {
   const { addTask, updateTask } = useTasks();
   const { toast } = useToast();
 
-  const handleSubmit = async (data: TaskFormValues) => {
+  const handleSubmit = async (data: { 
+    title: string;
+    description?: string;
+    type: 'meeting' | 'own-task' | 'delegated-task';
+    priority: 'simple' | 'urgent' | 'complex';
+    assignedPersonId?: string;
+    scheduledDate: string;
+    observations?: string;
+    subItems: SubItem[];
+  }) => {
     try {
       if (taskToEdit) {
-        await updateTask(taskToEdit.id, data);
+        await updateTask(taskToEdit.id, {
+          ...data,
+          deliveryDates: [],
+          isRecurrent: false
+        });
         toast({
           title: "Tarefa atualizada",
           description: "A tarefa foi atualizada com sucesso.",
         });
       } else {
-        await addTask(data);
+        await addTask({
+          ...data,
+          description: data.description || '',
+          observations: data.observations || '',
+          status: 'pending',
+          order: 0,
+          forwardHistory: [],
+          forwardCount: 0,
+          deliveryDates: [],
+          isRecurrent: false
+        });
         toast({
           title: "Tarefa criada",
           description: "A nova tarefa foi criada com sucesso.",

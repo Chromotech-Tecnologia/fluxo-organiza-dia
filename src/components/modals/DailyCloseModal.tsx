@@ -19,12 +19,15 @@ export function DailyCloseModal() {
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayTasks = tasks.filter(task => 
-    task.dates.some(date => format(new Date(date), 'yyyy-MM-dd') === today)
+    task.deliveryDates.some(date => format(new Date(date), 'yyyy-MM-dd') === today) ||
+    format(new Date(task.scheduledDate), 'yyyy-MM-dd') === today
   );
 
   const completedTasks = todayTasks.filter(task => task.status === 'completed');
   const pendingTasks = todayTasks.filter(task => task.status === 'pending');
-  const forwardedTasks = todayTasks.filter(task => task.status === 'forwarded');
+  const forwardedTasks = todayTasks.filter(task => 
+    task.status === 'forwarded-date' || task.status === 'forwarded-person'
+  );
   const notDoneTasks = todayTasks.filter(task => task.status === 'not-done');
 
   const handleStatusChange = async (taskId: string, status: TaskStatus) => {
@@ -127,8 +130,8 @@ export function DailyCloseModal() {
                       <div className="flex-1">
                         <h4 className="font-medium">{task.title}</h4>
                         <div className="flex gap-2 mt-2">
-                          <Badge variant={task.type === 'meeting' ? 'default' : task.type === 'own' ? 'secondary' : 'outline'}>
-                            {task.type === 'meeting' ? 'Reunião' : task.type === 'own' ? 'Própria' : 'Repassada'}
+                          <Badge variant={task.type === 'meeting' ? 'default' : task.type === 'own-task' ? 'secondary' : 'outline'}>
+                            {task.type === 'meeting' ? 'Reunião' : task.type === 'own-task' ? 'Própria' : 'Repassada'}
                           </Badge>
                           <Badge variant={task.priority === 'urgent' ? 'destructive' : task.priority === 'complex' ? 'default' : 'secondary'}>
                             {task.priority === 'urgent' ? 'Urgente' : task.priority === 'complex' ? 'Complexa' : 'Simples'}
@@ -156,8 +159,8 @@ export function DailyCloseModal() {
                         </Button>
                         <Button
                           size="sm"
-                          variant={task.status === 'forwarded' ? 'default' : 'outline'}
-                          onClick={() => handleStatusChange(task.id, 'forwarded')}
+                          variant={task.status === 'forwarded-date' || task.status === 'forwarded-person' ? 'default' : 'outline'}
+                          onClick={() => handleStatusChange(task.id, 'forwarded-date')}
                           className="gap-1"
                         >
                           <RotateCcw className="h-4 w-4" />

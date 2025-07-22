@@ -101,3 +101,25 @@ export interface TaskStats {
   topPersonByTasks?: Person;
   mostForwardedTask?: Task;
 }
+
+// Form types
+export interface TaskFormValues {
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: TaskPriority;
+  assignedPersonId?: string;
+  scheduledDate: string;
+  deliveryDates: string[];
+  observations: string;
+  isRecurrent: boolean;
+  recurrence?: RecurrenceConfig;
+  subItems: Omit<SubItem, 'id'>[];
+}
+
+export interface PersonFormValues {
+  name: string;
+  role: string;
+  contact: string;
+  isPartner: boolean;
+}
