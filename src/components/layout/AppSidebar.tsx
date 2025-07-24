@@ -1,7 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { useClerk, useUser } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Calendar,
   BarChart3,
@@ -51,8 +49,6 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
-  const { signOut } = useClerk();
-  const { user } = useUser();
 
   const isActive = (path: string) => currentPath === path;
   const isExpanded = menuItems.some((i) => isActive(i.url));
@@ -143,16 +139,16 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Logout Button */}
+        {/* Info Button */}
         <div className="mt-auto p-4 border-t border-border">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => signOut()}
+            onClick={() => alert('Sistema sem autenticação')}
             className="w-full justify-start gap-2"
           >
             <LogOut className="h-4 w-4" />
-            {!collapsed && <span>Sair</span>}
+            {!collapsed && <span>Info</span>}
           </Button>
         </div>
       </SidebarContent>
