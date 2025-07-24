@@ -10,7 +10,8 @@ import {
   FileText,
   Clock,
   TrendingUp,
-  LogOut
+  LogOut,
+  Star
 } from "lucide-react";
 
 import {
@@ -30,7 +31,8 @@ const menuItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Tarefas", url: "/tasks", icon: CheckSquare },
   { title: "Calendário", url: "/calendar", icon: Calendar },
-  { title: "Pessoas", url: "/people", icon: Users },
+  { title: "Equipe", url: "/people", icon: Users },
+  { title: "Skills", url: "/skills", icon: Star },
   { title: "Relatórios", url: "/reports", icon: BarChart3 },
 ];
 

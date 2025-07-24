@@ -1,17 +1,18 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from 'react';
+import { LoginForm } from './LoginForm';
+import { RegisterForm } from './RegisterForm';
 
 export function SignInPage() {
+  const [isLoginMode, setIsLoginMode] = useState(true);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Sistema de Controle de Tarefas</CardTitle>
-            <CardDescription>
-              Acesso temporário sem autenticação
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        {isLoginMode ? (
+          <LoginForm onToggleMode={() => setIsLoginMode(false)} />
+        ) : (
+          <RegisterForm onToggleMode={() => setIsLoginMode(true)} />
+        )}
       </div>
     </div>
   );

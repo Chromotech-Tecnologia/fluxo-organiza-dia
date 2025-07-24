@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Task, Person } from '@/types';
+import { Task, Person, Skill, TeamMember } from '@/types';
 
 interface ModalState {
   // Task Modal
@@ -16,15 +16,27 @@ interface ModalState {
   
   // Delete Confirmation Modal
   isDeleteModalOpen: boolean;
-  deleteType: 'task' | 'person' | null;
-  itemToDelete: (Task | Person) | null;
-  openDeleteModal: (type: 'task' | 'person', item: Task | Person) => void;
+  deleteType: 'task' | 'person' | 'skill' | 'teamMember' | null;
+  itemToDelete: (Task | Person | Skill | TeamMember) | null;
+  openDeleteModal: (type: 'task' | 'person' | 'skill' | 'teamMember', item: Task | Person | Skill | TeamMember) => void;
   closeDeleteModal: () => void;
   
   // Daily Close Modal
   isDailyCloseModalOpen: boolean;
   openDailyCloseModal: () => void;
   closeDailyCloseModal: () => void;
+  
+  // Skill Modal
+  isSkillModalOpen: boolean;
+  skillToEdit: Skill | null;
+  openSkillModal: (skill?: Skill) => void;
+  closeSkillModal: () => void;
+  
+  // Team Member Modal
+  isTeamMemberModalOpen: boolean;
+  teamMemberToEdit: TeamMember | null;
+  openTeamMemberModal: (teamMember?: TeamMember) => void;
+  closeTeamMemberModal: () => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -59,4 +71,16 @@ export const useModalStore = create<ModalState>((set) => ({
   isDailyCloseModalOpen: false,
   openDailyCloseModal: () => set({ isDailyCloseModalOpen: true }),
   closeDailyCloseModal: () => set({ isDailyCloseModalOpen: false }),
+  
+  // Skill Modal
+  isSkillModalOpen: false,
+  skillToEdit: null,
+  openSkillModal: (skill) => set({ isSkillModalOpen: true, skillToEdit: skill || null }),
+  closeSkillModal: () => set({ isSkillModalOpen: false, skillToEdit: null }),
+  
+  // Team Member Modal
+  isTeamMemberModalOpen: false,
+  teamMemberToEdit: null,
+  openTeamMemberModal: (teamMember) => set({ isTeamMemberModalOpen: true, teamMemberToEdit: teamMember || null }),
+  closeTeamMemberModal: () => set({ isTeamMemberModalOpen: false, teamMemberToEdit: null }),
 }));

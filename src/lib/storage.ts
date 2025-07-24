@@ -1,11 +1,13 @@
 // Sistema de armazenamento local para o controle de tarefas
 
-import { Task, Person, DailyReport } from '@/types';
+import { Task, Person, DailyReport, Skill, TeamMember } from '@/types';
 
 const STORAGE_KEYS = {
   TASKS: 'tasks-control-tasks',
   PEOPLE: 'tasks-control-people',
   DAILY_REPORTS: 'tasks-control-daily-reports',
+  SKILLS: 'tasks-control-skills',
+  TEAM_MEMBERS: 'tasks-control-team-members',
   APP_SETTINGS: 'tasks-control-settings'
 } as const;
 
@@ -127,6 +129,76 @@ export const dailyReportStorage = {
       reports[index] = { ...reports[index], ...updatedReport };
       dailyReportStorage.save(reports);
     }
+  }
+};
+
+// Funções específicas para habilidades
+export const skillsStorage = {
+  getAll: (): Skill[] => storage.get<Skill>(STORAGE_KEYS.SKILLS),
+  
+  save: (skills: Skill[]): void => storage.set(STORAGE_KEYS.SKILLS, skills),
+  
+  add: (skill: Skill): void => {
+    const skills = skillsStorage.getAll();
+    skills.push(skill);
+    skillsStorage.save(skills);
+  },
+  
+  update: (skillId: string, updatedSkill: Partial<Skill>): void => {
+    const skills = skillsStorage.getAll();
+    const index = skills.findIndex(s => s.id === skillId);
+    if (index !== -1) {
+      skills[index] = { ...skills[index], ...updatedSkill, updatedAt: new Date().toISOString() };
+      skillsStorage.save(skills);
+    }
+  },
+  
+  delete: (skillId: string): void => {
+    const skills = skillsStorage.getAll().filter(s => s.id !== skillId);
+    skillsStorage.save(skills);
+  },
+  
+  getById: (skillId: string): Skill | undefined => {
+    return skillsStorage.getAll().find(s => s.id === skillId);
+  }
+};
+
+// Funções específicas para membros da equipe
+export const teamMembersStorage = {
+  getAll: (): TeamMember[] => storage.get<TeamMember>(STORAGE_KEYS.TEAM_MEMBERS),
+  
+  save: (teamMembers: TeamMember[]): void => storage.set(STORAGE_KEYS.TEAM_MEMBERS, teamMembers),
+  
+  add: (teamMember: TeamMember): void => {
+    const teamMembers = teamMembersStorage.getAll();
+    teamMembers.push(teamMember);
+    teamMembersStorage.save(teamMembers);
+  },
+  
+  update: (teamMemberId: string, updatedTeamMember: Partial<TeamMember>): void => {
+    const teamMembers = teamMembersStorage.getAll();
+    const index = teamMembers.findIndex(tm => tm.id === teamMemberId);
+    if (index !== -1) {
+      teamMembers[index] = { ...teamMembers[index], ...updatedTeamMember, updatedAt: new Date().toISOString() };
+      teamMembersStorage.save(teamMembers);
+    }
+  },
+  
+  delete: (teamMemberId: string): void => {
+    const teamMembers = teamMembersStorage.getAll().filter(tm => tm.id !== teamMemberId);
+    teamMembersStorage.save(teamMembers);
+  },
+  
+  getById: (teamMemberId: string): TeamMember | undefined => {
+    return teamMembersStorage.getAll().find(tm => tm.id === teamMemberId);
+  },
+  
+  getBySkill: (skillId: string): TeamMember[] => {
+    return teamMembersStorage.getAll().filter(tm => tm.skillIds.includes(skillId));
+  },
+  
+  getByStatus: (status: 'ativo' | 'inativo'): TeamMember[] => {
+    return teamMembersStorage.getAll().filter(tm => tm.status === status);
   }
 };
 

@@ -11,6 +11,7 @@ import { TaskModal } from "./components/modals/TaskModal";
 import { PersonModal } from "./components/modals/PersonModal";
 import { DeleteModal } from "./components/modals/DeleteModal";
 import { DailyCloseModal } from "./components/modals/DailyCloseModal";
+import { SkillModal } from "./components/modals/SkillModal";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -22,6 +23,7 @@ import DailyClosePage from "./pages/DailyClosePage";
 import StatsPage from "./pages/StatsPage";
 import SettingsPage from "./pages/SettingsPage";
 import BackupPage from "./pages/BackupPage";
+import { SkillsPage } from "./pages/SkillsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +41,7 @@ const App = () => (
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/people" element={<PeoplePage />} />
+              <Route path="/skills" element={<SkillsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/daily-close" element={<DailyClosePage />} />
               <Route path="/stats" element={<StatsPage />} />
@@ -51,6 +54,7 @@ const App = () => (
           {/* Global Modals */}
           <TaskModal />
           <PersonModal />
+          <SkillModal />
           <DeleteModal />
           <DailyCloseModal />
         </AuthGuard>

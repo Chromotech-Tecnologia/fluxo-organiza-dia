@@ -5,12 +5,60 @@ export type TaskPriority = 'simple' | 'urgent' | 'complex';
 export type TaskStatus = 'pending' | 'completed' | 'not-done' | 'forwarded-date' | 'forwarded-person';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
+export interface Skill {
+  id: string;
+  name: string;
+  observation: string;
+  area: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  status: 'apresentado' | 'cotado' | 'iniciado' | 'finalizado';
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
+  status: 'ativo' | 'inativo';
+  isPartner: boolean;
+  skillIds: string[];
+  origin: string;
+  projects: Project[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Person {
   id: string;
   name: string;
   role: string;
   contact: string;
   isPartner: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -118,4 +166,37 @@ export interface PersonFormValues {
   role: string;
   contact: string;
   isPartner: boolean;
+}
+
+export interface SkillFormValues {
+  name: string;
+  observation: string;
+  area: string;
+}
+
+export interface TeamMemberFormValues {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
+  status: 'ativo' | 'inativo';
+  isPartner: boolean;
+  skillIds: string[];
+  origin: string;
+  projects: Project[];
+}
+
+export interface TeamMemberFilter {
+  search?: string;
+  skillIds?: string[];
+  status?: 'ativo' | 'inativo';
 }
