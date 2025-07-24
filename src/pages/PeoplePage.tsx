@@ -1,98 +1,157 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Users, Mail, Phone } from "lucide-react";
-import { useModalStore } from "@/stores/useModalStore";
-import { usePeople } from "@/hooks/usePeople";
-import { useTasks } from "@/hooks/useTasks";
-import { PersonCard } from "@/components/people/PersonCard";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, Search, Filter } from 'lucide-react';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useSkills } from '@/hooks/useSkills';
+import { useModalStore } from '@/stores/useModalStore';
+import { TeamMemberCard } from '@/components/team/TeamMemberCard';
+import { TeamMemberFilter } from '@/types';
 
-const PeoplePage = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const { openPersonModal } = useModalStore();
-  const { people } = usePeople();
-  const { tasks } = useTasks();
+export default function PeoplePage() {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ativo' | 'inativo' | ''>('');
+  const [skillFilter, setSkillFilter] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  const filters: TeamMemberFilter = {
+    search: search || undefined,
+    status: statusFilter || undefined,
+    skillIds: skillFilter.length > 0 ? skillFilter : undefined,
+  };
 
-  const filteredPeople = people.filter(person =>
-    person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    person.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    person.contact.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { teamMembers, loading } = useTeamMembers(filters);
+  const { skills } = useSkills();
+  const { openTeamMemberModal } = useModalStore();
 
-  const getTaskCount = (personId: string) => {
-    return tasks.filter(task => task.assignedPersonId === personId).length;
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setSkillFilter([]);
+  };
+
+  const toggleSkillFilter = (skillId: string) => {
+    setSkillFilter(prev => 
+      prev.includes(skillId) 
+        ? prev.filter(id => id !== skillId)
+        : [...prev, skillId]
+    );
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Pessoas</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Equipe</h1>
           <p className="text-muted-foreground">
-            Gerencie funcionários e parceiros
+            Gerencie os membros da sua equipe
           </p>
         </div>
-        <Button className="gap-2" onClick={() => openPersonModal()}>
-          <Plus className="h-4 w-4" />
-          Nova Pessoa
+        <Button onClick={() => openTeamMemberModal()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Membro
         </Button>
       </div>
 
-      {/* Busca */}
       <Card>
-        <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Membros da Equipe</CardTitle>
+              <CardDescription>
+                {teamMembers.length} membro{teamMembers.length !== 1 ? 's' : ''} encontrado{teamMembers.length !== 1 ? 's' : ''}
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filtros
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar pessoas por nome, função ou contato..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              placeholder="Buscar por nome, cargo, email ou origem..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
             />
           </div>
+
+          {showFilters && (
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Filtros</h4>
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Limpar
+                </Button>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="inativo">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Habilidades</label>
+                  <div className="max-h-32 overflow-y-auto border rounded p-2 space-y-1">
+                    {skills.map((skill) => (
+                      <label key={skill.id} className="flex items-center space-x-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={skillFilter.includes(skill.id)}
+                          onChange={() => toggleSkillFilter(skill.id)}
+                          className="rounded"
+                        />
+                        <span>{skill.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Carregando membros da equipe...</p>
+            </div>
+          ) : teamMembers.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                {search || statusFilter || skillFilter.length > 0
+                  ? 'Nenhum membro encontrado com os filtros aplicados.'
+                  : 'Nenhum membro da equipe cadastrado ainda.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {teamMembers.map((teamMember) => (
+                <TeamMemberCard
+                  key={teamMember.id}
+                  teamMember={teamMember}
+                />
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Lista de Pessoas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredPeople.length === 0 ? (
-          <div className="col-span-full">
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">
-                    {searchQuery ? "Nenhuma pessoa encontrada" : "Nenhuma pessoa cadastrada"}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchQuery 
-                      ? "Tente ajustar sua busca ou adicionar uma nova pessoa"
-                      : "Adicione funcionários e parceiros para delegar tarefas"
-                    }
-                  </p>
-                  <Button className="gap-2" onClick={() => openPersonModal()}>
-                    <Plus className="h-4 w-4" />
-                    {searchQuery ? "Nova Pessoa" : "Adicionar Primeira Pessoa"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          filteredPeople.map((person) => (
-            <PersonCard 
-              key={person.id} 
-              person={person} 
-              taskCount={getTaskCount(person.id)}
-            />
-          ))
-        )}
-      </div>
     </div>
   );
-};
-
-export default PeoplePage;
+}

@@ -1,4 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { authService } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import {
   Calendar,
@@ -51,6 +53,12 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+  const { user, signOut } = useAuthStore();
+
+  const handleLogout = () => {
+    authService.logout();
+    signOut();
+  };
 
   const isActive = (path: string) => currentPath === path;
   const isExpanded = menuItems.some((i) => isActive(i.url));
@@ -141,16 +149,19 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Info Button */}
+        {/* Logout Button */}
         <div className="mt-auto p-4 border-t border-border">
+          <div className="mb-2 text-xs text-muted-foreground">
+            {!collapsed && user && <span>Olá, {user.name}</span>}
+          </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => alert('Sistema sem autenticação')}
+            onClick={handleLogout}
             className="w-full justify-start gap-2"
           >
             <LogOut className="h-4 w-4" />
-            {!collapsed && <span>Info</span>}
+            {!collapsed && <span>Sair</span>}
           </Button>
         </div>
       </SidebarContent>

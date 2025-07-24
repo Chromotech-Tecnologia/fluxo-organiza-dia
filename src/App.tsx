@@ -12,6 +12,7 @@ import { PersonModal } from "./components/modals/PersonModal";
 import { DeleteModal } from "./components/modals/DeleteModal";
 import { DailyCloseModal } from "./components/modals/DailyCloseModal";
 import { SkillModal } from "./components/modals/SkillModal";
+import { TeamMemberModal } from "./components/modals/TeamMemberModal";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -55,6 +56,7 @@ const App = () => (
           <TaskModal />
           <PersonModal />
           <SkillModal />
+          <TeamMemberModal />
           <DeleteModal />
           <DailyCloseModal />
         </AuthGuard>

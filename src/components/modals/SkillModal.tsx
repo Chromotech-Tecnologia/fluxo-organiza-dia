@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function SkillModal() {
   const { isSkillModalOpen, skillToEdit, closeSkillModal } = useModalStore();
-  const { addSkill, updateSkill } = useSkills();
+  const { addSkill, updateSkill, refetch } = useSkills();
   const { toast } = useToast();
 
   const handleSubmit = async (data: SkillFormValues) => {
@@ -25,6 +25,8 @@ export function SkillModal() {
           description: "A nova habilidade foi adicionada com sucesso.",
         });
       }
+      // Forçar atualização da lista
+      setTimeout(() => refetch(), 100);
       closeSkillModal();
     } catch (error) {
       toast({

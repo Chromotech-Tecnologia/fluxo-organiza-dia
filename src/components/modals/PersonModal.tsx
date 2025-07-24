@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function PersonModal() {
   const { isPersonModalOpen, personToEdit, closePersonModal } = useModalStore();
-  const { addPerson, updatePerson } = usePeople();
+  const { addPerson, updatePerson, refetch } = usePeople();
   const { toast } = useToast();
 
   const handleSubmit = async (data: PersonFormValues) => {
@@ -25,6 +25,8 @@ export function PersonModal() {
           description: "A nova pessoa foi adicionada com sucesso.",
         });
       }
+      // Forçar atualização da lista
+      setTimeout(() => refetch(), 100);
       closePersonModal();
     } catch (error) {
       toast({

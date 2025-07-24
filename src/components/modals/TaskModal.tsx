@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function TaskModal() {
   const { isTaskModalOpen, taskToEdit, closeTaskModal } = useModalStore();
-  const { addTask, updateTask } = useTasks();
+  const { addTask, updateTask, refetch } = useTasks();
   const { toast } = useToast();
 
   const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
@@ -41,6 +41,8 @@ export function TaskModal() {
           description: "A nova tarefa foi criada com sucesso.",
         });
       }
+      // Forçar atualização da lista
+      setTimeout(() => refetch(), 100);
       closeTaskModal();
     } catch (error) {
       toast({
