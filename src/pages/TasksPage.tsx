@@ -3,20 +3,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Filter, Calendar } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useTasks } from "@/hooks/useTasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
+import { Task } from "@/types";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
   const { openTaskModal } = useModalStore();
-  const { tasks } = useTasks();
+  const { tasks, updateTask } = useTasks();
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleTaskSelection = (task: Task, checked: boolean) => {
+    if (checked) {
+      setSelectedTasks([...selectedTasks, task]);
+    } else {
+      setSelectedTasks(selectedTasks.filter(t => t.id !== task.id));
+    }
+  };
+
+  const handleStatusChange = async (taskId: string, status: Task['status']) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      await updateTask(taskId, { ...task, status });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -89,9 +108,26 @@ const TasksPage = () => {
           </Card>
         ) : (
           filteredTasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <div key={task.id} className="flex items-start gap-3">
+              <Checkbox
+                checked={selectedTasks.some(t => t.id === task.id)}
+                onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
+                className="mt-4"
+              />
+              <div className="flex-1">
+                <TaskCard 
+                  task={task} 
+                  onStatusChange={(status) => handleStatusChange(task.id, status)}
+                />
+              </div>
+            </div>
           ))
         )}
+        
+        <BulkActionsBar 
+          selectedTasks={selectedTasks}
+          onClearSelection={() => setSelectedTasks([])}
+        />
       </div>
     </div>
   );

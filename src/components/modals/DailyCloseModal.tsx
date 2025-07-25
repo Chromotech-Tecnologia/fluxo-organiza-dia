@@ -3,24 +3,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useModalStore } from "@/stores/useModalStore";
 import { useTasks } from "@/hooks/useTasks";
 import { Task, TaskStatus } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Check, X, RotateCcw, Users } from "lucide-react";
+import { Check, X, RotateCcw, Users, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export function DailyCloseModal() {
-  const { isDailyCloseModalOpen, closeDailyCloseModal } = useModalStore();
+  const { isDailyCloseModalOpen, selectedCloseDate, closeDailyCloseModal } = useModalStore();
   const { tasks, updateTask } = useTasks();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const [closeDate, setCloseDate] = useState<Date>(selectedCloseDate ? new Date(selectedCloseDate) : new Date());
 
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const closeDateString = format(closeDate, 'yyyy-MM-dd');
   const todayTasks = tasks.filter(task => 
-    task.deliveryDates.some(date => format(new Date(date), 'yyyy-MM-dd') === today) ||
-    format(new Date(task.scheduledDate), 'yyyy-MM-dd') === today
+    task.deliveryDates.some(date => format(new Date(date), 'yyyy-MM-dd') === closeDateString) ||
+    format(new Date(task.scheduledDate), 'yyyy-MM-dd') === closeDateString
   );
 
   const completedTasks = todayTasks.filter(task => task.status === 'completed');
@@ -59,9 +63,37 @@ export function DailyCloseModal() {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Fechamento do Dia - {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            Fechamento do Dia - {format(closeDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Seletor de Data */}
+        <div className="mb-4">
+          <label className="text-sm font-medium mb-2 block">Data do Fechamento:</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !closeDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {closeDate ? format(closeDate, "PPP", { locale: ptBR }) : "Selecionar data"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={closeDate}
+                onSelect={(date) => date && setCloseDate(date)}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {step === 1 && (
           <div className="space-y-6">
@@ -146,7 +178,7 @@ export function DailyCloseModal() {
                           className="gap-1"
                         >
                           <Check className="h-4 w-4" />
-                          OK
+                          Feito
                         </Button>
                         <Button
                           size="sm"
@@ -155,7 +187,7 @@ export function DailyCloseModal() {
                           className="gap-1"
                         >
                           <X className="h-4 w-4" />
-                          X
+                          Não feito
                         </Button>
                         <Button
                           size="sm"

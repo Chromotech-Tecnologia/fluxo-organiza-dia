@@ -27,8 +27,8 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
-  const { getPersonById } = usePeople();
-  const { openTaskModal, openDeleteModal } = useModalStore();
+  const { people, getPersonById } = usePeople();
+  const { openTaskModal, openDeleteModal, openForwardTaskModal } = useModalStore();
   const assignedPerson = task.assignedPersonId ? getPersonById(task.assignedPersonId) : null;
 
   const handleEdit = () => {
@@ -139,7 +139,20 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
           <div className="flex items-center gap-2 text-sm">
             <User className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">
-              {assignedPerson.name} - {assignedPerson.role}
+              Equipe: {assignedPerson.name} - {assignedPerson.role}
+            </span>
+          </div>
+        )}
+        
+        {/* Histórico de Repasses */}
+        {task.forwardCount > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">
+              Repassada {task.forwardCount}x 
+              {task.forwardHistory.length > 0 && task.forwardHistory[task.forwardHistory.length - 1].forwardedTo && 
+                ` para ${people.find(p => p.id === task.forwardHistory[task.forwardHistory.length - 1].forwardedTo)?.name || 'Equipe'}`
+              }
             </span>
           </div>
         )}
@@ -177,37 +190,33 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
 
         {/* Ações */}
         <div className="flex items-center gap-2 pt-2 border-t">
-          {task.status === 'pending' && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onStatusChange?.('completed')}
-                className="gap-1"
-              >
-                <CheckCircle className="h-3 w-3" />
-                OK
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onStatusChange?.('not-done')}
-                className="gap-1"
-              >
-                <X className="h-3 w-3" />
-                X
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onForward}
-                className="gap-1"
-              >
-                <ArrowRight className="h-3 w-3" />
-                Repassar
-              </Button>
-            </>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onStatusChange?.('completed')}
+            className="gap-1"
+          >
+            <CheckCircle className="h-3 w-3" />
+            Feito
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onStatusChange?.('not-done')}
+            className="gap-1"
+          >
+            <X className="h-3 w-3" />
+            Não feito
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => openForwardTaskModal(task)}
+            className="gap-1"
+          >
+            <ArrowRight className="h-3 w-3" />
+            Repassar
+          </Button>
           
           <div className="ml-auto">
             <Button size="sm" variant="ghost" onClick={handleEdit}>

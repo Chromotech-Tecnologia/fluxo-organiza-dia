@@ -13,6 +13,7 @@ import { DeleteModal } from "./components/modals/DeleteModal";
 import { DailyCloseModal } from "./components/modals/DailyCloseModal";
 import { SkillModal } from "./components/modals/SkillModal";
 import { TeamMemberModal } from "./components/modals/TeamMemberModal";
+import { ForwardTaskModal } from "./components/modals/ForwardTaskModal";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -54,11 +55,12 @@ const App = () => (
           
           {/* Global Modals */}
           <TaskModal />
-          <PersonModal />
-          <SkillModal />
-          <TeamMemberModal />
-          <DeleteModal />
-          <DailyCloseModal />
+      <PersonModal />
+      <SkillModal />
+      <TeamMemberModal />
+      <ForwardTaskModal />
+      <DeleteModal />
+      <DailyCloseModal />
         </AuthGuard>
       </BrowserRouter>
     </TooltipProvider>

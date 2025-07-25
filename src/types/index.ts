@@ -80,13 +80,10 @@ export interface RecurrenceConfig {
 }
 
 export interface ForwardRecord {
-  id: string;
-  fromDate: string;
-  toDate?: string;
-  fromPersonId?: string;
-  toPersonId?: string;
+  forwardedAt: string;
+  forwardedTo?: string | null;
+  newDate: string;
   reason: string;
-  timestamp: string;
 }
 
 export interface Task {

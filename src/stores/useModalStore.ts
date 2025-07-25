@@ -23,7 +23,8 @@ interface ModalState {
   
   // Daily Close Modal
   isDailyCloseModalOpen: boolean;
-  openDailyCloseModal: () => void;
+  selectedCloseDate: string | null;
+  openDailyCloseModal: (date?: string) => void;
   closeDailyCloseModal: () => void;
   
   // Skill Modal
@@ -37,6 +38,12 @@ interface ModalState {
   teamMemberToEdit: TeamMember | null;
   openTeamMemberModal: (teamMember?: TeamMember) => void;
   closeTeamMemberModal: () => void;
+  
+  // Forward Task Modal
+  isForwardTaskModalOpen: boolean;
+  taskToForward: Task | null;
+  openForwardTaskModal: (task: Task) => void;
+  closeForwardTaskModal: () => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -69,8 +76,15 @@ export const useModalStore = create<ModalState>((set) => ({
   
   // Daily Close Modal
   isDailyCloseModalOpen: false,
-  openDailyCloseModal: () => set({ isDailyCloseModalOpen: true }),
-  closeDailyCloseModal: () => set({ isDailyCloseModalOpen: false }),
+  selectedCloseDate: null,
+  openDailyCloseModal: (date?: string) => set({ 
+    isDailyCloseModalOpen: true, 
+    selectedCloseDate: date || new Date().toISOString().split('T')[0] 
+  }),
+  closeDailyCloseModal: () => set({ 
+    isDailyCloseModalOpen: false, 
+    selectedCloseDate: null 
+  }),
   
   // Skill Modal
   isSkillModalOpen: false,
@@ -83,4 +97,10 @@ export const useModalStore = create<ModalState>((set) => ({
   teamMemberToEdit: null,
   openTeamMemberModal: (teamMember) => set({ isTeamMemberModalOpen: true, teamMemberToEdit: teamMember || null }),
   closeTeamMemberModal: () => set({ isTeamMemberModalOpen: false, teamMemberToEdit: null }),
+  
+  // Forward Task Modal
+  isForwardTaskModalOpen: false,
+  taskToForward: null,
+  openForwardTaskModal: (task) => set({ isForwardTaskModalOpen: true, taskToForward: task }),
+  closeForwardTaskModal: () => set({ isForwardTaskModalOpen: false, taskToForward: null }),
 }));

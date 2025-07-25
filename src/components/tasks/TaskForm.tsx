@@ -198,11 +198,11 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 name="assignedPersonId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pessoa Responsável</FormLabel>
+                    <FormLabel>Equipe Responsável</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione a pessoa" />
+                          <SelectValue placeholder="Selecione a equipe" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
