@@ -90,12 +90,13 @@ export function useTasks(filters?: TaskFilter) {
   };
 
   // Adicionar nova tarefa
-  const addTask = (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const task: Task = {
+  const addTask = (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> | Task) => {
+    const task: Task = 'id' in newTask ? newTask : {
       ...newTask,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      completionHistory: [],
     };
 
     taskStorage.add(task);

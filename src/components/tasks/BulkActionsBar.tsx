@@ -20,7 +20,18 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
   const handleBulkStatusChange = async (status: Task['status']) => {
     try {
       for (const task of selectedTasks) {
-        await updateTask(task.id, { ...task, status });
+        const completionRecord = {
+          completedAt: new Date().toISOString(),
+          status: status as 'completed' | 'not-done',
+          date: task.scheduledDate
+        };
+        
+        await updateTask(task.id, { 
+          ...task, 
+          status,
+          completedAt: new Date().toISOString(),
+          completionHistory: [...(task.completionHistory || []), completionRecord]
+        });
       }
       
       toast({
@@ -62,27 +73,27 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           size="sm"
           variant="outline"
           onClick={() => handleBulkStatusChange('completed')}
-          className="gap-1"
+          className="gap-1 border-green-500 text-green-700 hover:bg-green-50"
         >
           <CheckCircle className="h-4 w-4" />
-          Marcar como Feito
+          Feito
         </Button>
 
         <Button
           size="sm"
           variant="outline"
           onClick={() => handleBulkStatusChange('not-done')}
-          className="gap-1"
+          className="gap-1 border-red-500 text-red-700 hover:bg-red-50"
         >
           <X className="h-4 w-4" />
-          Marcar como Não Feito
+          Não feito
         </Button>
 
         <Button
           size="sm"
           variant="outline"
           onClick={handleBulkForward}
-          className="gap-1"
+          className="gap-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
         >
           <ArrowRight className="h-4 w-4" />
           Repassar

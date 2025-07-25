@@ -194,7 +194,7 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             size="sm"
             variant="outline"
             onClick={() => onStatusChange?.('completed')}
-            className="gap-1"
+            className="gap-1 border-green-500 text-green-700 hover:bg-green-50"
           >
             <CheckCircle className="h-3 w-3" />
             Feito
@@ -203,7 +203,7 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             size="sm"
             variant="outline"
             onClick={() => onStatusChange?.('not-done')}
-            className="gap-1"
+            className="gap-1 border-red-500 text-red-700 hover:bg-red-50"
           >
             <X className="h-3 w-3" />
             Não feito
@@ -212,7 +212,7 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             size="sm"
             variant="outline"
             onClick={() => openForwardTaskModal(task)}
-            className="gap-1"
+            className="gap-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
           >
             <ArrowRight className="h-3 w-3" />
             Repassar

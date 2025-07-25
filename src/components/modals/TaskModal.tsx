@@ -34,7 +34,8 @@ export function TaskModal() {
           forwardHistory: [],
           forwardCount: 0,
           deliveryDates: [],
-          isRecurrent: false
+          isRecurrent: false,
+          completionHistory: []
         });
         toast({
           title: "Tarefa criada",

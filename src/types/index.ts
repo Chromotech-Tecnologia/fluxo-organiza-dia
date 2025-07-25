@@ -86,6 +86,12 @@ export interface ForwardRecord {
   reason: string;
 }
 
+export interface CompletionRecord {
+  completedAt: string;
+  status: 'completed' | 'not-done';
+  date: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -102,6 +108,7 @@ export interface Task {
   recurrence?: RecurrenceConfig;
   forwardHistory: ForwardRecord[];
   forwardCount: number;
+  completionHistory: CompletionRecord[];
   completedAt?: string;
   createdAt: string;
   updatedAt: string;

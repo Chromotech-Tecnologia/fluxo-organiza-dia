@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 export function ForwardTaskModal() {
   const { isForwardTaskModalOpen, taskToForward, closeForwardTaskModal } = useModalStore();
   const { teamMembers } = useTeamMembers();
-  const { updateTask } = useTasks();
+  const { updateTask, addTask } = useTasks();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>("");
@@ -23,9 +23,11 @@ export function ForwardTaskModal() {
     if (!taskToForward || !selectedDate) return;
 
     try {
-      await updateTask(taskToForward.id, {
+      // Criar nova tarefa duplicada para a nova data
+      const newTask = {
         ...taskToForward,
-        status: selectedTeamMember ? 'forwarded-person' : 'forwarded-date',
+        id: crypto.randomUUID(),
+        status: 'pending' as const,
         scheduledDate: selectedDate.toISOString().split('T')[0],
         assignedPersonId: selectedTeamMember || taskToForward.assignedPersonId,
         forwardCount: taskToForward.forwardCount + 1,
@@ -37,15 +39,23 @@ export function ForwardTaskModal() {
             newDate: selectedDate.toISOString().split('T')[0],
             reason: selectedTeamMember ? 'Repassada para equipe' : 'Reagendada'
           }
-        ]
-      });
+        ],
+        completionHistory: taskToForward.completionHistory || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Adicionar a nova tarefa
+      await addTask(newTask);
 
       toast({
         title: "Tarefa repassada",
-        description: `Tarefa repassada para ${selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : 'nova data'}`,
+        description: `Nova tarefa criada para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}`,
       });
 
       closeForwardTaskModal();
+      setSelectedDate(undefined);
+      setSelectedTeamMember("");
     } catch (error) {
       toast({
         title: "Erro",
