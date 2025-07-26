@@ -31,20 +31,29 @@ const TasksPage = () => {
   };
 
   const handleStatusChange = async (taskId: string, status: Task['status']) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
       const completionRecord = {
         completedAt: new Date().toISOString(),
         status: status as 'completed' | 'not-done',
-        date: task.scheduledDate
+        date: task.scheduledDate,
+        wasForwarded: false
       };
-      
+
+      const updatedCompletionHistory = [
+        ...(task.completionHistory || []),
+        completionRecord
+      ];
+
       await updateTask(taskId, { 
-        ...task, 
         status,
-        completedAt: new Date().toISOString(),
-        completionHistory: [...(task.completionHistory || []), completionRecord]
+        completionHistory: updatedCompletionHistory,
+        updatedAt: new Date().toISOString()
       });
+    } catch (error) {
+      console.error('Erro ao atualizar status da tarefa:', error);
     }
   };
 

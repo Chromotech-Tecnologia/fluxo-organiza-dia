@@ -83,6 +83,8 @@ export interface ForwardRecord {
   forwardedAt: string;
   forwardedTo?: string | null;
   newDate: string;
+  originalDate: string;
+  statusAtForward: TaskStatus;
   reason: string;
 }
 
@@ -90,6 +92,7 @@ export interface CompletionRecord {
   completedAt: string;
   status: 'completed' | 'not-done';
   date: string;
+  wasForwarded?: boolean;
 }
 
 export interface Task {

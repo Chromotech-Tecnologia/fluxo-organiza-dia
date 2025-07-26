@@ -23,6 +23,27 @@ export function ForwardTaskModal() {
     if (!taskToForward || !selectedDate) return;
 
     try {
+      // Marcar a conclusão atual da tarefa se ainda não foi feito
+      let updatedCompletionHistory = [...(taskToForward.completionHistory || [])];
+      
+      if (taskToForward.status === 'pending') {
+        // Se a tarefa ainda está pendente, não adicionar um registro de conclusão
+        // O histórico será mantido como está
+      } else if (taskToForward.status === 'completed' || taskToForward.status === 'not-done') {
+        // Se já foi concluída, marcar que foi repassada
+        updatedCompletionHistory = updatedCompletionHistory.map((record, index) => 
+          index === updatedCompletionHistory.length - 1 
+            ? { ...record, wasForwarded: true }
+            : record
+        );
+      }
+
+      // Atualizar a tarefa original para marcar que foi repassada
+      await updateTask(taskToForward.id, {
+        completionHistory: updatedCompletionHistory,
+        updatedAt: new Date().toISOString()
+      });
+
       // Criar nova tarefa duplicada para a nova data
       const newTask = {
         ...taskToForward,
@@ -37,10 +58,12 @@ export function ForwardTaskModal() {
             forwardedAt: new Date().toISOString(),
             forwardedTo: selectedTeamMember || null,
             newDate: selectedDate.toISOString().split('T')[0],
+            originalDate: taskToForward.scheduledDate,
+            statusAtForward: taskToForward.status,
             reason: selectedTeamMember ? 'Repassada para equipe' : 'Reagendada'
           }
         ],
-        completionHistory: taskToForward.completionHistory || [],
+        completionHistory: [], // Nova tarefa começa sem histórico de conclusão
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -73,6 +96,26 @@ export function ForwardTaskModal() {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Mostrar status atual da tarefa */}
+          {taskToForward && (
+            <div className="p-3 bg-muted rounded-lg">
+              <Label className="text-sm font-medium">Tarefa atual:</Label>
+              <p className="text-sm">{taskToForward.title}</p>
+              <p className="text-xs text-muted-foreground">
+                Data: {format(new Date(taskToForward.scheduledDate), "dd/MM/yyyy", { locale: ptBR })} - 
+                Status: <span className={
+                  taskToForward.status === 'completed' ? 'text-green-600' : 
+                  taskToForward.status === 'not-done' ? 'text-red-600' : 
+                  'text-yellow-600'
+                }>
+                  {taskToForward.status === 'completed' ? 'Feito' : 
+                   taskToForward.status === 'not-done' ? 'Não feito' : 
+                   'Pendente'}
+                </span>
+              </p>
+            </div>
+          )}
+
           <div>
             <Label>Nova Data de Execução</Label>
             <Calendar

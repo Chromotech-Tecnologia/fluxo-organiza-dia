@@ -188,38 +188,89 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
           </div>
         )}
 
+        {/* Histórico de Conclusões */}
+        {task.completionHistory && task.completionHistory.length > 0 && (
+          <div className="text-xs text-muted-foreground border-t pt-2">
+            <strong>Histórico de Conclusões:</strong>
+            {task.completionHistory.map((completion, index) => (
+              <div key={index} className="ml-2 mt-1">
+                • {format(new Date(completion.completedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
+                <span className={completion.status === 'completed' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                  {completion.status === 'completed' ? ' Feito' : ' Não feito'}
+                </span>
+                {completion.wasForwarded && ' (repassada após conclusão)'}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Histórico de Repasses */}
+        {task.forwardHistory && task.forwardHistory.length > 0 && (
+          <div className="text-xs text-muted-foreground border-t pt-2 mt-2">
+            <strong>Histórico de Repasses ({task.forwardCount}x):</strong>
+            {task.forwardHistory.map((forward, index) => (
+              <div key={index} className="ml-2 mt-1">
+                • {format(new Date(forward.forwardedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
+                <span className="text-yellow-600 font-medium"> Repassada</span>
+                <div className="ml-4 text-xs">
+                  De: {forward.originalDate} para: {forward.newDate}
+                  {forward.statusAtForward && (
+                    <span className="ml-2">
+                      (Status: <span className={
+                        forward.statusAtForward === 'completed' ? 'text-green-600' : 
+                        forward.statusAtForward === 'not-done' ? 'text-red-600' : 
+                        'text-yellow-600'
+                      }>
+                        {forward.statusAtForward === 'completed' ? 'Feito' : 
+                         forward.statusAtForward === 'not-done' ? 'Não feito' : 
+                         'Pendente'}
+                      </span>)
+                    </span>
+                  )}
+                  {forward.forwardedTo && (
+                    <div className="text-xs">
+                      Para: {people.find(p => p.id === forward.forwardedTo)?.name || 'Equipe'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Ações */}
-        <div className="flex items-center gap-2 pt-2 border-t">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onStatusChange?.('completed')}
-            className="gap-1 border-green-500 text-green-700 hover:bg-green-50"
-          >
-            <CheckCircle className="h-3 w-3" />
-            Feito
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onStatusChange?.('not-done')}
-            className="gap-1 border-red-500 text-red-700 hover:bg-red-50"
-          >
-            <X className="h-3 w-3" />
-            Não feito
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => openForwardTaskModal(task)}
-            className="gap-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
-          >
-            <ArrowRight className="h-3 w-3" />
-            Repassar
-          </Button>
+        <div className="flex flex-col gap-2 pt-3 border-t">
+          {/* Ações principais: Feito/Não feito */}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => onStatusChange?.('completed')}
+              className="bg-green-600 hover:bg-green-700 text-white flex-1"
+            >
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Feito
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => onStatusChange?.('not-done')}
+              className="bg-red-600 hover:bg-red-700 text-white flex-1"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Não feito
+            </Button>
+          </div>
           
-          <div className="ml-auto">
-            <Button size="sm" variant="ghost" onClick={handleEdit}>
+          {/* Ação secundária: Repassar (sempre disponível) */}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => openForwardTaskModal(task)}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white flex-1"
+            >
+              <ArrowRight className="h-3 w-3 mr-1" />
+              Repassar
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleEdit} className="flex-1">
               Editar
             </Button>
           </div>

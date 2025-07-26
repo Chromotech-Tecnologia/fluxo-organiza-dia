@@ -23,20 +23,25 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
         const completionRecord = {
           completedAt: new Date().toISOString(),
           status: status as 'completed' | 'not-done',
-          date: task.scheduledDate
+          date: task.scheduledDate,
+          wasForwarded: false
         };
-        
+
+        const updatedCompletionHistory = [
+          ...(task.completionHistory || []),
+          completionRecord
+        ];
+
         await updateTask(task.id, { 
-          ...task, 
           status,
-          completedAt: new Date().toISOString(),
-          completionHistory: [...(task.completionHistory || []), completionRecord]
+          completionHistory: updatedCompletionHistory,
+          updatedAt: new Date().toISOString()
         });
       }
       
       toast({
         title: "Tarefas atualizadas",
-        description: `${selectedTasks.length} tarefas marcadas como ${status === 'completed' ? 'feitas' : 'não feitas'}`,
+        description: `${selectedTasks.length} tarefa(s) marcada(s) como ${status === 'completed' ? 'feitas' : 'não feitas'}`,
       });
       
       onClearSelection();
