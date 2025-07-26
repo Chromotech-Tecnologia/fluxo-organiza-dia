@@ -30,7 +30,7 @@ const TasksPage = () => {
     }
   };
 
-  const handleStatusChange = async (taskId: string, status: Task['status']) => {
+  const handleStatusChange = (taskId: string, status: Task['status']) => {
     try {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
@@ -47,7 +47,7 @@ const TasksPage = () => {
         completionRecord
       ];
 
-      await updateTask(taskId, { 
+      updateTask(taskId, { 
         status,
         completionHistory: updatedCompletionHistory,
         updatedAt: new Date().toISOString()

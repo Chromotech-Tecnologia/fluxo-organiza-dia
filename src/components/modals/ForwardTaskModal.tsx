@@ -19,7 +19,7 @@ export function ForwardTaskModal() {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>("");
 
-  const handleForward = async () => {
+  const handleForward = () => {
     if (!taskToForward || !selectedDate) return;
 
     try {
@@ -39,7 +39,7 @@ export function ForwardTaskModal() {
       }
 
       // Atualizar a tarefa original para marcar que foi repassada
-      await updateTask(taskToForward.id, {
+      updateTask(taskToForward.id, {
         completionHistory: updatedCompletionHistory,
         updatedAt: new Date().toISOString()
       });
@@ -69,7 +69,7 @@ export function ForwardTaskModal() {
       };
 
       // Adicionar a nova tarefa
-      await addTask(newTask);
+      addTask(newTask);
 
       toast({
         title: "Tarefa repassada",
@@ -80,6 +80,7 @@ export function ForwardTaskModal() {
       setSelectedDate(undefined);
       setSelectedTeamMember("");
     } catch (error) {
+      console.error('Erro ao repassar tarefa:', error);
       toast({
         title: "Erro",
         description: "Erro ao repassar tarefa",

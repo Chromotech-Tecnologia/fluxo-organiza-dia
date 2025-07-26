@@ -17,7 +17,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
   const { openForwardTaskModal } = useModalStore();
   const { toast } = useToast();
 
-  const handleBulkStatusChange = async (status: Task['status']) => {
+  const handleBulkStatusChange = (status: Task['status']) => {
     try {
       for (const task of selectedTasks) {
         const completionRecord = {
@@ -32,7 +32,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           completionRecord
         ];
 
-        await updateTask(task.id, { 
+        updateTask(task.id, { 
           status,
           completionHistory: updatedCompletionHistory,
           updatedAt: new Date().toISOString()
