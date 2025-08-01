@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { 
   Clock, 
   User, 
@@ -11,7 +13,9 @@ import {
   MoreHorizontal,
   Calendar,
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  History,
+  Edit
 } from "lucide-react";
 import { Task } from "@/types";
 import { usePeople } from "@/hooks/usePeople";
@@ -30,18 +34,16 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
   const { people, getPersonById } = usePeople();
   const { openTaskModal, openDeleteModal, openForwardTaskModal } = useModalStore();
   const assignedPerson = task.assignedPersonId ? getPersonById(task.assignedPersonId) : null;
-
-  const handleEdit = () => {
-    openTaskModal(task);
-  };
-
-  const handleDelete = () => {
-    openDeleteModal('task', task);
-  };
   
   const completedSubItems = task.subItems.filter(item => item.completed).length;
   const totalSubItems = task.subItems.length;
   const progressPercentage = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
+
+  // Verificar se já tem uma baixa de feito/não feito
+  const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
+  const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
+  const canMarkDone = !hasCompletion || (lastCompletion?.status === 'not-done');
+  const canMarkNotDone = !hasCompletion || (lastCompletion?.status === 'completed');
 
   const typeColors = {
     'meeting': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -94,184 +96,198 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
 
   return (
     <Card className={cn("w-full border-l-4 hover:shadow-md transition-shadow", statusColors[task.status])}>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="font-semibold text-foreground line-clamp-2 mb-2">
+            <h3 className="font-semibold text-foreground line-clamp-1 mb-2 text-sm">
               {task.title}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge className={typeColors[task.type]}>
+            <div className="flex items-center gap-1 flex-wrap">
+              <Badge className={cn(typeColors[task.type], "text-xs py-0 px-2")}>
                 {getTypeLabel(task.type)}
               </Badge>
-              <Badge className={priorityColors[task.priority]}>
+              <Badge className={cn(priorityColors[task.priority], "text-xs py-0 px-2")}>
                 {getPriorityLabel(task.priority)}
               </Badge>
-              <Badge variant="outline">
-                {getStatusLabel(task.status)}
-              </Badge>
+              {task.forwardCount > 0 && (
+                <Badge variant="secondary" className="text-xs py-0 px-2">
+                  {task.forwardCount}x
+                </Badge>
+              )}
             </div>
           </div>
           
           <div className="flex items-center gap-1">
-            {task.forwardCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {task.forwardCount}x
-              </Badge>
-            )}
-            <Button variant="ghost" size="sm" onClick={handleDelete}>
-              <X className="h-4 w-4" />
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                  <History className="h-3 w-3" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Histórico da Tarefa</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">{task.title}</h4>
+                    <p className="text-sm text-muted-foreground">{task.description}</p>
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Histórico de Conclusões */}
+                  {task.completionHistory && task.completionHistory.length > 0 && (
+                    <div>
+                      <h5 className="font-medium text-sm mb-2">Histórico de Conclusões:</h5>
+                      <div className="space-y-1">
+                        {task.completionHistory.map((completion, index) => (
+                          <div key={index} className="text-xs border-l-2 border-gray-200 pl-3 py-1">
+                            {format(new Date(completion.completedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
+                            <span className={completion.status === 'completed' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                              {completion.status === 'completed' ? ' Feito' : ' Não feito'}
+                            </span>
+                            {completion.wasForwarded && ' (repassada após conclusão)'}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {task.completionHistory && task.completionHistory.length > 0 && task.forwardHistory && task.forwardHistory.length > 0 && (
+                    <Separator />
+                  )}
+
+                  {/* Histórico de Repasses */}
+                  {task.forwardHistory && task.forwardHistory.length > 0 && (
+                    <div>
+                      <h5 className="font-medium text-sm mb-2">Histórico de Repasses ({task.forwardCount}x):</h5>
+                      <div className="space-y-1">
+                        {task.forwardHistory.map((forward, index) => (
+                          <div key={index} className="text-xs border-l-2 border-yellow-200 pl-3 py-1">
+                            {format(new Date(forward.forwardedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
+                            <span className="text-yellow-600 font-medium"> Repassada</span>
+                            <div className="ml-2 text-xs text-muted-foreground mt-1">
+                              De: {forward.originalDate} para: {forward.newDate}
+                              {forward.statusAtForward && (
+                                <span className="ml-2">
+                                  (Status: <span className={
+                                    forward.statusAtForward === 'completed' ? 'text-green-600' : 
+                                    forward.statusAtForward === 'not-done' ? 'text-red-600' : 
+                                    'text-yellow-600'
+                                  }>
+                                    {forward.statusAtForward === 'completed' ? 'Feito' : 
+                                     forward.statusAtForward === 'not-done' ? 'Não feito' : 
+                                     'Pendente'}
+                                  </span>)
+                                </span>
+                              )}
+                              {forward.forwardedTo && (
+                                <div className="text-xs">
+                                  Para: {people.find(p => p.id === forward.forwardedTo)?.name || 'Equipe'}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Button variant="ghost" size="sm" onClick={() => openDeleteModal('task', task)} className="h-6 w-6 p-0">
+              <X className="h-3 w-3" />
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Descrição */}
-        {task.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {task.description}
-          </p>
-        )}
-
-        {/* Pessoa Responsável */}
-        {assignedPerson && (
-          <div className="flex items-center gap-2 text-sm">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">
-              Equipe: {assignedPerson.name} - {assignedPerson.role}
-            </span>
+      <CardContent className="space-y-3 py-3">
+        {/* Informações básicas */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-3 w-3" />
+            <span>{format(new Date(task.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}</span>
           </div>
-        )}
-        
-        {/* Histórico de Repasses */}
-        {task.forwardCount > 0 && (
-          <div className="flex items-center gap-2 text-sm">
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">
-              Repassada {task.forwardCount}x 
-              {task.forwardHistory.length > 0 && task.forwardHistory[task.forwardHistory.length - 1].forwardedTo && 
-                ` para ${people.find(p => p.id === task.forwardHistory[task.forwardHistory.length - 1].forwardedTo)?.name || 'Equipe'}`
-              }
-            </span>
-          </div>
-        )}
-
-        {/* Data */}
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">
-            {format(new Date(task.scheduledDate), "PPP", { locale: ptBR })}
-          </span>
+          {assignedPerson && (
+            <div className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              <span>{assignedPerson.name}</span>
+            </div>
+          )}
         </div>
 
         {/* Progresso dos Subitens */}
         {totalSubItems > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Progresso</span>
-              <span className="text-muted-foreground">
-                {completedSubItems}/{totalSubItems}
-              </span>
+              <span className="text-muted-foreground">{completedSubItems}/{totalSubItems}</span>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
+            <Progress value={progressPercentage} className="h-1" />
           </div>
         )}
 
-        {/* Observações */}
-        {task.observations && (
-          <div className="flex items-start gap-2">
-            <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {task.observations}
-            </p>
-          </div>
-        )}
-
-        {/* Histórico de Conclusões */}
-        {task.completionHistory && task.completionHistory.length > 0 && (
-          <div className="text-xs text-muted-foreground border-t pt-2">
-            <strong>Histórico de Conclusões:</strong>
-            {task.completionHistory.map((completion, index) => (
-              <div key={index} className="ml-2 mt-1">
-                • {format(new Date(completion.completedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
-                <span className={completion.status === 'completed' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                  {completion.status === 'completed' ? ' Feito' : ' Não feito'}
-                </span>
-                {completion.wasForwarded && ' (repassada após conclusão)'}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Histórico de Repasses */}
-        {task.forwardHistory && task.forwardHistory.length > 0 && (
-          <div className="text-xs text-muted-foreground border-t pt-2 mt-2">
-            <strong>Histórico de Repasses ({task.forwardCount}x):</strong>
-            {task.forwardHistory.map((forward, index) => (
-              <div key={index} className="ml-2 mt-1">
-                • {format(new Date(forward.forwardedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
-                <span className="text-yellow-600 font-medium"> Repassada</span>
-                <div className="ml-4 text-xs">
-                  De: {forward.originalDate} para: {forward.newDate}
-                  {forward.statusAtForward && (
-                    <span className="ml-2">
-                      (Status: <span className={
-                        forward.statusAtForward === 'completed' ? 'text-green-600' : 
-                        forward.statusAtForward === 'not-done' ? 'text-red-600' : 
-                        'text-yellow-600'
-                      }>
-                        {forward.statusAtForward === 'completed' ? 'Feito' : 
-                         forward.statusAtForward === 'not-done' ? 'Não feito' : 
-                         'Pendente'}
-                      </span>)
-                    </span>
-                  )}
-                  {forward.forwardedTo && (
-                    <div className="text-xs">
-                      Para: {people.find(p => p.id === forward.forwardedTo)?.name || 'Equipe'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Ações */}
-        <div className="flex flex-col gap-2 pt-3 border-t">
-          {/* Ações principais: Feito/Não feito */}
-          <div className="flex gap-2">
+        {/* Ações compactas */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t">
+          <div className="flex gap-1">
             <Button
               size="sm"
               onClick={() => onStatusChange?.('completed')}
-              className="bg-green-600 hover:bg-green-700 text-white flex-1"
+              disabled={!canMarkDone}
+              variant={lastCompletion?.status === 'completed' ? "default" : "outline"}
+              className={cn(
+                "h-7 px-2 text-xs",
+                lastCompletion?.status === 'completed' 
+                  ? "bg-green-600 hover:bg-green-700 text-white border-green-600" 
+                  : canMarkDone 
+                    ? "border-green-500 text-green-700 hover:bg-green-50" 
+                    : "opacity-50"
+              )}
             >
               <CheckCircle className="h-3 w-3 mr-1" />
               Feito
             </Button>
+            
             <Button
               size="sm"
               onClick={() => onStatusChange?.('not-done')}
-              className="bg-red-600 hover:bg-red-700 text-white flex-1"
+              disabled={!canMarkNotDone}
+              variant={lastCompletion?.status === 'not-done' ? "default" : "outline"}
+              className={cn(
+                "h-7 px-2 text-xs",
+                lastCompletion?.status === 'not-done' 
+                  ? "bg-red-600 hover:bg-red-700 text-white border-red-600" 
+                  : canMarkNotDone 
+                    ? "border-red-500 text-red-700 hover:bg-red-50" 
+                    : "opacity-50"
+              )}
             >
               <X className="h-3 w-3 mr-1" />
               Não feito
             </Button>
           </div>
           
-          {/* Ação secundária: Repassar (sempre disponível) */}
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <Button
               size="sm"
               onClick={() => openForwardTaskModal(task)}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white flex-1"
+              variant="outline"
+              className="h-7 px-2 text-xs border-yellow-500 text-yellow-700 hover:bg-yellow-50"
             >
               <ArrowRight className="h-3 w-3 mr-1" />
               Repassar
             </Button>
-            <Button size="sm" variant="outline" onClick={handleEdit} className="flex-1">
-              Editar
+            
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => openTaskModal(task)} 
+              className="h-7 px-2 text-xs"
+            >
+              <Edit className="h-3 w-3" />
             </Button>
           </div>
         </div>

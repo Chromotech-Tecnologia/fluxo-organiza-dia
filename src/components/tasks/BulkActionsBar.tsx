@@ -19,7 +19,18 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
 
   const handleBulkStatusChange = (status: Task['status']) => {
     try {
+      let updatedCount = 0;
+      
       for (const task of selectedTasks) {
+        // Verificar se já tem uma baixa
+        const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
+        const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
+        
+        // Não permitir múltiplas baixas do mesmo tipo
+        if (hasCompletion && lastCompletion?.status === status) {
+          continue; // Pular esta tarefa
+        }
+
         const completionRecord = {
           completedAt: new Date().toISOString(),
           status: status as 'completed' | 'not-done',
@@ -37,12 +48,22 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           completionHistory: updatedCompletionHistory,
           updatedAt: new Date().toISOString()
         });
+        
+        updatedCount++;
       }
       
-      toast({
-        title: "Tarefas atualizadas",
-        description: `${selectedTasks.length} tarefa(s) marcada(s) como ${status === 'completed' ? 'feitas' : 'não feitas'}`,
-      });
+      if (updatedCount > 0) {
+        toast({
+          title: "Tarefas atualizadas",
+          description: `${updatedCount} tarefa(s) marcada(s) como ${status === 'completed' ? 'feitas' : 'não feitas'}`,
+        });
+      } else {
+        toast({
+          title: "Nenhuma tarefa atualizada",
+          description: "Todas as tarefas selecionadas já possuem essa baixa",
+          variant: "default"
+        });
+      }
       
       onClearSelection();
     } catch (error) {

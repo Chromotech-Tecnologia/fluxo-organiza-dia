@@ -35,6 +35,15 @@ const TasksPage = () => {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
+      // Verificar se já tem uma baixa
+      const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
+      const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
+      
+      // Não permitir múltiplas baixas do mesmo tipo
+      if (hasCompletion && lastCompletion?.status === status) {
+        return; // Já tem essa baixa
+      }
+
       const completionRecord = {
         completedAt: new Date().toISOString(),
         status: status as 'completed' | 'not-done',
