@@ -39,11 +39,17 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
   const totalSubItems = task.subItems.length;
   const progressPercentage = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
 
-  // Verificar se já tem uma baixa de feito/não feito
-  const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
-  const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
-  const canMarkDone = !hasCompletion || (lastCompletion?.status === 'not-done');
-  const canMarkNotDone = !hasCompletion || (lastCompletion?.status === 'completed');
+  // Verificar se já tem uma baixa de feito/não feito hoje
+  const today = format(new Date(), "yyyy-MM-dd");
+  const todayCompletions = task.completionHistory?.filter(completion => 
+    format(new Date(completion.completedAt), "yyyy-MM-dd") === today
+  ) || [];
+  const lastTodayCompletion = todayCompletions.length > 0 ? todayCompletions[todayCompletions.length - 1] : null;
+  
+  const todayForwards = task.forwardHistory?.filter(forward => 
+    format(new Date(forward.forwardedAt), "yyyy-MM-dd") === today
+  ) || [];
+  const hasForwardedToday = todayForwards.length > 0;
 
   const typeColors = {
     'meeting': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -136,63 +142,76 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
                   
                   <Separator />
                   
-                  {/* Histórico de Conclusões */}
-                  {task.completionHistory && task.completionHistory.length > 0 && (
-                    <div>
-                      <h5 className="font-medium text-sm mb-2">Histórico de Conclusões:</h5>
-                      <div className="space-y-1">
-                        {task.completionHistory.map((completion, index) => (
-                          <div key={index} className="text-xs border-l-2 border-gray-200 pl-3 py-1">
-                            {format(new Date(completion.completedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
-                            <span className={completion.status === 'completed' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                              {completion.status === 'completed' ? ' Feito' : ' Não feito'}
-                            </span>
-                            {completion.wasForwarded && ' (repassada após conclusão)'}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {task.completionHistory && task.completionHistory.length > 0 && task.forwardHistory && task.forwardHistory.length > 0 && (
-                    <Separator />
-                  )}
-
-                  {/* Histórico de Repasses */}
-                  {task.forwardHistory && task.forwardHistory.length > 0 && (
-                    <div>
-                      <h5 className="font-medium text-sm mb-2">Histórico de Repasses ({task.forwardCount}x):</h5>
-                      <div className="space-y-1">
-                        {task.forwardHistory.map((forward, index) => (
-                          <div key={index} className="text-xs border-l-2 border-yellow-200 pl-3 py-1">
-                            {format(new Date(forward.forwardedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })} - 
-                            <span className="text-yellow-600 font-medium"> Repassada</span>
-                            <div className="ml-2 text-xs text-muted-foreground mt-1">
-                              De: {forward.originalDate} para: {forward.newDate}
-                              {forward.statusAtForward && (
-                                <span className="ml-2">
-                                  (Status: <span className={
-                                    forward.statusAtForward === 'completed' ? 'text-green-600' : 
-                                    forward.statusAtForward === 'not-done' ? 'text-red-600' : 
-                                    'text-yellow-600'
-                                  }>
-                                    {forward.statusAtForward === 'completed' ? 'Feito' : 
-                                     forward.statusAtForward === 'not-done' ? 'Não feito' : 
-                                     'Pendente'}
-                                  </span>)
-                                </span>
-                              )}
-                              {forward.forwardedTo && (
-                                <div className="text-xs">
-                                  Para: {people.find(p => p.id === forward.forwardedTo)?.name || 'Equipe'}
+                  {/* Histórico de Conclusões e Repasses por Dia */}
+                  {(() => {
+                    // Agrupar por dia e mostrar apenas o último de cada tipo por dia
+                    const historyByDay: Record<string, { completion?: any, forward?: any }> = {};
+                    
+                    // Processar conclusões
+                    task.completionHistory?.forEach(completion => {
+                      const day = format(new Date(completion.completedAt), "yyyy-MM-dd");
+                      if (!historyByDay[day]) historyByDay[day] = {};
+                      historyByDay[day].completion = completion;
+                    });
+                    
+                    // Processar repasses
+                    task.forwardHistory?.forEach(forward => {
+                      const day = format(new Date(forward.forwardedAt), "yyyy-MM-dd");
+                      if (!historyByDay[day]) historyByDay[day] = {};
+                      historyByDay[day].forward = forward;
+                    });
+                    
+                    const sortedDays = Object.keys(historyByDay).sort().reverse();
+                    
+                    if (sortedDays.length === 0) return null;
+                    
+                    return (
+                      <div>
+                        <h5 className="font-medium text-sm mb-2">Histórico de Ações:</h5>
+                        <div className="space-y-2">
+                          {sortedDays.map(day => {
+                            const dayData = historyByDay[day];
+                            return (
+                              <div key={day} className="border-l-2 border-gray-200 pl-3 py-2">
+                                <div className="text-xs font-medium text-muted-foreground mb-1">
+                                  {format(new Date(day), "dd/MM/yyyy", { locale: ptBR })}
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                                
+                                {dayData.completion && (
+                                  <div className="text-xs mb-1">
+                                    <span className={dayData.completion.status === 'completed' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                                      {dayData.completion.status === 'completed' ? '✓ Feito' : '✗ Não feito'}
+                                    </span>
+                                    <span className="text-muted-foreground ml-2">
+                                      às {format(new Date(dayData.completion.completedAt), "HH:mm", { locale: ptBR })}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {dayData.forward && (
+                                  <div className="text-xs">
+                                    <span className="text-yellow-600 font-medium">↗ Repassada</span>
+                                    <span className="text-muted-foreground ml-2">
+                                      às {format(new Date(dayData.forward.forwardedAt), "HH:mm", { locale: ptBR })}
+                                    </span>
+                                    <div className="ml-2 text-xs text-muted-foreground mt-1">
+                                      De: {dayData.forward.originalDate} para: {dayData.forward.newDate}
+                                      {dayData.forward.forwardedTo && (
+                                        <div className="text-xs">
+                                          Para: {people.find(p => p.id === dayData.forward.forwardedTo)?.name || 'Equipe'}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
+
                 </div>
               </DialogContent>
             </Dialog>
@@ -236,15 +255,12 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             <Button
               size="sm"
               onClick={() => onStatusChange?.('completed')}
-              disabled={!canMarkDone}
-              variant={lastCompletion?.status === 'completed' ? "default" : "outline"}
+              variant={lastTodayCompletion?.status === 'completed' ? "default" : "outline"}
               className={cn(
                 "h-7 px-2 text-xs",
-                lastCompletion?.status === 'completed' 
+                lastTodayCompletion?.status === 'completed' 
                   ? "bg-green-600 hover:bg-green-700 text-white border-green-600" 
-                  : canMarkDone 
-                    ? "border-green-500 text-green-700 hover:bg-green-50" 
-                    : "opacity-50"
+                  : "border-green-300 text-green-600 hover:bg-green-50"
               )}
             >
               <CheckCircle className="h-3 w-3 mr-1" />
@@ -254,15 +270,12 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             <Button
               size="sm"
               onClick={() => onStatusChange?.('not-done')}
-              disabled={!canMarkNotDone}
-              variant={lastCompletion?.status === 'not-done' ? "default" : "outline"}
+              variant={lastTodayCompletion?.status === 'not-done' ? "default" : "outline"}
               className={cn(
                 "h-7 px-2 text-xs",
-                lastCompletion?.status === 'not-done' 
+                lastTodayCompletion?.status === 'not-done' 
                   ? "bg-red-600 hover:bg-red-700 text-white border-red-600" 
-                  : canMarkNotDone 
-                    ? "border-red-500 text-red-700 hover:bg-red-50" 
-                    : "opacity-50"
+                  : "border-red-300 text-red-600 hover:bg-red-50"
               )}
             >
               <X className="h-3 w-3 mr-1" />
@@ -274,8 +287,13 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             <Button
               size="sm"
               onClick={() => openForwardTaskModal(task)}
-              variant="outline"
-              className="h-7 px-2 text-xs border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+              variant={hasForwardedToday ? "default" : "outline"}
+              className={cn(
+                "h-7 px-2 text-xs",
+                hasForwardedToday 
+                  ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600" 
+                  : "border-yellow-300 text-yellow-600 hover:bg-yellow-50"
+              )}
             >
               <ArrowRight className="h-3 w-3 mr-1" />
               Repassar
@@ -285,7 +303,7 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
               size="sm" 
               variant="outline" 
               onClick={() => openTaskModal(task)} 
-              className="h-7 px-2 text-xs"
+              className="h-7 px-2 text-xs border-gray-300 text-gray-600 hover:bg-gray-50"
             >
               <Edit className="h-3 w-3" />
             </Button>
