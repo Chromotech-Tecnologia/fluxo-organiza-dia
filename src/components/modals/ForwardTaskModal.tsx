@@ -17,7 +17,7 @@ export function ForwardTaskModal() {
   const { updateTask, addTask } = useTasks();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTeamMember, setSelectedTeamMember] = useState<string>("");
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>("none");
 
   const handleForward = () => {
     if (!taskToForward || !selectedDate) return;
@@ -50,17 +50,17 @@ export function ForwardTaskModal() {
         id: crypto.randomUUID(),
         status: 'pending' as const,
         scheduledDate: selectedDate.toISOString().split('T')[0],
-        assignedPersonId: selectedTeamMember || taskToForward.assignedPersonId,
+        assignedPersonId: selectedTeamMember && selectedTeamMember !== "none" ? selectedTeamMember : taskToForward.assignedPersonId,
         forwardCount: taskToForward.forwardCount + 1,
         forwardHistory: [
           ...taskToForward.forwardHistory,
           {
             forwardedAt: new Date().toISOString(),
-            forwardedTo: selectedTeamMember || null,
+            forwardedTo: selectedTeamMember && selectedTeamMember !== "none" ? selectedTeamMember : null,
             newDate: selectedDate.toISOString().split('T')[0],
             originalDate: taskToForward.scheduledDate,
             statusAtForward: taskToForward.status,
-            reason: selectedTeamMember ? 'Repassada para equipe' : 'Reagendada'
+            reason: selectedTeamMember && selectedTeamMember !== "none" ? 'Repassada para equipe' : 'Reagendada'
           }
         ],
         completionHistory: [], // Nova tarefa começa sem histórico de conclusão
@@ -78,7 +78,7 @@ export function ForwardTaskModal() {
 
       closeForwardTaskModal();
       setSelectedDate(undefined);
-      setSelectedTeamMember("");
+      setSelectedTeamMember("none");
     } catch (error) {
       console.error('Erro ao repassar tarefa:', error);
       toast({
@@ -135,7 +135,7 @@ export function ForwardTaskModal() {
                 <SelectValue placeholder="Selecionar membro da equipe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Apenas reagendar</SelectItem>
+                <SelectItem value="none">Apenas reagendar</SelectItem>
                 {teamMembers.filter(member => member.status === 'ativo').map((member) => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.name} - {member.role}
