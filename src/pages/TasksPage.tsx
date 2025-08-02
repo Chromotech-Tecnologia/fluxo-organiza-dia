@@ -8,14 +8,21 @@ import { Plus, Search, Filter, Calendar } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useTasks } from "@/hooks/useTasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
-import { Task } from "@/types";
+import { Task, TaskFilter } from "@/types";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
+  const [taskFilters, setTaskFilters] = useState<TaskFilter>({
+    dateRange: {
+      start: new Date().toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0]
+    }
+  });
   const { openTaskModal } = useModalStore();
-  const { tasks, updateTask } = useTasks();
+  const { tasks, updateTask } = useTasks(taskFilters);
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,35 +89,26 @@ const TasksPage = () => {
         </Button>
       </div>
 
-      {/* Filtros e Busca */}
+      {/* Busca */}
       <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Buscar tarefas..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Button variant="outline" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filtros
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Calendar className="h-4 w-4" />
-              Data
-            </Button>
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Buscar tarefas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </CardContent>
       </Card>
+
+      {/* Filtros */}
+      <TaskFilters 
+        currentFilters={taskFilters}
+        onFiltersChange={setTaskFilters}
+      />
 
       {/* Lista de Tarefas */}
       <div className="grid gap-4">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, X, ArrowRight, Trash2 } from "lucide-react";
+import { CheckCircle, X, ArrowRight, Trash2, Users } from "lucide-react";
 import { Task } from "@/types";
 import { useTasks } from "@/hooks/useTasks";
 import { useModalStore } from "@/stores/useModalStore";
@@ -123,6 +123,36 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
         >
           <ArrowRight className="h-4 w-4" />
           Repassar
+        </Button>
+        
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            toast({
+              title: "Em desenvolvimento",
+              description: "Funcionalidade de deletar em massa em desenvolvimento"
+            });
+          }}
+          className="gap-1 border-red-500 text-red-700 hover:bg-red-50"
+        >
+          <Trash2 className="h-4 w-4" />
+          Deletar
+        </Button>
+        
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            toast({
+              title: "Em desenvolvimento",
+              description: "Funcionalidade de delegar em massa em desenvolvimento"
+            });
+          }}
+          className="gap-1 border-purple-500 text-purple-700 hover:bg-purple-50"
+        >
+          <Users className="h-4 w-4" />
+          Delegar
         </Button>
       </div>
 

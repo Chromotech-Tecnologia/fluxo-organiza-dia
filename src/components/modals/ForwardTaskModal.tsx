@@ -23,24 +23,18 @@ export function ForwardTaskModal() {
     if (!taskToForward || !selectedDate) return;
 
     try {
-      // Marcar a conclusão atual da tarefa se ainda não foi feito
-      let updatedCompletionHistory = [...(taskToForward.completionHistory || [])];
-      
-      if (taskToForward.status === 'pending') {
-        // Se a tarefa ainda está pendente, não adicionar um registro de conclusão
-        // O histórico será mantido como está
-      } else if (taskToForward.status === 'completed' || taskToForward.status === 'not-done') {
-        // Se já foi concluída, marcar que foi repassada
-        updatedCompletionHistory = updatedCompletionHistory.map((record, index) => 
-          index === updatedCompletionHistory.length - 1 
-            ? { ...record, wasForwarded: true }
-            : record
-        );
-      }
+      const forwardRecord = {
+        forwardedAt: new Date().toISOString(),
+        forwardedTo: selectedTeamMember && selectedTeamMember !== "none" ? selectedTeamMember : null,
+        newDate: selectedDate.toISOString().split('T')[0],
+        originalDate: taskToForward.scheduledDate,
+        statusAtForward: taskToForward.status,
+        reason: selectedTeamMember && selectedTeamMember !== "none" ? 'Repassada para equipe' : 'Reagendada'
+      };
 
-      // Atualizar a tarefa original para marcar que foi repassada
+      // Atualizar a tarefa original com histórico de repasse
       updateTask(taskToForward.id, {
-        completionHistory: updatedCompletionHistory,
+        forwardHistory: [...(taskToForward.forwardHistory || []), forwardRecord],
         updatedAt: new Date().toISOString()
       });
 
@@ -53,14 +47,13 @@ export function ForwardTaskModal() {
         assignedPersonId: selectedTeamMember && selectedTeamMember !== "none" ? selectedTeamMember : taskToForward.assignedPersonId,
         forwardCount: taskToForward.forwardCount + 1,
         forwardHistory: [
-          ...taskToForward.forwardHistory,
           {
             forwardedAt: new Date().toISOString(),
-            forwardedTo: selectedTeamMember && selectedTeamMember !== "none" ? selectedTeamMember : null,
+            forwardedTo: null,
             newDate: selectedDate.toISOString().split('T')[0],
             originalDate: taskToForward.scheduledDate,
-            statusAtForward: taskToForward.status,
-            reason: selectedTeamMember && selectedTeamMember !== "none" ? 'Repassada para equipe' : 'Reagendada'
+            statusAtForward: 'pending' as const,
+            reason: `Recebido repasse de ${format(new Date(taskToForward.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`
           }
         ],
         completionHistory: [], // Nova tarefa começa sem histórico de conclusão

@@ -236,6 +236,11 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
               <span>{assignedPerson.name}</span>
             </div>
           )}
+          {task.type === 'delegated-task' && assignedPerson && (
+            <div className="text-xs text-muted-foreground">
+              Delegada para: {assignedPerson.name}
+            </div>
+          )}
         </div>
 
         {/* Progresso dos Subitens */}

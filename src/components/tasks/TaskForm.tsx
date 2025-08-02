@@ -84,7 +84,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const typeOptions = [
     { value: "meeting", label: "Reunião" },
     { value: "own-task", label: "Tarefa Própria" },
-    { value: "delegated-task", label: "Tarefa Repassada" },
+    { value: "delegated-task", label: "Tarefa Delegada" },
   ];
 
   const priorityOptions = [
