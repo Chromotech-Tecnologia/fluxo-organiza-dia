@@ -35,9 +35,10 @@ export function useTasks(filters?: TaskFilter) {
     return tasks.filter(task => {
       // Filtro por data
       if (filters.dateRange) {
-        const taskDate = new Date(task.scheduledDate);
-        const startDate = new Date(filters.dateRange.start);
-        const endDate = new Date(filters.dateRange.end);
+        const taskDate = task.scheduledDate;
+        const startDate = filters.dateRange.start;
+        const endDate = filters.dateRange.end;
+        
         if (taskDate < startDate || taskDate > endDate) {
           return false;
         }
@@ -180,7 +181,7 @@ export function useTasks(filters?: TaskFilter) {
 
   useEffect(() => {
     loadTasks();
-  }, [filters]);
+  }, [JSON.stringify(filters)]);
 
   return {
     tasks,

@@ -22,7 +22,7 @@ const TasksPage = () => {
     }
   });
   const { openTaskModal } = useModalStore();
-  const { tasks, updateTask } = useTasks(taskFilters);
+  const { tasks, updateTask, refetch } = useTasks(taskFilters);
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

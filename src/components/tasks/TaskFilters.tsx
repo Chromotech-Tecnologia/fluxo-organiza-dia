@@ -18,7 +18,7 @@ export function TaskFilters({ onFiltersChange, currentFilters }: TaskFiltersProp
   const [tempFilters, setTempFilters] = useState<TaskFilter>(currentFilters);
 
   const applyFilters = () => {
-    onFiltersChange(tempFilters);
+    onFiltersChange({ ...tempFilters });
   };
 
   const clearFilters = () => {

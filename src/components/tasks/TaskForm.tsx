@@ -249,7 +249,13 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       <Calendar
                         mode="single"
                         selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
+                        onSelect={(date) => {
+                          if (date) {
+                            // Garantir que a data seja no timezone local
+                            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+                            field.onChange(localDate.toISOString().split('T')[0]);
+                          }
+                        }}
                         initialFocus
                         className="pointer-events-auto"
                       />

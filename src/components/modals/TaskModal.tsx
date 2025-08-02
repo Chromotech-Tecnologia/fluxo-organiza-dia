@@ -42,9 +42,9 @@ export function TaskModal() {
           description: "A nova tarefa foi criada com sucesso.",
         });
       }
-      // Forçar atualização da lista
-      setTimeout(() => refetch(), 100);
       closeTaskModal();
+      // Forçar atualização da lista
+      setTimeout(() => refetch(), 200);
     } catch (error) {
       toast({
         title: "Erro",
