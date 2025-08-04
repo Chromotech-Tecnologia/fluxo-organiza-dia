@@ -11,15 +11,15 @@ import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { Task, TaskFilter } from "@/types";
-import { dateToLocalString } from "@/lib/utils";
+import { calendarDateToString } from "@/lib/utils";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
   const [taskFilters, setTaskFilters] = useState<TaskFilter>({
     dateRange: {
-      start: dateToLocalString(new Date()),
-      end: dateToLocalString(new Date())
+      start: calendarDateToString(new Date()),
+      end: calendarDateToString(new Date())
     }
   });
   const { openTaskModal } = useModalStore();

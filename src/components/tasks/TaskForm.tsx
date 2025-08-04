@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn, dateToLocalString, stringToLocalDate } from "@/lib/utils";
+import { cn, calendarDateToString, stringToCalendarDate } from "@/lib/utils";
 import { Task, TaskType, TaskPriority, SubItem } from "@/types";
 import { usePeople } from "@/hooks/usePeople";
 
@@ -49,7 +49,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       type: task?.type || "own-task",
       priority: task?.priority || "simple",
       assignedPersonId: task?.assignedPersonId || "",
-      scheduledDate: task?.scheduledDate || new Date().toISOString().split('T')[0],
+      scheduledDate: task?.scheduledDate || calendarDateToString(new Date()),
       observations: task?.observations || "",
     },
   });
@@ -248,10 +248,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                     <PopoverContent className="w-auto p-0" align="start">
                        <Calendar
                         mode="single"
-                        selected={field.value ? stringToLocalDate(field.value) : undefined}
+                        selected={field.value ? stringToCalendarDate(field.value) : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            const localDateString = dateToLocalString(date);
+                            const localDateString = calendarDateToString(date);
                             field.onChange(localDateString);
                           }
                         }}
