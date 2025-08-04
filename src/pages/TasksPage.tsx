@@ -11,15 +11,20 @@ import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { Task, TaskFilter } from "@/types";
-import { calendarDateToString } from "@/lib/utils";
+// import { calendarDateToString } from "@/lib/utils";
+import { createLocalDate, calendarDateToString } from "@/lib/utils";
+
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
+  const today = new Date();
+  const safeToday = createLocalDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
   const [taskFilters, setTaskFilters] = useState<TaskFilter>({
     dateRange: {
-      start: calendarDateToString(new Date()),
-      end: calendarDateToString(new Date())
+      start: calendarDateToString(safeToday),
+      end: calendarDateToString(safeToday)
     }
   });
   const { openTaskModal } = useModalStore();
@@ -46,7 +51,7 @@ const TasksPage = () => {
       // Verificar se já tem uma baixa
       const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
       const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
-      
+
       // Não permitir múltiplas baixas do mesmo tipo
       if (hasCompletion && lastCompletion?.status === status) {
         return; // Já tem essa baixa
@@ -64,7 +69,7 @@ const TasksPage = () => {
         completionRecord
       ];
 
-      updateTask(taskId, { 
+      updateTask(taskId, {
         status,
         completionHistory: updatedCompletionHistory,
         updatedAt: new Date().toISOString()
@@ -106,7 +111,7 @@ const TasksPage = () => {
       </Card>
 
       {/* Filtros */}
-      <TaskFilters 
+      <TaskFilters
         currentFilters={taskFilters}
         onFiltersChange={setTaskFilters}
       />
@@ -122,7 +127,7 @@ const TasksPage = () => {
                   {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchQuery 
+                  {searchQuery
                     ? "Tente ajustar sua busca ou criar uma nova tarefa"
                     : "Comece criando sua primeira tarefa para organizar seu dia"
                   }
@@ -143,16 +148,16 @@ const TasksPage = () => {
                 className="mt-4"
               />
               <div className="flex-1">
-                <TaskCard 
-                  task={task} 
+                <TaskCard
+                  task={task}
                   onStatusChange={(status) => handleStatusChange(task.id, status)}
                 />
               </div>
             </div>
           ))
         )}
-        
-        <BulkActionsBar 
+
+        <BulkActionsBar
           selectedTasks={selectedTasks}
           onClearSelection={() => setSelectedTasks([])}
         />
