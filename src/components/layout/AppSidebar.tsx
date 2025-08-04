@@ -75,7 +75,7 @@ export function AppSidebar() {
           <CheckSquare className="h-6 w-6 text-sidebar-primary" />
           {!collapsed && (
             <span className="font-semibold text-sidebar-foreground">
-              Controle de Tarefasss
+              Controle de Tarefas
             </span>
           )}
         </div>
