@@ -246,12 +246,13 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
+                       <Calendar
                         mode="single"
                         selected={field.value ? stringToLocalDate(field.value) : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            field.onChange(dateToLocalString(date));
+                            const localDateString = dateToLocalString(date);
+                            field.onChange(localDateString);
                           }
                         }}
                         initialFocus
