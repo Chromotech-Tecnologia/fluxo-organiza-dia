@@ -10,6 +10,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { dateToLocalString } from "@/lib/utils";
 
 export function ForwardTaskModal() {
   const { isForwardTaskModalOpen, taskToForward, closeForwardTaskModal } = useModalStore();
@@ -26,7 +27,7 @@ export function ForwardTaskModal() {
       const forwardRecord = {
         forwardedAt: new Date().toISOString(),
         forwardedTo: selectedTeamMember && selectedTeamMember !== "none" ? selectedTeamMember : null,
-        newDate: selectedDate.toISOString().split('T')[0],
+        newDate: dateToLocalString(selectedDate),
         originalDate: taskToForward.scheduledDate,
         statusAtForward: taskToForward.status,
         reason: selectedTeamMember && selectedTeamMember !== "none" ? 'Repassada para equipe' : 'Reagendada'
@@ -43,14 +44,14 @@ export function ForwardTaskModal() {
         ...taskToForward,
         id: crypto.randomUUID(),
         status: 'pending' as const,
-        scheduledDate: selectedDate.toISOString().split('T')[0],
+        scheduledDate: dateToLocalString(selectedDate),
         assignedPersonId: selectedTeamMember && selectedTeamMember !== "none" ? selectedTeamMember : taskToForward.assignedPersonId,
         forwardCount: taskToForward.forwardCount + 1,
         forwardHistory: [
           {
             forwardedAt: new Date().toISOString(),
             forwardedTo: null,
-            newDate: selectedDate.toISOString().split('T')[0],
+            newDate: dateToLocalString(selectedDate),
             originalDate: taskToForward.scheduledDate,
             statusAtForward: 'pending' as const,
             reason: `Recebido repasse de ${format(new Date(taskToForward.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`

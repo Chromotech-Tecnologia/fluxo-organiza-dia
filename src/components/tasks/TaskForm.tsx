@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn, dateToLocalString, stringToLocalDate } from "@/lib/utils";
 import { Task, TaskType, TaskPriority, SubItem } from "@/types";
 import { usePeople } from "@/hooks/usePeople";
 
@@ -248,12 +248,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
+                        selected={field.value ? stringToLocalDate(field.value) : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            // Garantir que a data seja no timezone local
-                            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-                            field.onChange(localDate.toISOString().split('T')[0]);
+                            field.onChange(dateToLocalString(date));
                           }
                         }}
                         initialFocus
