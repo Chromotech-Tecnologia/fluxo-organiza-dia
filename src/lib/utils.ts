@@ -30,7 +30,7 @@ export function calendarDateToString(date: Date): string {
   // Usa getFullYear, getMonth, getDate que são timezone-safe
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
-  const day = date.getDate() +1;
+  const day = date.getDate() + 1;
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
