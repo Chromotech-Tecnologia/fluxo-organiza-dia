@@ -79,7 +79,7 @@ const TasksPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestão de Tarefas</h1>
+          <h1 className="text-3xl font-bold text-foreground">Gestão de Tarefass</h1>
           <p className="text-muted-foreground">
             Controle e organize suas tarefas diárias
           </p>
