@@ -23,6 +23,7 @@ import { useModalStore } from "@/stores/useModalStore";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { formatDateForDisplay } from "@/lib/utils";
 
 interface TaskCardProps {
   task: Task;
@@ -223,7 +224,7 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <Calendar className="h-3 w-3" />
-            <span>{format(new Date(task.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}</span>
+            <span>{formatDateForDisplay(task.scheduledDate)}</span>
           </div>
           {assignedPerson && (
             <div className="flex items-center gap-1">

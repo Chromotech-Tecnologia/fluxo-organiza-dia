@@ -16,7 +16,26 @@ export function getCurrentDateInSaoPaulo(): string {
     day: "2-digit",
   });
   
-  return formatter.format(now); // formato YYYY-MM-DD
+  const result = formatter.format(now);
+  console.log('getCurrentDateInSaoPaulo:', result);
+  return result; // formato YYYY-MM-DD
+}
+
+// Função para formatar data para exibição (DD/MM/YYYY) - SEGURA PARA TIMEZONE
+export function formatDateForDisplay(dateString: string): string {
+  const [year, month, day] = dateString.split('-');
+  const result = `${day}/${month}/${year}`;
+  console.log('formatDateForDisplay - Input:', dateString, 'Output:', result);
+  return result;
+}
+
+// Função para criar Date local sem conversão de timezone - NOVA
+export function createLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  // Criar Date local usando o timezone local, não UTC
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  console.log('createLocalDate - Input:', dateString, 'Output:', date);
+  return date;
 }
 
 // Função para converter Date do calendário para string YYYY-MM-DD - CORRIGIDA
