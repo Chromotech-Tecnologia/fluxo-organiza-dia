@@ -31,7 +31,8 @@ import { ptBR } from "date-fns/locale";
 import { useTasks } from "@/hooks/useTasks";
 import { useModalStore } from "@/stores/useModalStore";
 import { Task } from "@/types";
-import { formatDateToYMDInSaoPaulo } from "@/utils"; // ajuste o caminho se necessário
+import { formatDateToYMDInSaoPaulo } from "@/lib/utils";
+
 
 
 const CalendarPage = () => {
