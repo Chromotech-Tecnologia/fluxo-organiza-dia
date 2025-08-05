@@ -78,4 +78,17 @@ export function formatDateToYMDInSaoPaulo(date: Date): string {
   }).format(date); // Retorna "yyyy-MM-dd"
 }
 
+export function toSaoPauloDate(inputDate: string | Date): Date {
+  const date = typeof inputDate === "string" ? new Date(inputDate) : inputDate;
+
+  const formatted = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+
+  return new Date(formatted); // YYYY-MM-DD string parsed as Date
+}
+
 

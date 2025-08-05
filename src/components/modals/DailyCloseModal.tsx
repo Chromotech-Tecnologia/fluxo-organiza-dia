@@ -13,7 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { Check, X, RotateCcw, Users, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-// import { toSaoPauloDate } from "@/lib/utils";
+import { toSaoPauloDate } from "@/lib/utils";
 import { formatDateToYMDInSaoPaulo } from "@/lib/utils";
 
 
