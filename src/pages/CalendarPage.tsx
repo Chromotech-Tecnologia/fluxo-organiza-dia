@@ -34,8 +34,6 @@ import { Task } from "@/types";
 import { formatDateToYMDInSaoPaulo } from "@/lib/utils";
 import { getDayFromDateString } from "@/lib/utils";
 
-
-
 const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
@@ -54,20 +52,19 @@ const CalendarPage = () => {
     const dateString = formatDateToYMDInSaoPaulo(date);
 
     return tasks.filter(task => {
-      // const taskDate = formatDateToYMDInSaoPaulo(new Date(task.scheduledDate));
-      const taskDate = getDayFromDateString(task.scheduledDate);
-     
+      // Corrigido: usar getDayFromDateString para ambas as datas para comparação consistente
+      const taskDateString = getDayFromDateString(task.scheduledDate);
+      const isScheduled = taskDateString === dateString;
 
-      const isScheduled = taskDate === dateString;
-
-      const isInDeliveries = task.deliveryDates?.some(deliveryDate =>
-        formatDateToYMDInSaoPaulo(new Date(deliveryDate)) === dateString
-      );
+      // Para deliveryDates, também aplicar o mesmo tratamento
+      const isInDeliveries = task.deliveryDates?.some(deliveryDate => {
+        const deliveryDateString = getDayFromDateString(deliveryDate);
+        return deliveryDateString === dateString;
+      });
 
       return isScheduled || isInDeliveries;
     });
   };
-
 
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
