@@ -10,7 +10,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
-import { calendarDateToString } from "@/lib/utils";
+import { calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 export function ForwardTaskModal() {
   const { isForwardTaskModalOpen, taskToForward, closeForwardTaskModal } = useModalStore();
@@ -118,7 +118,11 @@ export function ForwardTaskModal() {
               selected={selectedDate}
               onSelect={setSelectedDate}
               className="rounded-md border mt-2 pointer-events-auto"
-              disabled={(date) => date < new Date()}
+              disabled={(date) => {
+                const dateStr = calendarDateToString(date);
+                const todayStr = getCurrentDateInSaoPaulo();
+                return dateStr < todayStr;
+              }}
             />
           </div>
 

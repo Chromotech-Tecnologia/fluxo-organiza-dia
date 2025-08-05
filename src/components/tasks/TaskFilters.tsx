@@ -7,7 +7,7 @@ import { Calendar, Filter, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePeople } from "@/hooks/usePeople";
 import { TaskFilter, TaskStatus, TaskType } from "@/types";
-import { calendarDateToString } from "@/lib/utils";
+import { calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 interface TaskFiltersProps {
   onFiltersChange: (filters: TaskFilter) => void;
@@ -39,7 +39,7 @@ export function TaskFilters({ onFiltersChange, currentFilters }: TaskFiltersProp
   };
 
   const getTodayDate = () => {
-    return calendarDateToString(new Date());
+    return getCurrentDateInSaoPaulo();
   };
   
   const getYesterdayDate = () => {

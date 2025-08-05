@@ -39,17 +39,12 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
   const totalSubItems = task.subItems.length;
   const progressPercentage = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
 
-  // Verificar se já tem uma baixa de feito/não feito hoje
-  const today = format(new Date(), "yyyy-MM-dd");
-  const todayCompletions = task.completionHistory?.filter(completion => 
-    format(new Date(completion.completedAt), "yyyy-MM-dd") === today
-  ) || [];
-  const lastTodayCompletion = todayCompletions.length > 0 ? todayCompletions[todayCompletions.length - 1] : null;
+  // Buscar o último status registrado
+  const lastCompletion = task.completionHistory && task.completionHistory.length > 0 
+    ? task.completionHistory[task.completionHistory.length - 1] 
+    : null;
   
-  const todayForwards = task.forwardHistory?.filter(forward => 
-    format(new Date(forward.forwardedAt), "yyyy-MM-dd") === today
-  ) || [];
-  const hasForwardedToday = todayForwards.length > 0;
+  const hasBeenForwarded = task.forwardHistory && task.forwardHistory.length > 0;
 
   const typeColors = {
     'meeting': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -260,10 +255,10 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             <Button
               size="sm"
               onClick={() => onStatusChange?.('completed')}
-              variant={lastTodayCompletion?.status === 'completed' ? "default" : "outline"}
+              variant={task.status === 'completed' || lastCompletion?.status === 'completed' ? "default" : "outline"}
               className={cn(
                 "h-7 px-2 text-xs",
-                lastTodayCompletion?.status === 'completed' 
+                (task.status === 'completed' || lastCompletion?.status === 'completed') 
                   ? "bg-green-600 hover:bg-green-700 text-white border-green-600" 
                   : "border-green-300 text-green-600 hover:bg-green-50"
               )}
@@ -275,10 +270,10 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             <Button
               size="sm"
               onClick={() => onStatusChange?.('not-done')}
-              variant={lastTodayCompletion?.status === 'not-done' ? "default" : "outline"}
+              variant={task.status === 'not-done' || lastCompletion?.status === 'not-done' ? "default" : "outline"}
               className={cn(
                 "h-7 px-2 text-xs",
-                lastTodayCompletion?.status === 'not-done' 
+                (task.status === 'not-done' || lastCompletion?.status === 'not-done')
                   ? "bg-red-600 hover:bg-red-700 text-white border-red-600" 
                   : "border-red-300 text-red-600 hover:bg-red-50"
               )}
@@ -292,10 +287,10 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             <Button
               size="sm"
               onClick={() => openForwardTaskModal(task)}
-              variant={hasForwardedToday ? "default" : "outline"}
+              variant={hasBeenForwarded ? "default" : "outline"}
               className={cn(
                 "h-7 px-2 text-xs",
-                hasForwardedToday 
+                hasBeenForwarded 
                   ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600" 
                   : "border-yellow-300 text-yellow-600 hover:bg-yellow-50"
               )}

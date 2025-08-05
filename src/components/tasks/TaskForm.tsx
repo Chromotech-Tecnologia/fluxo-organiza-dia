@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn, calendarDateToString, stringToCalendarDate } from "@/lib/utils";
+import { cn, calendarDateToString, stringToCalendarDate, getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Task, TaskType, TaskPriority, SubItem } from "@/types";
 import { usePeople } from "@/hooks/usePeople";
 
@@ -49,7 +49,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       type: task?.type || "own-task",
       priority: task?.priority || "simple",
       assignedPersonId: task?.assignedPersonId || "",
-      scheduledDate: task?.scheduledDate || calendarDateToString(new Date()),
+      scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       observations: task?.observations || "",
     },
   });
