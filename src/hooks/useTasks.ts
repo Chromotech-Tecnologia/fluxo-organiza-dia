@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Task, TaskFilter, TaskStats } from '@/types';
 import { taskStorage } from '@/lib/storage';
 import { toast } from '@/hooks/use-toast';
+import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 
 export function useTasks(filters?: TaskFilter) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -39,9 +40,13 @@ export function useTasks(filters?: TaskFilter) {
         const startDate = filters.dateRange.start;
         const endDate = filters.dateRange.end;
         
+        console.log('Filtrando tarefa:', task.title, 'data tarefa:', taskDate, 'intervalo:', startDate, 'até', endDate);
+        
         if (taskDate < startDate || taskDate > endDate) {
           return false;
         }
+        
+        console.log('Tarefa encontrada no filtro:', task.title);
       }
 
       // Filtro por tipo
@@ -159,7 +164,7 @@ export function useTasks(filters?: TaskFilter) {
     const pendingTasks = allTasks.filter(t => t.status === 'pending').length;
     
     // Tarefas em atraso
-    const today = new Date().toISOString().split('T')[0];
+    const today = getCurrentDateInSaoPaulo();
     const overdueTasks = allTasks.filter(t => 
       t.status === 'pending' && t.scheduledDate < today
     ).length;

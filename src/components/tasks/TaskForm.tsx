@@ -236,8 +236,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          {field.value ? (
-                            format(new Date(field.value), "PPP", { locale: ptBR })
+                           {field.value ? (
+                            format(stringToCalendarDate(field.value), "dd/MM/yyyy")
                           ) : (
                             <span>Selecione uma data</span>
                           )}
@@ -246,17 +246,22 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                       <Calendar
+                        <Calendar
                         mode="single"
                         selected={field.value ? stringToCalendarDate(field.value) : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            const localDateString = calendarDateToString(date);
-                            field.onChange(localDateString);
+                            const dateString = calendarDateToString(date);
+                            console.log('Data selecionada no TaskForm:', date, 'String final:', dateString);
+                            field.onChange(dateString);
                           }
                         }}
+                        disabled={(date) => {
+                          const dateString = calendarDateToString(date);
+                          const today = getCurrentDateInSaoPaulo();
+                          return dateString < today;
+                        }}
                         initialFocus
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>

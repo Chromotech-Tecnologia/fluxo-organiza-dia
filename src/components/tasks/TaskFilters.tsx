@@ -7,7 +7,7 @@ import { Calendar, Filter, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePeople } from "@/hooks/usePeople";
 import { TaskFilter, TaskStatus, TaskType } from "@/types";
-import { calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
+import { getCurrentDateInSaoPaulo, getYesterdayInSaoPaulo, getTomorrowInSaoPaulo } from "@/lib/utils";
 
 interface TaskFiltersProps {
   onFiltersChange: (filters: TaskFilter) => void;
@@ -38,35 +38,22 @@ export function TaskFilters({ onFiltersChange, currentFilters }: TaskFiltersProp
     return count;
   };
 
-  const getTodayDate = () => {
-    return getCurrentDateInSaoPaulo();
-  };
-  
-  const getYesterdayDate = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return calendarDateToString(yesterday);
-  };
-  
-  const getTomorrowDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return calendarDateToString(tomorrow);
-  };
-
   const setDateFilter = (type: 'today' | 'yesterday' | 'tomorrow') => {
     let dateRange;
     switch (type) {
       case 'today':
-        const today = getTodayDate();
+        const today = getCurrentDateInSaoPaulo();
+        console.log('Filtro Hoje aplicado:', today);
         dateRange = { start: today, end: today };
         break;
       case 'yesterday':
-        const yesterday = getYesterdayDate();
+        const yesterday = getYesterdayInSaoPaulo();
+        console.log('Filtro Ontem aplicado:', yesterday);
         dateRange = { start: yesterday, end: yesterday };
         break;
       case 'tomorrow':
-        const tomorrow = getTomorrowDate();
+        const tomorrow = getTomorrowInSaoPaulo();
+        console.log('Filtro Amanhã aplicado:', tomorrow);
         dateRange = { start: tomorrow, end: tomorrow };
         break;
     }
@@ -91,21 +78,21 @@ export function TaskFilters({ onFiltersChange, currentFilters }: TaskFiltersProp
             <div className="flex gap-2 flex-wrap">
               <Button
                 size="sm"
-                variant={tempFilters.dateRange?.start === getTodayDate() ? "default" : "outline"}
+                variant={tempFilters.dateRange?.start === getCurrentDateInSaoPaulo() ? "default" : "outline"}
                 onClick={() => setDateFilter('today')}
               >
                 Hoje
               </Button>
               <Button
                 size="sm"
-                variant={tempFilters.dateRange?.start === getYesterdayDate() ? "default" : "outline"}
+                variant={tempFilters.dateRange?.start === getYesterdayInSaoPaulo() ? "default" : "outline"}
                 onClick={() => setDateFilter('yesterday')}
               >
                 Ontem
               </Button>
               <Button
                 size="sm"
-                variant={tempFilters.dateRange?.start === getTomorrowDate() ? "default" : "outline"}
+                variant={tempFilters.dateRange?.start === getTomorrowInSaoPaulo() ? "default" : "outline"}
                 onClick={() => setDateFilter('tomorrow')}
               >
                 Amanhã

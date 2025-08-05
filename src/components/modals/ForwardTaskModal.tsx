@@ -116,12 +116,17 @@ export function ForwardTaskModal() {
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={setSelectedDate}
+              onSelect={(date) => {
+                if (date) {
+                  console.log('Data selecionada para reagendamento:', date, 'String:', calendarDateToString(date));
+                  setSelectedDate(date);
+                }
+              }}
               className="rounded-md border mt-2 pointer-events-auto"
               disabled={(date) => {
-                const dateStr = calendarDateToString(date);
-                const todayStr = getCurrentDateInSaoPaulo();
-                return dateStr < todayStr;
+                const dateString = calendarDateToString(date);
+                const today = getCurrentDateInSaoPaulo();
+                return dateString < today;
               }}
             />
           </div>
