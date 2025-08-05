@@ -2,23 +2,23 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Calendar, 
-  Grid, 
-  List, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Grid,
+  List,
   Plus,
   Clock,
   CheckCircle,
   AlertTriangle
 } from "lucide-react";
-import { 
-  format, 
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
-  isSameMonth, 
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
   isToday,
   startOfWeek,
   endOfWeek,
@@ -31,6 +31,8 @@ import { ptBR } from "date-fns/locale";
 import { useTasks } from "@/hooks/useTasks";
 import { useModalStore } from "@/stores/useModalStore";
 import { Task } from "@/types";
+import { formatDateToYMDInSaoPaulo } from "@/utils"; // ajuste o caminho se necessário
+
 
 const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -47,19 +49,25 @@ const CalendarPage = () => {
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const getTasksForDate = (date: Date): Task[] => {
-    const dateString = format(date, 'yyyy-MM-dd');
+    const dateString = formatDateToYMDInSaoPaulo(date);
+
     return tasks.filter(task => {
-      const taskDate = format(new Date(task.scheduledDate), 'yyyy-MM-dd');
-      return taskDate === dateString || 
-             task.deliveryDates.some(deliveryDate => 
-               format(new Date(deliveryDate), 'yyyy-MM-dd') === dateString
-             );
+      const taskDate = formatDateToYMDInSaoPaulo(new Date(task.scheduledDate));
+
+      const isScheduled = taskDate === dateString;
+
+      const isInDeliveries = task.deliveryDates?.some(deliveryDate =>
+        formatDateToYMDInSaoPaulo(new Date(deliveryDate)) === dateString
+      );
+
+      return isScheduled || isInDeliveries;
     });
   };
 
+
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
-    
+
     if (viewMode === 'month') {
       newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
     } else if (viewMode === 'week') {
@@ -67,7 +75,7 @@ const CalendarPage = () => {
     } else { // day
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
     }
-    
+
     setCurrentDate(newDate);
   };
 
@@ -99,7 +107,7 @@ const CalendarPage = () => {
     };
 
     return (
-      <div 
+      <div
         className={`text-xs p-1 rounded text-white truncate cursor-pointer hover:opacity-80 flex items-center gap-1 ${getPriorityColor(task.priority)}`}
         onClick={() => openTaskModal(task)}
         title={task.title}
@@ -121,22 +129,22 @@ const CalendarPage = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant={viewMode === 'day' ? 'default' : 'outline'} 
+          <Button
+            variant={viewMode === 'day' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('day')}
           >
             Dia
           </Button>
-          <Button 
-            variant={viewMode === 'week' ? 'default' : 'outline'} 
+          <Button
+            variant={viewMode === 'week' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('week')}
           >
             Semana
           </Button>
-          <Button 
-            variant={viewMode === 'month' ? 'default' : 'outline'} 
+          <Button
+            variant={viewMode === 'month' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('month')}
           >
@@ -161,15 +169,15 @@ const CalendarPage = () => {
               </Button>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => setCurrentDate(new Date())}
               >
                 Hoje
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => openTaskModal()}
                 className="gap-2"
@@ -193,7 +201,7 @@ const CalendarPage = () => {
                   {day}
                 </div>
               ))}
-              
+
               {/* Dias do mês */}
               {monthDays.map((day) => (
                 <div
@@ -237,7 +245,7 @@ const CalendarPage = () => {
                   </div>
                 ))}
               </div>
-              
+
               {/* Grade de horários */}
               <div className="grid grid-cols-8 gap-1 text-sm">
                 {/* Coluna de horários */}
@@ -248,7 +256,7 @@ const CalendarPage = () => {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Colunas dos dias */}
                 {weekDays.map((day) => (
                   <div key={day.toISOString()} className="space-y-2">
@@ -271,7 +279,7 @@ const CalendarPage = () => {
                   {getTasksForDate(currentDate).length} tarefa(s)
                 </Badge>
               </div>
-              
+
               <div className="space-y-3">
                 {getTasksForDate(currentDate).length === 0 ? (
                   <div className="text-center py-12">
@@ -301,14 +309,14 @@ const CalendarPage = () => {
                           <div className="flex gap-2">
                             <Badge variant={
                               task.priority === 'urgent' ? 'destructive' :
-                              task.priority === 'complex' ? 'default' : 'secondary'
+                                task.priority === 'complex' ? 'default' : 'secondary'
                             }>
                               {task.priority === 'urgent' ? 'Urgente' :
-                               task.priority === 'complex' ? 'Complexa' : 'Simples'}
+                                task.priority === 'complex' ? 'Complexa' : 'Simples'}
                             </Badge>
                             <Badge variant="outline">
                               {task.type === 'meeting' ? 'Reunião' :
-                               task.type === 'own-task' ? 'Própria' : 'Repassada'}
+                                task.type === 'own-task' ? 'Própria' : 'Repassada'}
                             </Badge>
                           </div>
                         </div>

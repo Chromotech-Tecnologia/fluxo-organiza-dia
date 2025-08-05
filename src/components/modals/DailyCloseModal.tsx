@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { Check, X, RotateCcw, Users, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { toSaoPauloDate } from '@/utils/timeUtils';
 
 export function DailyCloseModal() {
   const { isDailyCloseModalOpen, selectedCloseDate, closeDailyCloseModal } = useModalStore();
@@ -24,7 +25,7 @@ export function DailyCloseModal() {
   const closeDateString = format(closeDate, 'yyyy-MM-dd');
   const todayTasks = tasks.filter(task => 
     task.deliveryDates.some(date => format(new Date(date), 'yyyy-MM-dd') === closeDateString) ||
-    format(new Date(task.scheduledDate), 'yyyy-MM-dd') === closeDateString
+    format(toSaoPauloDate(task.scheduledDate), 'yyyy-MM-dd') === closeDateString
   );
 
   const completedTasks = todayTasks.filter(task => task.status === 'completed');

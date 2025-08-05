@@ -12,6 +12,7 @@ import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
+import { getCurrentDateInSaoPauloISO } from '@/utils/timeUtils';
 
 console.log("Data atual SP (start):", getCurrentDateInSaoPaulo());
 console.log("Data atual SP (end):", getCurrentDateInSaoPaulo());
@@ -57,7 +58,7 @@ const TasksPage = () => {
       }
 
       const completionRecord = {
-        completedAt: new Date().toISOString(),
+        completedAt: getCurrentDateInSaoPauloISO(),
         status: status as 'completed' | 'not-done',
         date: task.scheduledDate,
         wasForwarded: false

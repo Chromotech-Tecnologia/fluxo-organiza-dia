@@ -69,3 +69,13 @@ export function getTomorrowInSaoPaulo(): string {
   }).format(now);
 }
 
+export function formatDateToYMDInSaoPaulo(date: Date): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date); // Retorna "yyyy-MM-dd"
+}
+
+
