@@ -6,15 +6,21 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Função para obter data atual no timezone de São Paulo
+// export function getCurrentDateInSaoPaulo(): string {
+//   const now = new Date();
+//   const saoPauloTime = new Intl.DateTimeFormat("sv-SE", {
+//     timeZone: "America/Sao_Paulo",
+//     year: "numeric",
+//     month: "2-digit",
+//     day: "2-digit",
+//   }).format(now);
+//   return saoPauloTime; // formato YYYY-MM-DD
+// }
+
 export function getCurrentDateInSaoPaulo(): string {
   const now = new Date();
-  const saoPauloTime = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-  return saoPauloTime; // formato YYYY-MM-DD
+  const saoPauloDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  return saoPauloDate.toISOString().split("T")[0]; // retorna "yyyy-mm-dd"
 }
 
 
@@ -90,5 +96,9 @@ export function toSaoPauloDate(inputDate: string | Date): Date {
 
   return new Date(formatted); // YYYY-MM-DD string parsed as Date
 }
+// lib/utils.ts
+
+
+
 
 

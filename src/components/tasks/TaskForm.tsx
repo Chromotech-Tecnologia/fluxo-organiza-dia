@@ -18,6 +18,7 @@ import { cn, calendarDateToString, stringToCalendarDate, getCurrentDateInSaoPaul
 import { Task, TaskType, TaskPriority, SubItem } from "@/types";
 import { usePeople } from "@/hooks/usePeople";
 
+
 const taskFormSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional(),
