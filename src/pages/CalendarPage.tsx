@@ -32,6 +32,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { useModalStore } from "@/stores/useModalStore";
 import { Task } from "@/types";
 import { formatDateToYMDInSaoPaulo } from "@/lib/utils";
+import { getDayFromDateString } from "@/lib/utils";
 
 
 
@@ -53,7 +54,9 @@ const CalendarPage = () => {
     const dateString = formatDateToYMDInSaoPaulo(date);
 
     return tasks.filter(task => {
-      const taskDate = formatDateToYMDInSaoPaulo(new Date(task.scheduledDate));
+      // const taskDate = formatDateToYMDInSaoPaulo(new Date(task.scheduledDate));
+      const taskDate = getDayFromDateString(task.scheduledDate);
+     
 
       const isScheduled = taskDate === dateString;
 
