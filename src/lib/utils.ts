@@ -5,39 +5,42 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Função para obter data atual no timezone de São Paulo
-// export function getCurrentDateInSaoPaulo(): string {
-//   const now = new Date();
-//   const saoPauloTime = new Intl.DateTimeFormat("sv-SE", {
-//     timeZone: "America/Sao_Paulo",
-//     year: "numeric",
-//     month: "2-digit",
-//     day: "2-digit",
-//   }).format(now);
-//   return saoPauloTime; // formato YYYY-MM-DD
-// }
-
+// Função para obter data atual no timezone de São Paulo - CORRIGIDA
 export function getCurrentDateInSaoPaulo(): string {
   const now = new Date();
-  const saoPauloDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-  return saoPauloDate.toISOString().split("T")[0]; // retorna "yyyy-mm-dd"
+  // Usar Intl.DateTimeFormat que é mais confiável para timezone
+  const formatter = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  
+  return formatter.format(now); // formato YYYY-MM-DD
 }
 
-
-// Função para converter Date do calendário para string YYYY-MM-DD
+// Função para converter Date do calendário para string YYYY-MM-DD - CORRIGIDA
 export function calendarDateToString(date: Date): string {
   // Garantir que a data seja interpretada como local sem conversão de timezone
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
+  
+  console.log('calendarDateToString - Input:', date, 'Output:', `${year}-${month}-${day}`);
   return `${year}-${month}-${day}`;
 }
 
-// Função para converter string YYYY-MM-DD para Date do calendário
+// Função para converter string YYYY-MM-DD para Date do calendário - CORRIGIDA
 export function stringToCalendarDate(dateString: string): Date {
+  console.log('stringToCalendarDate - Input:', dateString);
+  
   const [year, month, day] = dateString.split('-').map(Number);
   // Criar Date object local sem conversão de timezone
-  return new Date(year, month - 1, day);
+  // Usar meio-dia para evitar problemas de DST
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  
+  console.log('stringToCalendarDate - Output:', date);
+  return date;
 }
 
 // Função para verificar se uma data é futura
@@ -51,42 +54,57 @@ export function isSameDate(date1: string, date2: string): boolean {
   return date1 === date2;
 }
 
-// Função para obter data de ontem
+// Função para obter data de ontem - CORRIGIDA
 export function getYesterdayInSaoPaulo(): string {
   const now = new Date();
-  now.setDate(now.getDate() - 1);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "America/Sao_Paulo",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(now);
+  }).format(yesterday);
 }
 
-// Função para obter data de amanhã
+// Função para obter data de amanhã - CORRIGIDA
 export function getTomorrowInSaoPaulo(): string {
   const now = new Date();
-  now.setDate(now.getDate() + 1);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "America/Sao_Paulo",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(now);
+  }).format(tomorrow);
 }
 
+// Função para formatar Date para YYYY-MM-DD no timezone de São Paulo
 export function formatDateToYMDInSaoPaulo(date: Date): string {
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "America/Sao_Paulo",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(date); // Retorna "yyyy-MM-dd"
+  }).format(date);
 }
 
+// Função para converter data para timezone de São Paulo - CORRIGIDA
 export function toSaoPauloDate(inputDate: string | Date): Date {
-  const date = typeof inputDate === "string" ? new Date(inputDate) : inputDate;
+  let date: Date;
+  
+  if (typeof inputDate === "string") {
+    // Se é uma string no formato YYYY-MM-DD, criar Date local
+    const [year, month, day] = inputDate.split('-').map(Number);
+    date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  } else {
+    date = inputDate;
+  }
 
+  // Retornar a data ajustada para São Paulo
   const formatted = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "America/Sao_Paulo",
     year: "numeric",
@@ -94,11 +112,6 @@ export function toSaoPauloDate(inputDate: string | Date): Date {
     day: "2-digit",
   }).format(date);
 
-  return new Date(formatted); // YYYY-MM-DD string parsed as Date
+  const [year, month, day] = formatted.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
 }
-// lib/utils.ts
-
-
-
-
-
