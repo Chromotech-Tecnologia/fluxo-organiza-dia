@@ -257,11 +257,12 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                             field.onChange(dateString);
                           }
                         }}
-                        disabled={(date) => {
-                          const dateString = calendarDateToString(date);
-                          const today = getCurrentDateInSaoPaulo();
-                          return dateString < today;
-                        }}
+                        // REMOVIDO: A restrição que impedia datas anteriores
+                        // disabled={(date) => {
+                        //   const dateString = calendarDateToString(date);
+                        //   const today = getCurrentDateInSaoPaulo();
+                        //   return dateString < today;
+                        // }}
                         initialFocus
                       />
                     </PopoverContent>
