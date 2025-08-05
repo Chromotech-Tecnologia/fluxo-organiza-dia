@@ -38,21 +38,6 @@ export function createLocalDate(dateString: string): Date {
   return date;
 }
 
-// Função para obter o dia do mês de uma data string - PARA CALENDÁRIO
-export function getDayFromDateString(dateString: string): number {
-  const [year, month, day] = dateString.split('-').map(Number);
-  console.log('getDayFromDateString - Input:', dateString, 'Day:', day);
-  return day;
-}
-
-// Função para verificar se uma data string corresponde a um dia específico - PARA CALENDÁRIO
-export function isDateStringOnDay(dateString: string, targetDay: number, targetMonth: number, targetYear: number): boolean {
-  const [year, month, day] = dateString.split('-').map(Number);
-  const matches = year === targetYear && month === (targetMonth + 1) && day === targetDay;
-  console.log('isDateStringOnDay - DateString:', dateString, 'Target:', `${targetYear}-${targetMonth + 1}-${targetDay}`, 'Matches:', matches);
-  return matches;
-}
-
 // Função para converter Date do calendário para string YYYY-MM-DD - CORRIGIDA
 export function calendarDateToString(date: Date): string {
   // Garantir que a data seja interpretada como local sem conversão de timezone
