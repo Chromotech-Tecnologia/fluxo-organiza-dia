@@ -13,6 +13,10 @@ import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 
+console.log("Data atual SP (start):", getCurrentDateInSaoPaulo());
+console.log("Data atual SP (end):", getCurrentDateInSaoPaulo());
+
+
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);

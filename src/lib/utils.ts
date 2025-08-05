@@ -8,10 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 // Função para obter data atual no timezone de São Paulo
 export function getCurrentDateInSaoPaulo(): string {
   const now = new Date();
-  // Usar toLocaleDateString com timezone de São Paulo para obter data local
-  const localDate = new Date(now.toLocaleString("en-CA", { timeZone: "America/Sao_Paulo" }));
-  return localDate.toISOString().split('T')[0];
+  const saoPauloTime = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return saoPauloTime; // formato YYYY-MM-DD
 }
+
 
 // Função para converter Date do calendário para string YYYY-MM-DD
 export function calendarDateToString(date: Date): string {
@@ -42,18 +47,25 @@ export function isSameDate(date1: string, date2: string): boolean {
 
 // Função para obter data de ontem
 export function getYesterdayInSaoPaulo(): string {
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const localDate = new Date(yesterday.toLocaleString("en-CA", { timeZone: "America/Sao_Paulo" }));
-  return localDate.toISOString().split('T')[0];
+  const now = new Date();
+  now.setDate(now.getDate() - 1);
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 }
 
 // Função para obter data de amanhã
 export function getTomorrowInSaoPaulo(): string {
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const localDate = new Date(tomorrow.toLocaleString("en-CA", { timeZone: "America/Sao_Paulo" }));
-  return localDate.toISOString().split('T')[0];
+  const now = new Date();
+  now.setDate(now.getDate() + 1);
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 }
+
