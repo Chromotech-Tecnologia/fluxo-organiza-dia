@@ -50,19 +50,44 @@ const CalendarPage = () => {
 
   const getTasksForDate = (date: Date): Task[] => {
     const dateString = formatDateToYMDInSaoPaulo(date);
+    
+    // DEBUG: Console para identificar o problema
+    console.log('🗓️ Buscando tarefas para:', dateString);
+    console.log('📋 Total de tarefas:', tasks.length);
 
     return tasks.filter(task => {
-      // Corrigido: usar getDayFromDateString para ambas as datas para comparação consistente
-      const taskDateString = getDayFromDateString(task.scheduledDate);
-      const isScheduled = taskDateString === dateString;
+      // CORRIGIDO: Comparar strings com strings, não string com número
+      const isScheduled = task.scheduledDate === dateString;
+      
+      // DEBUG: Log das comparações
+      console.log(`🔍 Tarefa "${task.title}":`, {
+        scheduledDate: task.scheduledDate,
+        dateString,
+        isScheduled
+      });
 
       // Para deliveryDates, também aplicar o mesmo tratamento
       const isInDeliveries = task.deliveryDates?.some(deliveryDate => {
-        const deliveryDateString = getDayFromDateString(deliveryDate);
-        return deliveryDateString === dateString;
+        const match = deliveryDate === dateString;
+        
+        // DEBUG: Log das delivery dates
+        if (task.deliveryDates && task.deliveryDates.length > 0) {
+          console.log(`📅 Delivery date "${deliveryDate}":`, {
+            deliveryDate,
+            dateString,
+            match
+          });
+        }
+        
+        return match;
       });
 
-      return isScheduled || isInDeliveries;
+      const result = isScheduled || isInDeliveries;
+      if (result) {
+        console.log(`✅ Tarefa "${task.title}" encontrada para ${dateString}`);
+      }
+      
+      return result;
     });
   };
 
