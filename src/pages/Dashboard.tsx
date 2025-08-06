@@ -165,11 +165,11 @@ const Dashboard = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={
-                      task.priority === 'urgent' ? 'destructive' :
-                      task.priority === 'complex' ? 'secondary' : 'default'
+                      task.priority === 'extreme' ? 'destructive' :
+                      task.priority === 'priority' ? 'secondary' : 'default'
                     }>
-                      {task.priority === 'urgent' ? 'Urgente' :
-                       task.priority === 'complex' ? 'Complexa' : 'Simples'}
+                      {task.priority === 'extreme' ? 'Extrema' :
+                       task.priority === 'priority' ? 'Prioridade' : 'Sem Prioridade'}
                     </Badge>
                     <Badge variant="outline">
                       {task.type === 'meeting' ? 'Reunião' :

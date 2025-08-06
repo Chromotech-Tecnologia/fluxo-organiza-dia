@@ -168,8 +168,8 @@ export function DailyCloseModal() {
                           <Badge variant={task.type === 'meeting' ? 'default' : task.type === 'own-task' ? 'secondary' : 'outline'}>
                             {task.type === 'meeting' ? 'Reunião' : task.type === 'own-task' ? 'Própria' : 'Repassada'}
                           </Badge>
-                          <Badge variant={task.priority === 'urgent' ? 'destructive' : task.priority === 'complex' ? 'default' : 'secondary'}>
-                            {task.priority === 'urgent' ? 'Urgente' : task.priority === 'complex' ? 'Complexa' : 'Simples'}
+                          <Badge variant={task.priority === 'extreme' ? 'destructive' : task.priority === 'priority' ? 'default' : 'secondary'}>
+                            {task.priority === 'extreme' ? 'Extrema' : task.priority === 'priority' ? 'Prioridade' : 'Sem Prioridade'}
                           </Badge>
                         </div>
                       </div>
