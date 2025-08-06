@@ -14,7 +14,242 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_reports: {
+        Row: {
+          completed_tasks: number | null
+          completion_rate: number | null
+          created_at: string
+          date: string
+          forwarded_tasks: number | null
+          id: string
+          observations: string | null
+          pending_tasks: number | null
+          total_tasks: number | null
+          updated_at: string
+        }
+        Insert: {
+          completed_tasks?: number | null
+          completion_rate?: number | null
+          created_at?: string
+          date: string
+          forwarded_tasks?: number | null
+          id?: string
+          observations?: string | null
+          pending_tasks?: number | null
+          total_tasks?: number | null
+          updated_at?: string
+        }
+        Update: {
+          completed_tasks?: number | null
+          completion_rate?: number | null
+          created_at?: string
+          date?: string
+          forwarded_tasks?: number | null
+          id?: string
+          observations?: string | null
+          pending_tasks?: number | null
+          total_tasks?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      people: {
+        Row: {
+          active: boolean
+          created_at: string
+          department: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          level: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          level?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          level?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_person_id: string | null
+          category: string | null
+          completion_history: Json | null
+          created_at: string
+          delivery_dates: string[] | null
+          description: string | null
+          forward_count: number | null
+          forward_history: Json | null
+          id: string
+          is_routine: boolean | null
+          observations: string | null
+          priority: string
+          routine_config: Json | null
+          scheduled_date: string
+          status: string
+          sub_items: Json | null
+          task_order: number | null
+          time_investment: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_person_id?: string | null
+          category?: string | null
+          completion_history?: Json | null
+          created_at?: string
+          delivery_dates?: string[] | null
+          description?: string | null
+          forward_count?: number | null
+          forward_history?: Json | null
+          id?: string
+          is_routine?: boolean | null
+          observations?: string | null
+          priority?: string
+          routine_config?: Json | null
+          scheduled_date: string
+          status?: string
+          sub_items?: Json | null
+          task_order?: number | null
+          time_investment?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_person_id?: string | null
+          category?: string | null
+          completion_history?: Json | null
+          created_at?: string
+          delivery_dates?: string[] | null
+          description?: string | null
+          forward_count?: number | null
+          forward_history?: Json | null
+          id?: string
+          is_routine?: boolean | null
+          observations?: string | null
+          priority?: string
+          routine_config?: Json | null
+          scheduled_date?: string
+          status?: string
+          sub_items?: Json | null
+          task_order?: number | null
+          time_investment?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_person_id_fkey"
+            columns: ["assigned_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          department: string | null
+          email: string | null
+          hire_date: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          project_ids: string[] | null
+          role: string | null
+          skill_ids: string[] | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          project_ids?: string[] | null
+          role?: string | null
+          skill_ids?: string[] | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          project_ids?: string[] | null
+          role?: string | null
+          skill_ids?: string[] | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

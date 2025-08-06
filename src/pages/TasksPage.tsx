@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Filter, Calendar } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
-import { useTasks } from "@/hooks/useTasks";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
@@ -29,7 +29,7 @@ const TasksPage = () => {
     }
   });
   const { openTaskModal } = useModalStore();
-  const { tasks, updateTask, refetch } = useTasks(taskFilters);
+  const { tasks, updateTask, refetch } = useSupabaseTasks(taskFilters);
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -8,11 +8,13 @@ import {
   Users, 
   TrendingUp,
   Calendar,
-  Plus
+  Plus,
+  Database
 } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
 import { usePeople } from "@/hooks/usePeople";
 import { useModalStore } from "@/stores/useModalStore";
+import { MigrationButton } from "@/components/migration/MigrationButton";
 
 const Dashboard = () => {
   const { getStats, getTasksByDate } = useTasks();
@@ -63,6 +65,22 @@ const Dashboard = () => {
           </Button>
         </div>
       </div>
+
+      {/* Migração para Supabase */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <Database className="h-5 w-5" />
+            Migração para Banco de Dados
+          </CardTitle>
+          <CardDescription className="text-blue-700">
+            Seus dados estão salvos localmente. Migre para o Supabase para ter backup em nuvem.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <MigrationButton />
+        </CardContent>
+      </Card>
 
       {/* KPIs Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
