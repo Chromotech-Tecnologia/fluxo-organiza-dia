@@ -67,10 +67,14 @@ export const MigrationButton = () => {
               <div>
                 <p>Tarefas no LocalStorage: {migrationStats.tasksInLocalStorage}</p>
                 <p>Pessoas no LocalStorage: {migrationStats.peopleInLocalStorage}</p>
+                <p>Skills no LocalStorage: {migrationStats.skillsInLocalStorage}</p>
+                <p>Equipe no LocalStorage: {migrationStats.teamMembersInLocalStorage}</p>
               </div>
               <div>
                 <p>Tarefas no Supabase: {migrationStats.tasksInSupabase}</p>
                 <p>Pessoas no Supabase: {migrationStats.peopleInSupabase}</p>
+                <p>Skills no Supabase: {migrationStats.skillsInSupabase}</p>
+                <p>Equipe no Supabase: {migrationStats.teamMembersInSupabase}</p>
               </div>
             </div>
           </div>

@@ -117,6 +117,13 @@ export class SupabaseMigration {
     
     if (localTasks.length === 0) return;
 
+    // Obter lista de pessoas existentes para validar referências
+    const { data: existingPeople } = await supabase
+      .from('people')
+      .select('id');
+    
+    const existingPersonIds = new Set(existingPeople?.map(p => p.id) || []);
+
     const supabaseTasks = localTasks.map(task => ({
       id: task.id,
       title: task.title,
@@ -127,7 +134,10 @@ export class SupabaseMigration {
       time_investment: task.timeInvestment || 'low',
       category: task.category || 'personal',
       status: task.status,
-      assigned_person_id: task.assignedPersonId || null,
+      // Só definir assigned_person_id se a pessoa existir na base
+      assigned_person_id: (task.assignedPersonId && existingPersonIds.has(task.assignedPersonId)) 
+        ? task.assignedPersonId 
+        : null,
       forward_count: task.forwardCount || 0,
       observations: task.observations || null,
       sub_items: task.subItems as any || [],
@@ -190,11 +200,23 @@ export class SupabaseMigration {
         .from('people')
         .select('*', { count: 'exact', head: true });
 
+      const { count: skillsCount } = await supabase
+        .from('skills')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: teamMembersCount } = await supabase
+        .from('team_members')
+        .select('*', { count: 'exact', head: true });
+
       return {
         tasksInSupabase: tasksCount || 0,
         peopleInSupabase: peopleCount || 0,
+        skillsInSupabase: skillsCount || 0,
+        teamMembersInSupabase: teamMembersCount || 0,
         tasksInLocalStorage: taskStorage.getAll().length,
-        peopleInLocalStorage: peopleStorage.getAll().length
+        peopleInLocalStorage: peopleStorage.getAll().length,
+        skillsInLocalStorage: skillsStorage.getAll().length,
+        teamMembersInLocalStorage: teamMembersStorage.getAll().length
       };
     } catch (error) {
       console.error('Erro ao verificar status da migração:', error);
