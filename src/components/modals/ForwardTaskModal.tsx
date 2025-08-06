@@ -131,22 +131,6 @@ export function ForwardTaskModal() {
             />
           </div>
 
-          <div>
-            <Label>Repassar para Equipe (Opcional)</Label>
-            <Select value={selectedTeamMember} onValueChange={setSelectedTeamMember}>
-              <SelectTrigger className="mt-2">
-                <SelectValue placeholder="Selecionar membro da equipe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Apenas reagendar</SelectItem>
-                {teamMembers.filter(member => member.status === 'ativo').map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    {member.name} - {member.role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="flex gap-2 justify-end pt-4">
             <Button variant="outline" onClick={closeForwardTaskModal}>

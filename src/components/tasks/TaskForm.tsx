@@ -23,10 +23,16 @@ const taskFormSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional(),
   type: z.enum(["meeting", "own-task", "delegated-task"]),
-  priority: z.enum(["simple", "urgent", "complex"]),
+  priority: z.enum(["none", "priority", "extreme"]),
+  timeInvestment: z.enum(["low", "medium", "high"]),
+  category: z.enum(["personal", "business"]),
   assignedPersonId: z.string().optional(),
   scheduledDate: z.string(),
   observations: z.string().optional(),
+  isRoutine: z.boolean(),
+  routineCycle: z.enum(["daily", "weekly", "monthly", "quarterly", "biannual", "annual"]).optional(),
+  routineStartDate: z.string().optional(),
+  routineEndDate: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -41,6 +47,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const { people } = usePeople();
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
   const [newSubItem, setNewSubItem] = useState("");
+  const [editingSubItem, setEditingSubItem] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -48,10 +56,16 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       title: task?.title || "",
       description: task?.description || "",
       type: task?.type || "own-task",
-      priority: task?.priority || "simple",
+      priority: task?.priority || "none",
+      timeInvestment: task?.timeInvestment || "low",
+      category: task?.category || "personal",
       assignedPersonId: task?.assignedPersonId || "",
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       observations: task?.observations || "",
+      isRoutine: task?.isRoutine || false,
+      routineCycle: task?.routineCycle || "daily",
+      routineStartDate: task?.routineStartDate || getCurrentDateInSaoPaulo(),
+      routineEndDate: task?.routineEndDate || "",
     },
   });
 
@@ -72,6 +86,33 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      addSubItem();
+    }
+  };
+
+  const startEditingSubItem = (id: string, text: string) => {
+    setEditingSubItem(id);
+    setEditingText(text);
+  };
+
+  const saveSubItemEdit = () => {
+    if (editingSubItem && editingText.trim()) {
+      setSubItems(subItems.map(item => 
+        item.id === editingSubItem ? { ...item, text: editingText.trim() } : item
+      ));
+      setEditingSubItem(null);
+      setEditingText("");
+    }
+  };
+
+  const cancelSubItemEdit = () => {
+    setEditingSubItem(null);
+    setEditingText("");
+  };
+
   const removeSubItem = (id: string) => {
     setSubItems(subItems.filter(item => item.id !== id));
   };
@@ -89,9 +130,29 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   ];
 
   const priorityOptions = [
-    { value: "simple", label: "Simples" },
-    { value: "urgent", label: "Urgente" },
-    { value: "complex", label: "Complexa" },
+    { value: "none", label: "Sem Prioridade" },
+    { value: "priority", label: "Prioridade" },
+    { value: "extreme", label: "Extrema Prioridade" },
+  ];
+
+  const timeInvestmentOptions = [
+    { value: "low", label: "Baixo (Até 5m)" },
+    { value: "medium", label: "Médio (5-60m)" },
+    { value: "high", label: "Alto (Maior que 60m)" },
+  ];
+
+  const categoryOptions = [
+    { value: "personal", label: "Pessoal" },
+    { value: "business", label: "Empresarial" },
+  ];
+
+  const routineCycleOptions = [
+    { value: "daily", label: "Diário" },
+    { value: "weekly", label: "Semanal" },
+    { value: "monthly", label: "Mensal" },
+    { value: "quarterly", label: "Trimestral" },
+    { value: "biannual", label: "Semestral" },
+    { value: "annual", label: "Anual" },
   ];
 
   return (
@@ -140,7 +201,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             />
 
             {/* Tipo e Prioridade */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -190,6 +251,198 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="timeInvestment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tempo Investido</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Tempo investido" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timeInvestmentOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Categoria */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a categoria" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categoryOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Rotina */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="isRoutine"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Esta é uma Rotina?</FormLabel>
+                      <CardDescription>
+                        Se marcado, esta tarefa será recorrente baseada no ciclo definido
+                      </CardDescription>
+                    </div>
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="h-4 w-4"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("isRoutine") && (
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="routineCycle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ciclo da Rotina</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o ciclo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {routineCycleOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="routineStartDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Data Início</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(stringToCalendarDate(field.value), "dd/MM/yyyy")
+                                ) : (
+                                  <span>Data início</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? stringToCalendarDate(field.value) : undefined}
+                              onSelect={(date) => {
+                                if (date) {
+                                  field.onChange(calendarDateToString(date));
+                                }
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="routineEndDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Data Fim (Opcional)</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(stringToCalendarDate(field.value), "dd/MM/yyyy")
+                                ) : (
+                                  <span>Data fim (opcional)</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? stringToCalendarDate(field.value) : undefined}
+                              onSelect={(date) => {
+                                if (date) {
+                                  field.onChange(calendarDateToString(date));
+                                }
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Pessoa Responsável (se for tarefa repassada) */}

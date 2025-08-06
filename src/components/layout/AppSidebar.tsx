@@ -72,11 +72,18 @@ export function AppSidebar() {
     <Sidebar className={collapsed ? "w-14" : "w-60"}>
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
-          <CheckSquare className="h-6 w-6 text-sidebar-primary" />
-          {!collapsed && (
-            <span className="font-semibold text-sidebar-foreground">
-              Controle de Tarefas
-            </span>
+          {!collapsed ? (
+            <img 
+              src="/lovable-uploads/62746c0f-6206-4a0e-9672-06fa744bddf2.png" 
+              alt="Organize-se" 
+              className="h-8 w-auto"
+            />
+          ) : (
+            <img 
+              src="/lovable-uploads/55aa042d-8f18-4c5e-9998-7723c0ce9a12.png" 
+              alt="Organize-se" 
+              className="h-6 w-6"
+            />
           )}
         </div>
       </SidebarHeader>

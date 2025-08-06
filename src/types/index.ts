@@ -1,7 +1,9 @@
 // Tipos principais do sistema de controle de tarefas
 
 export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
-export type TaskPriority = 'simple' | 'urgent' | 'complex';
+export type TaskPriority = 'none' | 'priority' | 'extreme';
+export type TaskTimeInvestment = 'low' | 'medium' | 'high';
+export type TaskCategory = 'personal' | 'business';
 export type TaskStatus = 'pending' | 'completed' | 'not-done' | 'forwarded-date' | 'forwarded-person';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
@@ -101,6 +103,8 @@ export interface Task {
   description: string;
   type: TaskType;
   priority: TaskPriority;
+  timeInvestment: TaskTimeInvestment;
+  category: TaskCategory;
   status: TaskStatus;
   assignedPersonId?: string;
   subItems: SubItem[];
@@ -108,6 +112,10 @@ export interface Task {
   observations: string;
   order: number;
   isRecurrent: boolean;
+  isRoutine: boolean;
+  routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
+  routineStartDate?: string;
+  routineEndDate?: string;
   recurrence?: RecurrenceConfig;
   forwardHistory: ForwardRecord[];
   forwardCount: number;
@@ -163,9 +171,15 @@ export interface TaskFormValues {
   description?: string;
   type: TaskType;
   priority: TaskPriority;
+  timeInvestment: TaskTimeInvestment;
+  category: TaskCategory;
   assignedPersonId?: string;
   scheduledDate: string;
   observations?: string;
+  isRoutine: boolean;
+  routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
+  routineStartDate?: string;
+  routineEndDate?: string;
 }
 
 export interface PersonFormValues {

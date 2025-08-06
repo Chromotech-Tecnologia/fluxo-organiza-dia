@@ -334,11 +334,11 @@ const CalendarPage = () => {
                           </div>
                           <div className="flex gap-2">
                             <Badge variant={
-                              task.priority === 'urgent' ? 'destructive' :
-                                task.priority === 'complex' ? 'default' : 'secondary'
+                              task.priority === 'extreme' ? 'destructive' :
+                                task.priority === 'priority' ? 'default' : 'secondary'
                             }>
-                              {task.priority === 'urgent' ? 'Urgente' :
-                                task.priority === 'complex' ? 'Complexa' : 'Simples'}
+                              {task.priority === 'extreme' ? 'Extrema' :
+                                task.priority === 'priority' ? 'Prioridade' : 'Sem Prioridade'}
                             </Badge>
                             <Badge variant="outline">
                               {task.type === 'meeting' ? 'Reunião' :

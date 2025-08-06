@@ -103,6 +103,14 @@ export function useTasks(filters?: TaskFilter) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       completionHistory: [],
+      forwardHistory: [],
+      forwardCount: 0,
+      status: 'pending',
+      order: 0,
+      deliveryDates: [],
+      timeInvestment: newTask.timeInvestment || 'low',
+      category: newTask.category || 'personal',
+      isRoutine: newTask.isRoutine || false,
     };
 
     taskStorage.add(task);
