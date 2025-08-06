@@ -9,13 +9,15 @@ import {
   User, 
   CheckCircle, 
   Circle, 
-  X, 
+  Trash2, 
   MoreHorizontal,
   Calendar,
   MessageSquare,
   ArrowRight,
   History,
-  Edit
+  Edit,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Task } from "@/types";
 import { usePeople } from "@/hooks/usePeople";
@@ -29,9 +31,10 @@ interface TaskCardProps {
   task: Task;
   onStatusChange?: (status: Task['status']) => void;
   onForward?: () => void;
+  onClick?: () => void;
 }
 
-export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
+export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardProps) {
   const { people, getPersonById } = usePeople();
   const { openTaskModal, openDeleteModal, openForwardTaskModal } = useModalStore();
   const assignedPerson = task.assignedPersonId ? getPersonById(task.assignedPersonId) : null;
@@ -71,18 +74,35 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
     const labels = {
       'meeting': 'Reunião',
       'own-task': 'Própria',
-      'delegated-task': 'Repassada'
+      'delegated-task': 'Delegada'
     };
     return labels[type];
   };
 
   const getPriorityLabel = (priority: Task['priority']) => {
     const labels = {
-      'simple': 'Simples',
-      'urgent': 'Urgente',
-      'complex': 'Complexa'
+      'none': 'Sem Prioridade',
+      'priority': 'Prioridade', 
+      'extreme': 'Extrema Prioridade'
     };
-    return labels[priority];
+    return labels[priority] || 'Sem Prioridade';
+  };
+
+  const getTimeInvestmentLabel = (time: Task['timeInvestment']) => {
+    const labels = {
+      'low': 'Baixo (≤5m)',
+      'medium': 'Médio (5-60m)',
+      'high': 'Alto (>60m)'
+    };
+    return labels[time] || 'Baixo (≤5m)';
+  };
+
+  const getCategoryLabel = (category: Task['category']) => {
+    const labels = {
+      'personal': 'Pessoal',
+      'business': 'Empresarial'
+    };
+    return labels[category] || 'Pessoal';
   };
 
   const getStatusLabel = (status: Task['status']) => {
@@ -97,32 +117,21 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
   };
 
   return (
-    <Card className={cn("w-full border-l-4 hover:shadow-md transition-shadow", statusColors[task.status])}>
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h3 className="font-semibold text-foreground line-clamp-1 mb-2 text-sm">
-              {task.title}
-            </h3>
-            <div className="flex items-center gap-1 flex-wrap">
-              <Badge className={cn(typeColors[task.type], "text-xs py-0 px-2")}>
-                {getTypeLabel(task.type)}
-              </Badge>
-              <Badge className={cn(priorityColors[task.priority], "text-xs py-0 px-2")}>
-                {getPriorityLabel(task.priority)}
-              </Badge>
-              {task.forwardCount > 0 && (
-                <Badge variant="secondary" className="text-xs py-0 px-2">
-                  {task.forwardCount}x
-                </Badge>
-              )}
-            </div>
-          </div>
+    <Card 
+      className={cn("w-full border-l-4 hover:shadow-md transition-shadow cursor-pointer", statusColors[task.status])}
+      onClick={() => onClick ? onClick() : openTaskModal(task)}
+    >
+      <CardHeader className="pb-1 pt-3">
+        {/* Primeira linha: Nome, Deletar, Histórico, Edit */}
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-semibold text-foreground line-clamp-1 text-sm flex-1">
+            {task.title}
+          </h3>
           
           <div className="flex items-center gap-1">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => e.stopPropagation()}>
                   <History className="h-3 w-3" />
                 </Button>
               </DialogTrigger>
@@ -212,53 +221,88 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
               </DialogContent>
             </Dialog>
             
-            <Button variant="ghost" size="sm" onClick={() => openDeleteModal('task', task)} className="h-6 w-6 p-0">
-              <X className="h-3 w-3" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                openTaskModal(task);
+              }} 
+              className="h-6 w-6 p-0"
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                openDeleteModal('task', task);
+              }} 
+              className="h-6 w-6 p-0"
+            >
+              <Trash2 className="h-3 w-3" />
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3 py-3">
-        {/* Informações básicas */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
+      <CardContent className="space-y-2 py-2">
+        {/* Segunda linha: Data e Tags */}
+        <div className="flex items-center flex-wrap gap-1 text-xs">
+          <div className="flex items-center gap-1 text-muted-foreground">
             <Calendar className="h-3 w-3" />
             <span>{formatDateForDisplay(task.scheduledDate)}</span>
           </div>
-          {assignedPerson && (
-            <div className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              <span>{assignedPerson.name}</span>
-            </div>
+          
+          <Badge className={cn(typeColors[task.type], "text-xs py-0 px-1")}>
+            {getTypeLabel(task.type)}
+          </Badge>
+          
+          <Badge className={cn(priorityColors[task.priority], "text-xs py-0 px-1")}>
+            {getPriorityLabel(task.priority)}
+          </Badge>
+          
+          <Badge variant="outline" className="text-xs py-0 px-1">
+            {getTimeInvestmentLabel(task.timeInvestment)}
+          </Badge>
+          
+          <Badge variant="outline" className="text-xs py-0 px-1">
+            {getCategoryLabel(task.category)}
+          </Badge>
+          
+          {task.isRoutine && (
+            <Badge variant="secondary" className="text-xs py-0 px-1">
+              Rotina ({task.routineCycle})
+            </Badge>
           )}
-          {task.type === 'delegated-task' && assignedPerson && (
-            <div className="text-xs text-muted-foreground">
-              Delegada para: {assignedPerson.name}
-            </div>
+          
+          {assignedPerson && (
+            <Badge variant="outline" className="text-xs py-0 px-1">
+              {assignedPerson.name}
+            </Badge>
+          )}
+          
+          {task.forwardCount > 0 && (
+            <Badge variant="secondary" className="text-xs py-0 px-1">
+              {task.forwardCount}x repasses
+            </Badge>
           )}
         </div>
 
-        {/* Progresso dos Subitens */}
-        {totalSubItems > 0 && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Progresso</span>
-              <span className="text-muted-foreground">{completedSubItems}/{totalSubItems}</span>
-            </div>
-            <Progress value={progressPercentage} className="h-1" />
-          </div>
-        )}
-
-        {/* Ações compactas */}
-        <div className="flex items-center justify-between gap-2 pt-2 border-t">
-          <div className="flex gap-1">
+        {/* Terceira linha: Ações e Progresso */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1">
             <Button
               size="sm"
-              onClick={() => onStatusChange?.('completed')}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStatusChange?.('completed');
+              }}
               variant={task.status === 'completed' || lastCompletion?.status === 'completed' ? "default" : "outline"}
               className={cn(
-                "h-7 px-2 text-xs",
+                "h-6 px-2 text-xs",
                 (task.status === 'completed' || lastCompletion?.status === 'completed') 
                   ? "bg-green-600 hover:bg-green-700 text-white border-green-600" 
                   : "border-green-300 text-green-600 hover:bg-green-50"
@@ -270,28 +314,32 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
             
             <Button
               size="sm"
-              onClick={() => onStatusChange?.('not-done')}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStatusChange?.('not-done');
+              }}
               variant={task.status === 'not-done' || lastCompletion?.status === 'not-done' ? "default" : "outline"}
               className={cn(
-                "h-7 px-2 text-xs",
+                "h-6 px-2 text-xs",
                 (task.status === 'not-done' || lastCompletion?.status === 'not-done')
                   ? "bg-red-600 hover:bg-red-700 text-white border-red-600" 
                   : "border-red-300 text-red-600 hover:bg-red-50"
               )}
             >
-              <X className="h-3 w-3 mr-1" />
+              <Circle className="h-3 w-3 mr-1" />
               Não feito
             </Button>
-          </div>
-          
-          <div className="flex gap-1">
+            
             <Button
               size="sm"
-              onClick={() => openForwardTaskModal(task)}
-              variant={hasBeenForwarded ? "default" : "outline"}
+              onClick={(e) => {
+                e.stopPropagation();
+                openForwardTaskModal(task);
+              }}
+              variant={task.status === 'forwarded-date' || task.status === 'forwarded-person' ? "default" : "outline"}
               className={cn(
-                "h-7 px-2 text-xs",
-                hasBeenForwarded 
+                "h-6 px-2 text-xs",
+                (task.status === 'forwarded-date' || task.status === 'forwarded-person')
                   ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600" 
                   : "border-yellow-300 text-yellow-600 hover:bg-yellow-50"
               )}
@@ -299,16 +347,17 @@ export function TaskCard({ task, onStatusChange, onForward }: TaskCardProps) {
               <ArrowRight className="h-3 w-3 mr-1" />
               Repassar
             </Button>
-            
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => openTaskModal(task)} 
-              className="h-7 px-2 text-xs border-gray-300 text-gray-600 hover:bg-gray-50"
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
           </div>
+          
+          {/* Progresso dos Subitens */}
+          {totalSubItems > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center text-xs text-muted-foreground">
+                <span>{completedSubItems}/{totalSubItems}</span>
+              </div>
+              <Progress value={progressPercentage} className="h-2 w-16" />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

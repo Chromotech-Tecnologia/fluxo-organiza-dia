@@ -98,14 +98,14 @@ const TasksPage = () => {
 
       {/* Busca */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Buscar tarefas..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-8"
             />
           </div>
         </CardContent>
@@ -114,7 +114,13 @@ const TasksPage = () => {
       {/* Filtros */}
       <TaskFilters 
         currentFilters={taskFilters}
-        onFiltersChange={setTaskFilters}
+        onFiltersChange={(filters) => {
+          setTaskFilters(filters);
+          // Se limpar filtros, limpar busca também
+          if (!filters.dateRange && !filters.status?.length && !filters.type?.length && !filters.assignedPersonId) {
+            setSearchQuery('');
+          }
+        }}
       />
 
       {/* Lista de Tarefas */}
