@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Search, Filter } from 'lucide-react';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useSkills } from '@/hooks/useSkills';
+import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
+import { useSupabaseSkills } from '@/hooks/useSupabaseSkills';
 import { useModalStore } from '@/stores/useModalStore';
 import { TeamMemberCard } from '@/components/team/TeamMemberCard';
 import { TeamMemberFilter } from '@/types';
@@ -22,8 +22,8 @@ export default function PeoplePage() {
     skillIds: skillFilter.length > 0 ? skillFilter : undefined,
   };
 
-  const { teamMembers, loading } = useTeamMembers(filters);
-  const { skills } = useSkills();
+  const { teamMembers, loading } = useSupabaseTeamMembers(filters);
+  const { skills } = useSupabaseSkills();
   const { openTeamMemberModal } = useModalStore();
 
   const clearFilters = () => {

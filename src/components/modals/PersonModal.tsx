@@ -1,13 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalStore } from "@/stores/useModalStore";
 import { PersonForm } from "@/components/people/PersonForm";
-import { usePeople } from "@/hooks/usePeople";
+import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { PersonFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export function PersonModal() {
   const { isPersonModalOpen, personToEdit, closePersonModal } = useModalStore();
-  const { addPerson, updatePerson, refetch } = usePeople();
+  const { addPerson, updatePerson, refetch } = useSupabasePeople();
   const { toast } = useToast();
 
   const handleSubmit = async (data: PersonFormValues) => {

@@ -1,13 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalStore } from "@/stores/useModalStore";
 import { TaskForm } from "@/components/tasks/TaskForm";
-import { useTasks } from "@/hooks/useTasks";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { SubItem, TaskFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export function TaskModal() {
   const { isTaskModalOpen, taskToEdit, closeTaskModal } = useModalStore();
-  const { addTask, updateTask, refetch } = useTasks();
+  const { addTask, updateTask, refetch } = useSupabaseTasks();
   const { toast } = useToast();
 
   const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
