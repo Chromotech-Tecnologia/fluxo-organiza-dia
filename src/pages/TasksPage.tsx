@@ -158,6 +158,7 @@ const TasksPage = () => {
                 <TaskCard 
                   task={task} 
                   onStatusChange={(status) => handleStatusChange(task.id, status)}
+                  currentViewDate={taskFilters.dateRange?.start}
                 />
               </div>
             </div>

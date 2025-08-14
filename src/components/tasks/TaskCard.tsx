@@ -32,9 +32,10 @@ interface TaskCardProps {
   onStatusChange?: (status: Task['status']) => void;
   onForward?: () => void;
   onClick?: () => void;
+  currentViewDate?: string;
 }
 
-export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardProps) {
+export function TaskCard({ task, onStatusChange, onForward, onClick, currentViewDate }: TaskCardProps) {
   const { people, getPersonById } = useSupabasePeople();
   const { openTaskModal, openDeleteModal, openForwardTaskModal } = useModalStore();
   const assignedPerson = task.assignedPersonId ? getPersonById(task.assignedPersonId) : null;
@@ -48,7 +49,14 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
     ? task.completionHistory[task.completionHistory.length - 1] 
     : null;
   
-  const hasBeenForwarded = task.forwardHistory && task.forwardHistory.length > 0;
+  // Uma tarefa deve ficar amarela apenas se:
+  // 1. Foi repassada (tem forwardHistory)
+  // 2. A data agendada da tarefa corresponde à data atual sendo visualizada
+  // 3. A tarefa é original (não é resultado de repasse)
+  const hasBeenForwarded = task.forwardHistory && 
+    task.forwardHistory.length > 0 && 
+    currentViewDate && 
+    task.scheduledDate === currentViewDate;
 
   const typeColors = {
     'meeting': 'bg-blue-100 text-blue-800 border-blue-200',
