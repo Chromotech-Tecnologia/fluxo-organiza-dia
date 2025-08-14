@@ -20,7 +20,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import { Task } from "@/types";
-import { usePeople } from "@/hooks/usePeople";
+import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { useModalStore } from "@/stores/useModalStore";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -35,7 +35,7 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardProps) {
-  const { people, getPersonById } = usePeople();
+  const { people, getPersonById } = useSupabasePeople();
   const { openTaskModal, openDeleteModal, openForwardTaskModal } = useModalStore();
   const assignedPerson = task.assignedPersonId ? getPersonById(task.assignedPersonId) : null;
   
@@ -122,11 +122,15 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
       onClick={() => onClick ? onClick() : openTaskModal(task)}
     >
       <CardHeader className="pb-1 pt-3">
-        {/* Primeira linha: Nome, Deletar, Histórico, Edit */}
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-semibold text-foreground line-clamp-1 text-sm flex-1">
-            {task.title}
-          </h3>
+          <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+              {task.order || 0}
+            </div>
+            <h3 className="font-semibold text-foreground line-clamp-1 text-sm flex-1">
+              {task.title}
+            </h3>
+          </div>
           
           <div className="flex items-center gap-1">
             <Dialog>
@@ -147,19 +151,15 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
                   
                   <Separator />
                   
-                  {/* Histórico de Conclusões e Repasses por Dia */}
                   {(() => {
-                    // Agrupar por dia e mostrar apenas o último de cada tipo por dia
                     const historyByDay: Record<string, { completion?: any, forward?: any }> = {};
                     
-                    // Processar conclusões
                     task.completionHistory?.forEach(completion => {
                       const day = format(new Date(completion.completedAt), "yyyy-MM-dd");
                       if (!historyByDay[day]) historyByDay[day] = {};
                       historyByDay[day].completion = completion;
                     });
                     
-                    // Processar repasses
                     task.forwardHistory?.forEach(forward => {
                       const day = format(new Date(forward.forwardedAt), "yyyy-MM-dd");
                       if (!historyByDay[day]) historyByDay[day] = {};
@@ -168,7 +168,9 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
                     
                     const sortedDays = Object.keys(historyByDay).sort().reverse();
                     
-                    if (sortedDays.length === 0) return null;
+                    if (sortedDays.length === 0) {
+                      return <p className="text-sm text-muted-foreground">Nenhum histórico disponível.</p>;
+                    }
                     
                     return (
                       <div>
@@ -216,7 +218,6 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
                       </div>
                     );
                   })()}
-
                 </div>
               </DialogContent>
             </Dialog>
@@ -249,7 +250,6 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
       </CardHeader>
 
       <CardContent className="space-y-2 py-2">
-        {/* Segunda linha: Data e Tags */}
         <div className="flex items-center flex-wrap gap-1 text-xs">
           <div className="flex items-center gap-1 text-muted-foreground">
             <Calendar className="h-3 w-3" />
@@ -291,7 +291,6 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
           )}
         </div>
 
-        {/* Terceira linha: Ações e Progresso */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1">
             <Button
@@ -349,7 +348,6 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
             </Button>
           </div>
           
-          {/* Progresso dos Subitens */}
           {totalSubItems > 0 && (
             <div className="flex items-center gap-2">
               <div className="flex items-center text-xs text-muted-foreground">

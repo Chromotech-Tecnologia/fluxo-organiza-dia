@@ -15,7 +15,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       let query = supabase
         .from('tasks')
         .select('*')
-        .order('task_order', { ascending: true });
+        .order('order_index', { ascending: true })
+        .order('scheduled_date')
+        .order('created_at');
 
       // Aplicar filtros se fornecidos
       if (filters?.dateRange) {
@@ -76,7 +78,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         routineStartDate: (task.routine_config as any)?.startDate,
         routineEndDate: (task.routine_config as any)?.endDate,
         recurrence: task.routine_config as any,
-        order: task.task_order || 0,
+        order: task.task_order || task.order_index || 0,
         createdAt: task.created_at,
         updatedAt: task.updated_at
       }));
@@ -115,7 +117,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         delivery_dates: [],
         is_routine: newTask.isRoutine || false,
         routine_config: newTask.recurrence as any || null,
-        task_order: newTask.order || 0
+        task_order: newTask.order || 0,
+        order_index: newTask.order || 0
       };
 
       const { error } = await supabase
@@ -162,7 +165,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (updates.deliveryDates !== undefined) supabaseUpdates.delivery_dates = updates.deliveryDates;
       if (updates.isRoutine !== undefined) supabaseUpdates.is_routine = updates.isRoutine;
       if (updates.recurrence !== undefined) supabaseUpdates.routine_config = updates.recurrence as any;
-      if (updates.order !== undefined) supabaseUpdates.task_order = updates.order;
+      if (updates.order !== undefined) {
+        supabaseUpdates.task_order = updates.order;
+        supabaseUpdates.order_index = updates.order;
+      }
 
       const { error } = await supabase
         .from('tasks')
@@ -219,7 +225,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       for (const [index, taskId] of taskIds.entries()) {
         const { error } = await supabase
           .from('tasks')
-          .update({ task_order: index })
+          .update({ 
+            task_order: index + 1,
+            order_index: index + 1
+          })
           .eq('id', taskId);
         
         if (error) throw error;
@@ -269,7 +278,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         routineStartDate: (task.routine_config as any)?.startDate,
         routineEndDate: (task.routine_config as any)?.endDate,
         recurrence: task.routine_config as any,
-        order: task.task_order || 0,
+        order: task.task_order || task.order_index || 0,
         createdAt: task.created_at,
         updatedAt: task.updated_at
       }));
