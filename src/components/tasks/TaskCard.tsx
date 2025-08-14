@@ -51,12 +51,11 @@ export function TaskCard({ task, onStatusChange, onForward, onClick, currentView
   
   // Uma tarefa deve ficar amarela apenas se:
   // 1. Foi repassada (tem forwardHistory)
-  // 2. A data agendada da tarefa corresponde à data atual sendo visualizada
-  // 3. A tarefa é original (não é resultado de repasse)
+  // 2. A data agendada atual é a data ORIGINAL de um repasse (não o destino)
+  // 3. Ou seja, a tarefa está sendo exibida no dia de onde foi repassada
   const hasBeenForwarded = task.forwardHistory && 
     task.forwardHistory.length > 0 && 
-    currentViewDate && 
-    task.scheduledDate === currentViewDate;
+    task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
 
   const typeColors = {
     'meeting': 'bg-blue-100 text-blue-800 border-blue-200',

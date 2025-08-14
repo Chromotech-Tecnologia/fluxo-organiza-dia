@@ -54,8 +54,12 @@ const DailyClosePage = () => {
   };
 
   const getTaskButtonStyle = (task: Task, status: Task['status']) => {
-    const isForwarded = task.forwardHistory && task.forwardHistory.length > 0;
-    const lastCompletion = task.completionHistory && task.completionHistory.length > 0 
+    // Uma tarefa foi repassada se tem forwardHistory e a scheduledDate é a originalDate
+    const isForwarded = task.forwardHistory && 
+      task.forwardHistory.length > 0 && 
+      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+    
+    const lastCompletion = task.completionHistory && task.completionHistory.length > 0
       ? task.completionHistory[task.completionHistory.length - 1] 
       : null;
     
@@ -127,7 +131,9 @@ const DailyClosePage = () => {
             const lastCompletion = task.completionHistory && task.completionHistory.length > 0 
               ? task.completionHistory[task.completionHistory.length - 1] 
               : null;
-            const isForwarded = task.forwardHistory && task.forwardHistory.length > 0;
+            const isForwarded = task.forwardHistory && 
+              task.forwardHistory.length > 0 && 
+              task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
             
             return (
               <Card key={task.id} className="w-full">
