@@ -149,6 +149,7 @@ export interface TaskFilter {
   type?: TaskType[];
   priority?: TaskPriority[];
   status?: TaskStatus[];
+  category?: TaskCategory[];
   assignedPersonId?: string;
   maxForwards?: number;
   isRecurrent?: boolean;

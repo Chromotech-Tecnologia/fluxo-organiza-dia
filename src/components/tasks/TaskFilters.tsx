@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Filter, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePeople } from "@/hooks/usePeople";
-import { TaskFilter, TaskStatus, TaskType } from "@/types";
+import { TaskFilter, TaskStatus, TaskType, TaskCategory } from "@/types";
 import { getCurrentDateInSaoPaulo, getYesterdayInSaoPaulo, getTomorrowInSaoPaulo } from "@/lib/utils";
 
 interface TaskFiltersProps {
@@ -220,6 +220,24 @@ export function TaskFilters({ onFiltersChange, currentFilters }: TaskFiltersProp
               className="h-7 px-2 text-xs"
             >
               Reunião
+            </Button>
+          </div>
+
+          {/* Categoria */}
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant={tempFilters.category?.includes('personal' as TaskCategory) ? "default" : "outline"}
+              onClick={() => {
+                const category = tempFilters.category || [];
+                const newCategory = category.includes('personal' as TaskCategory)
+                  ? category.filter(c => c !== 'personal')
+                  : [...category, 'personal' as TaskCategory];
+                setTempFilters({ ...tempFilters, category: newCategory });
+              }}
+              className="h-7 px-2 text-xs"
+            >
+              Pessoal
             </Button>
           </div>
 

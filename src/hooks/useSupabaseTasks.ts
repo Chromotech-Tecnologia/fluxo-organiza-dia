@@ -38,6 +38,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         query = query.in('status', filters.status);
       }
 
+      if (filters?.category && filters.category.length > 0) {
+        query = query.in('category', filters.category);
+      }
+
       if (filters?.assignedPersonId) {
         query = query.eq('assigned_person_id', filters.assignedPersonId);
       }
