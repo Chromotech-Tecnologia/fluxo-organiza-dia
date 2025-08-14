@@ -156,7 +156,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (updates.timeInvestment !== undefined) supabaseUpdates.time_investment = updates.timeInvestment;
       if (updates.category !== undefined) supabaseUpdates.category = updates.category;
       if (updates.status !== undefined) supabaseUpdates.status = updates.status;
-      if (updates.assignedPersonId !== undefined) supabaseUpdates.assigned_person_id = updates.assignedPersonId;
+      if (updates.assignedPersonId !== undefined) supabaseUpdates.assigned_person_id = updates.assignedPersonId || null;
       if (updates.forwardCount !== undefined) supabaseUpdates.forward_count = updates.forwardCount;
       if (updates.observations !== undefined) supabaseUpdates.observations = updates.observations;
       if (updates.subItems !== undefined) supabaseUpdates.sub_items = updates.subItems;

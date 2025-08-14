@@ -60,7 +60,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       priority: task?.priority || "priority",
       timeInvestment: task?.timeInvestment || "low",
       category: task?.category || "business",
-      assignedPersonId: task?.assignedPersonId || "",
+      assignedPersonId: task?.assignedPersonId || undefined,
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       order: task?.order || 0,
       observations: task?.observations || "",
@@ -481,13 +481,14 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                           <SelectValue placeholder="Selecione a equipe" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                       <SelectContent>
+                        <SelectItem value="">Nenhum</SelectItem>
                         {people.map((person) => (
                           <SelectItem key={person.id} value={person.id}>
                             {person.name} - {person.role}
                           </SelectItem>
                         ))}
-                      </SelectContent>
+                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>

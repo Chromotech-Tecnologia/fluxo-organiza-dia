@@ -12,11 +12,20 @@ export function TaskModal() {
 
   const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
     try {
+      // Limpar campos vazios para evitar problemas com UUID
+      const cleanData = {
+        ...data,
+        assignedPersonId: data.assignedPersonId || null,
+        description: data.description || null,
+        observations: data.observations || null,
+        routineEndDate: data.routineEndDate || null,
+        routineStartDate: data.isRoutine ? data.routineStartDate : null,
+        routineCycle: data.isRoutine ? data.routineCycle : null,
+      };
+
       if (taskToEdit) {
         await updateTask(taskToEdit.id, {
-          ...data,
-          description: data.description || '',
-          observations: data.observations || '',
+          ...cleanData,
           deliveryDates: [],
           isRecurrent: false
         });
@@ -26,9 +35,7 @@ export function TaskModal() {
         });
       } else {
         await addTask({
-          ...data,
-          description: data.description || '',
-          observations: data.observations || '',
+          ...cleanData,
           status: 'pending',
           order: data.order || 0,
           forwardHistory: [],
