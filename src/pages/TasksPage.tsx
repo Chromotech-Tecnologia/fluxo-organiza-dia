@@ -8,6 +8,7 @@ import { Plus, Search, Filter, Calendar } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { TasksStats } from "@/components/tasks/TasksStats";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { Task, TaskFilter } from "@/types";
@@ -122,6 +123,9 @@ const TasksPage = () => {
           }
         }}
       />
+
+      {/* Resumo de Estatísticas */}
+      <TasksStats tasks={filteredTasks} />
 
       {/* Lista de Tarefas */}
       <div className="grid gap-4">

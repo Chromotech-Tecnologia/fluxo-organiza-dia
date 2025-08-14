@@ -9,10 +9,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useModalStore } from "@/stores/useModalStore";
-import { useTasks } from "@/hooks/useTasks";
-import { usePeople } from "@/hooks/usePeople";
-import { useSkills } from "@/hooks/useSkills";
-import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
+import { useSupabasePeople } from "@/hooks/useSupabasePeople";
+import { useSupabaseSkills } from "@/hooks/useSupabaseSkills";
+import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { useToast } from "@/hooks/use-toast";
 
 export function DeleteModal() {
@@ -22,10 +22,10 @@ export function DeleteModal() {
     itemToDelete, 
     closeDeleteModal 
   } = useModalStore();
-  const { deleteTask, refetch: refetchTasks } = useTasks();
-  const { deletePerson, refetch: refetchPeople } = usePeople();
-  const { deleteSkill, refetch: refetchSkills } = useSkills();
-  const { deleteTeamMember, refetch: refetchTeamMembers } = useTeamMembers();
+  const { deleteTask, refetch: refetchTasks } = useSupabaseTasks();
+  const { deletePerson, refetch: refetchPeople } = useSupabasePeople();
+  const { deleteSkill, refetch: refetchSkills } = useSupabaseSkills();
+  const { deleteTeamMember, refetch: refetchTeamMembers } = useSupabaseTeamMembers();
   const { toast } = useToast();
 
   const handleDelete = async () => {
