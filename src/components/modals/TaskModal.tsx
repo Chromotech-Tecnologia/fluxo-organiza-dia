@@ -30,7 +30,7 @@ export function TaskModal() {
           description: data.description || '',
           observations: data.observations || '',
           status: 'pending',
-          order: 0,
+          order: data.order || 0,
           forwardHistory: [],
           forwardCount: 0,
           deliveryDates: [],

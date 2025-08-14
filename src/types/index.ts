@@ -175,6 +175,7 @@ export interface TaskFormValues {
   category: TaskCategory;
   assignedPersonId?: string;
   scheduledDate: string;
+  order: number;
   observations?: string;
   isRoutine: boolean;
   routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
