@@ -335,10 +335,10 @@ export function TaskCard({ task, onStatusChange, onForward, onClick }: TaskCardP
                 e.stopPropagation();
                 openForwardTaskModal(task);
               }}
-              variant={task.status === 'forwarded-date' || task.status === 'forwarded-person' ? "default" : "outline"}
+              variant={hasBeenForwarded ? "default" : "outline"}
               className={cn(
                 "h-6 px-2 text-xs",
-                (task.status === 'forwarded-date' || task.status === 'forwarded-person')
+                hasBeenForwarded
                   ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600" 
                   : "border-yellow-300 text-yellow-600 hover:bg-yellow-50"
               )}

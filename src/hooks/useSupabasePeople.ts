@@ -155,6 +155,27 @@ export function useSupabasePeople() {
 
   useEffect(() => {
     loadPeople();
+    
+    // Setup real-time subscription
+    const channel = supabase
+      .channel('people-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'people'
+        },
+        () => {
+          console.log('People changed, reloading...');
+          loadPeople();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {

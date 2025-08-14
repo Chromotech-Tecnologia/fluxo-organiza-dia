@@ -201,6 +201,27 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
 
   useEffect(() => {
     loadTeamMembers();
+    
+    // Setup real-time subscription
+    const channel = supabase
+      .channel('team-members-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'team_members'
+        },
+        () => {
+          console.log('Team members changed, reloading...');
+          loadTeamMembers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [filters]);
 
   return {

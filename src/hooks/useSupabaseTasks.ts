@@ -335,6 +335,27 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   useEffect(() => {
     loadTasks();
+    
+    // Setup real-time subscription
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks'
+        },
+        () => {
+          console.log('Tasks changed, reloading...');
+          loadTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [JSON.stringify(filters)]);
 
   return {

@@ -5,8 +5,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useModalStore } from "@/stores/useModalStore";
-import { useTeamMembers } from "@/hooks/useTeamMembers";
-import { useTasks } from "@/hooks/useTasks";
+import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -14,8 +14,8 @@ import { calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 export function ForwardTaskModal() {
   const { isForwardTaskModalOpen, taskToForward, closeForwardTaskModal } = useModalStore();
-  const { teamMembers } = useTeamMembers();
-  const { updateTask, addTask } = useTasks();
+  const { teamMembers } = useSupabaseTeamMembers();
+  const { updateTask, addTask } = useSupabaseTasks();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>("none");

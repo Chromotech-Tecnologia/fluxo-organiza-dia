@@ -149,6 +149,27 @@ export function useSupabaseSkills() {
 
   useEffect(() => {
     loadSkills();
+    
+    // Setup real-time subscription
+    const channel = supabase
+      .channel('skills-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'skills'
+        },
+        () => {
+          console.log('Skills changed, reloading...');
+          loadSkills();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
