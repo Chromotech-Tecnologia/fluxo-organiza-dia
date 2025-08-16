@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn, calendarDateToString, stringToCalendarDate, getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Task, TaskType, TaskPriority, SubItem } from "@/types";
-import { usePeople } from "@/hooks/usePeople";
+import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 
 
 const taskFormSchema = z.object({
@@ -29,6 +29,7 @@ const taskFormSchema = z.object({
   assignedPersonId: z.string().optional(),
   scheduledDate: z.string(),
   observations: z.string().optional(),
+  order: z.number().min(0, "Ordem deve ser maior ou igual a 0").optional(),
   isRoutine: z.boolean(),
   routineCycle: z.enum(["daily", "weekly", "monthly", "quarterly", "biannual", "annual"]).optional(),
   routineStartDate: z.string().optional(),
@@ -44,7 +45,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
-  const { people } = usePeople();
+  const { people } = useSupabasePeople();
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
   const [newSubItem, setNewSubItem] = useState("");
   const [editingSubItem, setEditingSubItem] = useState<string | null>(null);
@@ -56,11 +57,12 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       title: task?.title || "",
       description: task?.description || "",
       type: task?.type || "own-task",
-      priority: task?.priority || "none",
+      priority: task?.priority || "priority",
       timeInvestment: task?.timeInvestment || "low",
-      category: task?.category || "personal",
-      assignedPersonId: task?.assignedPersonId || "",
+      category: task?.category || "business",
+      assignedPersonId: task?.assignedPersonId || undefined,
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
+      order: task?.order || 0,
       observations: task?.observations || "",
       isRoutine: task?.isRoutine || false,
       routineCycle: task?.routineCycle || "daily",
@@ -200,8 +202,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               )}
             />
 
-            {/* Tipo e Prioridade */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Tipo, Prioridade, Tempo e Ordem */}
+            <div className="grid grid-cols-4 gap-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -272,6 +274,26 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="order"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ordem</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        {...field}
+                        onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -459,13 +481,14 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                           <SelectValue placeholder="Selecione a equipe" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                       <SelectContent>
+                        <SelectItem value="">Nenhum</SelectItem>
                         {people.map((person) => (
                           <SelectItem key={person.id} value={person.id}>
                             {person.name} - {person.role}
                           </SelectItem>
                         ))}
-                      </SelectContent>
+                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
