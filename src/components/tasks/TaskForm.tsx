@@ -33,8 +33,6 @@ const taskFormSchema = z.object({
   routineCycle: z.enum(["daily", "weekly", "monthly", "quarterly", "biannual", "annual"]).optional(),
   routineStartDate: z.string().optional(),
   routineEndDate: z.string().optional(),
-  taskOrder: z.number().optional(),
-  orderIndex: z.number().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -68,8 +66,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       routineCycle: task?.routineCycle || "daily",
       routineStartDate: task?.routineStartDate || getCurrentDateInSaoPaulo(),
       routineEndDate: task?.routineEndDate || "",
-      taskOrder: task?.taskOrder || 0,
-      orderIndex: task?.orderIndex || 0,
     },
   });
 
@@ -205,7 +201,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             />
 
             {/* Tipo e Prioridade */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -280,75 +276,33 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="taskOrder"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ordem</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="0" 
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
-            {/* Categoria e Índice de Ordem */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a categoria" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categoryOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="orderIndex"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Índice de Ordem</FormLabel>
+            {/* Categoria */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="0" 
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
-                      />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a categoria" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      {categoryOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Rotina */}
             <div className="space-y-4">
