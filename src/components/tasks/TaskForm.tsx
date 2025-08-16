@@ -59,7 +59,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       priority: task?.priority || "none",
       timeInvestment: task?.timeInvestment || "low",
       category: task?.category || "personal",
-      assignedPersonId: task?.assignedPersonId || "",
+      // PROBLEMA ESTÁ AQUI - mudando de "" para undefined
+      assignedPersonId: task?.assignedPersonId || undefined, // Era: || ""
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       observations: task?.observations || "",
       isRoutine: task?.isRoutine || false,
@@ -100,7 +101,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
   const saveSubItemEdit = () => {
     if (editingSubItem && editingText.trim()) {
-      setSubItems(subItems.map(item => 
+      setSubItems(subItems.map(item =>
         item.id === editingSubItem ? { ...item, text: editingText.trim() } : item
       ));
       setEditingSubItem(null);
@@ -118,7 +119,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   };
 
   const toggleSubItem = (id: string) => {
-    setSubItems(subItems.map(item => 
+    setSubItems(subItems.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
   };
@@ -189,10 +190,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Descreva os detalhes da tarefa" 
+                    <Textarea
+                      placeholder="Descreva os detalhes da tarefa"
                       className="min-h-[100px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -453,7 +454,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Equipe Responsável</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""} // Adicionar esta linha para garantir que nunca seja undefined
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a equipe" />
@@ -490,7 +494,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                           {field.value ? (
+                          {field.value ? (
                             format(stringToCalendarDate(field.value), "dd/MM/yyyy")
                           ) : (
                             <span>Selecione uma data</span>
@@ -500,7 +504,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
+                      <Calendar
                         mode="single"
                         selected={field.value ? stringToCalendarDate(field.value) : undefined}
                         onSelect={(date) => {
@@ -528,7 +532,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             {/* Subitens */}
             <div className="space-y-4">
               <FormLabel>Subitens (Checklist)</FormLabel>
-              
+
               {/* Lista de subitens */}
               <div className="space-y-2">
                 {subItems.map((item) => (
@@ -576,9 +580,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Observações adicionais..." 
-                      {...field} 
+                    <Textarea
+                      placeholder="Observações adicionais..."
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
