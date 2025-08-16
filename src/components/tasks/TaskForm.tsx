@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn, calendarDateToString, stringToCalendarDate, getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Task, TaskType, TaskPriority, SubItem } from "@/types";
-import { useSupabasePeople } from "@/hooks/useSupabasePeople";
+import { usePeople } from "@/hooks/usePeople";
 
 
 const taskFormSchema = z.object({
@@ -29,7 +29,6 @@ const taskFormSchema = z.object({
   assignedPersonId: z.string().optional(),
   scheduledDate: z.string(),
   observations: z.string().optional(),
-  order: z.number().min(0, "Ordem deve ser maior ou igual a 0").optional(),
   isRoutine: z.boolean(),
   routineCycle: z.enum(["daily", "weekly", "monthly", "quarterly", "biannual", "annual"]).optional(),
   routineStartDate: z.string().optional(),
@@ -45,7 +44,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
-  const { people } = useSupabasePeople();
+  const { people } = usePeople();
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
   const [newSubItem, setNewSubItem] = useState("");
   const [editingSubItem, setEditingSubItem] = useState<string | null>(null);
@@ -57,18 +56,11 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       title: task?.title || "",
       description: task?.description || "",
       type: task?.type || "own-task",
-      priority: task?.priority || "priority",
+      priority: task?.priority || "none",
       timeInvestment: task?.timeInvestment || "low",
-<<<<<<< HEAD
       category: task?.category || "personal",
-      // PROBLEMA ESTÁ AQUI - mudando de "" para undefined
-      assignedPersonId: task?.assignedPersonId || undefined, // Era: || ""
-=======
-      category: task?.category || "business",
       assignedPersonId: task?.assignedPersonId || undefined,
->>>>>>> bf8b58911c63397019fe06e6ed8178eb3f2e491d
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
-      order: task?.order || 0,
       observations: task?.observations || "",
       isRoutine: task?.isRoutine || false,
       routineCycle: task?.routineCycle || "daily",
@@ -108,7 +100,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
   const saveSubItemEdit = () => {
     if (editingSubItem && editingText.trim()) {
-      setSubItems(subItems.map(item =>
+      setSubItems(subItems.map(item => 
         item.id === editingSubItem ? { ...item, text: editingText.trim() } : item
       ));
       setEditingSubItem(null);
@@ -126,7 +118,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   };
 
   const toggleSubItem = (id: string) => {
-    setSubItems(subItems.map(item =>
+    setSubItems(subItems.map(item => 
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
   };
@@ -197,10 +189,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Descreva os detalhes da tarefa"
+                    <Textarea 
+                      placeholder="Descreva os detalhes da tarefa" 
                       className="min-h-[100px]"
-                      {...field}
+                      {...field} 
                     />
                   </FormControl>
                   <FormMessage />
@@ -208,8 +200,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               )}
             />
 
-            {/* Tipo, Prioridade, Tempo e Ordem */}
-            <div className="grid grid-cols-4 gap-4">
+            {/* Tipo e Prioridade */}
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -280,26 +272,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="order"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ordem</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number"
-                        placeholder="0"
-                        min="0"
-                        {...field}
-                        onChange={e => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -481,23 +453,19 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Equipe Responsável</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ""} // Adicionar esta linha para garantir que nunca seja undefined
-                    >
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a equipe" />
                         </SelectTrigger>
                       </FormControl>
-                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
+                      <SelectContent>
                         {people.map((person) => (
                           <SelectItem key={person.id} value={person.id}>
                             {person.name} - {person.role}
                           </SelectItem>
                         ))}
-                       </SelectContent>
+                      </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
@@ -522,7 +490,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          {field.value ? (
+                           {field.value ? (
                             format(stringToCalendarDate(field.value), "dd/MM/yyyy")
                           ) : (
                             <span>Selecione uma data</span>
@@ -532,7 +500,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
+                        <Calendar
                         mode="single"
                         selected={field.value ? stringToCalendarDate(field.value) : undefined}
                         onSelect={(date) => {
@@ -560,7 +528,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             {/* Subitens */}
             <div className="space-y-4">
               <FormLabel>Subitens (Checklist)</FormLabel>
-
+              
               {/* Lista de subitens */}
               <div className="space-y-2">
                 {subItems.map((item) => (
@@ -608,9 +576,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Observações adicionais..."
-                      {...field}
+                    <Textarea 
+                      placeholder="Observações adicionais..." 
+                      {...field} 
                     />
                   </FormControl>
                   <FormMessage />
