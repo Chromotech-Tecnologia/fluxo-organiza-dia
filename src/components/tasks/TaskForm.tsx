@@ -476,7 +476,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   <FormItem>
                     <FormLabel>Equipe Responsável</FormLabel>
                     <Select onValueChange={field.onChange} 
-                    value={field.value || ""}>
+                    value={field.value || ""}defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a equipe" />
