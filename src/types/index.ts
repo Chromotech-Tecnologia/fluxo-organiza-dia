@@ -149,6 +149,7 @@ export interface TaskFilter {
   type?: TaskType[];
   priority?: TaskPriority[];
   status?: TaskStatus[];
+  category?: TaskCategory[];
   assignedPersonId?: string;
   maxForwards?: number;
   isRecurrent?: boolean;
@@ -175,6 +176,7 @@ export interface TaskFormValues {
   category: TaskCategory;
   assignedPersonId?: string;
   scheduledDate: string;
+  order: number;
   observations?: string;
   isRoutine: boolean;
   routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';

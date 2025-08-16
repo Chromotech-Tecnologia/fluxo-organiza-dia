@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Search } from 'lucide-react';
-import { useSkills } from '@/hooks/useSkills';
+import { useSupabaseSkills } from '@/hooks/useSupabaseSkills';
 import { useModalStore } from '@/stores/useModalStore';
 import { SkillCard } from '@/components/skills/SkillCard';
 import { SkillModal } from '@/components/modals/SkillModal';
 
 export function SkillsPage() {
   const [search, setSearch] = useState('');
-  const { skills, loading } = useSkills();
+  const { skills, loading } = useSupabaseSkills();
   const { openSkillModal } = useModalStore();
 
   const filteredSkills = skills.filter(skill =>

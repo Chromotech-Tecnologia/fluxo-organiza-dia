@@ -1,13 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalStore } from "@/stores/useModalStore";
 import { TeamMemberForm } from "@/components/team/TeamMemberForm";
-import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { TeamMemberFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export function TeamMemberModal() {
   const { isTeamMemberModalOpen, teamMemberToEdit, closeTeamMemberModal } = useModalStore();
-  const { addTeamMember, updateTeamMember, refetch } = useTeamMembers();
+  const { addTeamMember, updateTeamMember, refetch } = useSupabaseTeamMembers();
   const { toast } = useToast();
 
   const handleSubmit = async (data: TeamMemberFormValues) => {

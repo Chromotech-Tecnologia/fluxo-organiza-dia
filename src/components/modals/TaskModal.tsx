@@ -1,22 +1,31 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalStore } from "@/stores/useModalStore";
 import { TaskForm } from "@/components/tasks/TaskForm";
-import { useTasks } from "@/hooks/useTasks";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { SubItem, TaskFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export function TaskModal() {
   const { isTaskModalOpen, taskToEdit, closeTaskModal } = useModalStore();
-  const { addTask, updateTask, refetch } = useTasks();
+  const { addTask, updateTask, refetch } = useSupabaseTasks();
   const { toast } = useToast();
 
   const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
     try {
+      // Limpar campos vazios para evitar problemas com UUID
+      const cleanData = {
+        ...data,
+        assignedPersonId: data.assignedPersonId || null,
+        description: data.description || null,
+        observations: data.observations || null,
+        routineEndDate: data.routineEndDate || null,
+        routineStartDate: data.isRoutine ? data.routineStartDate : null,
+        routineCycle: data.isRoutine ? data.routineCycle : null,
+      };
+
       if (taskToEdit) {
         await updateTask(taskToEdit.id, {
-          ...data,
-          description: data.description || '',
-          observations: data.observations || '',
+          ...cleanData,
           deliveryDates: [],
           isRecurrent: false
         });
@@ -26,11 +35,9 @@ export function TaskModal() {
         });
       } else {
         await addTask({
-          ...data,
-          description: data.description || '',
-          observations: data.observations || '',
+          ...cleanData,
           status: 'pending',
-          order: 0,
+          order: data.order || 0,
           forwardHistory: [],
           forwardCount: 0,
           deliveryDates: [],

@@ -1,13 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalStore } from "@/stores/useModalStore";
 import { SkillForm } from "@/components/skills/SkillForm";
-import { useSkills } from "@/hooks/useSkills";
+import { useSupabaseSkills } from "@/hooks/useSupabaseSkills";
 import { SkillFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export function SkillModal() {
   const { isSkillModalOpen, skillToEdit, closeSkillModal } = useModalStore();
-  const { addSkill, updateSkill, refetch } = useSkills();
+  const { addSkill, updateSkill, refetch } = useSupabaseSkills();
   const { toast } = useToast();
 
   const handleSubmit = async (data: SkillFormValues) => {

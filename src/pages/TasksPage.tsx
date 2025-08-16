@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Filter, Calendar } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
-import { useTasks } from "@/hooks/useTasks";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { TasksStats } from "@/components/tasks/TasksStats";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { Task, TaskFilter } from "@/types";
@@ -29,7 +30,7 @@ const TasksPage = () => {
     }
   });
   const { openTaskModal } = useModalStore();
-  const { tasks, updateTask, refetch } = useTasks(taskFilters);
+  const { tasks, updateTask, refetch } = useSupabaseTasks(taskFilters);
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -123,6 +124,9 @@ const TasksPage = () => {
         }}
       />
 
+      {/* Resumo de Estatísticas */}
+      <TasksStats tasks={filteredTasks} />
+
       {/* Lista de Tarefas */}
       <div className="grid gap-4">
         {filteredTasks.length === 0 ? (
@@ -158,6 +162,7 @@ const TasksPage = () => {
                 <TaskCard 
                   task={task} 
                   onStatusChange={(status) => handleStatusChange(task.id, status)}
+                  currentViewDate={taskFilters.dateRange?.start}
                 />
               </div>
             </div>
