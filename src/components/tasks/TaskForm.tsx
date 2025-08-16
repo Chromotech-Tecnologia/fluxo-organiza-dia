@@ -57,12 +57,12 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       title: task?.title || "",
       description: task?.description || "",
       type: task?.type || "own-task",
-      priority: task?.priority || "priority",
+      priority: task?.priority || "none",
       timeInvestment: task?.timeInvestment || "low",
-      category: task?.category || "business",
-      assignedPersonId: task?.assignedPersonId || undefined,
+      category: task?.category || "personal",
+      // PROBLEMA ESTÁ AQUI - mudando de "" para undefined
+      assignedPersonId: task?.assignedPersonId || undefined, // Era: || ""
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
-      order: task?.order || 0,
       observations: task?.observations || "",
       isRoutine: task?.isRoutine || false,
       routineCycle: task?.routineCycle || "daily",
@@ -102,7 +102,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
   const saveSubItemEdit = () => {
     if (editingSubItem && editingText.trim()) {
-      setSubItems(subItems.map(item => 
+      setSubItems(subItems.map(item =>
         item.id === editingSubItem ? { ...item, text: editingText.trim() } : item
       ));
       setEditingSubItem(null);
@@ -120,7 +120,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   };
 
   const toggleSubItem = (id: string) => {
-    setSubItems(subItems.map(item => 
+    setSubItems(subItems.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
   };
@@ -191,10 +191,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Descreva os detalhes da tarefa" 
+                    <Textarea
+                      placeholder="Descreva os detalhes da tarefa"
                       className="min-h-[100px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -286,7 +286,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   <FormItem>
                     <FormLabel>Ordem</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         type="number"
                         placeholder="0"
                         min="0"
@@ -475,21 +475,22 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Equipe Responsável</FormLabel>
-                    <Select onValueChange={field.onChange} 
-                    value={field.value || ""}defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""} // Adicionar esta linha para garantir que nunca seja undefined
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a equipe" />
                         </SelectTrigger>
                       </FormControl>
-                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
+                      <SelectContent>
                         {people.map((person) => (
                           <SelectItem key={person.id} value={person.id}>
                             {person.name} - {person.role}
                           </SelectItem>
                         ))}
-                       </SelectContent>
+                      </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
@@ -514,7 +515,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                           {field.value ? (
+                          {field.value ? (
                             format(stringToCalendarDate(field.value), "dd/MM/yyyy")
                           ) : (
                             <span>Selecione uma data</span>
@@ -524,7 +525,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
+                      <Calendar
                         mode="single"
                         selected={field.value ? stringToCalendarDate(field.value) : undefined}
                         onSelect={(date) => {
@@ -552,7 +553,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             {/* Subitens */}
             <div className="space-y-4">
               <FormLabel>Subitens (Checklist)</FormLabel>
-              
+
               {/* Lista de subitens */}
               <div className="space-y-2">
                 {subItems.map((item) => (
@@ -600,9 +601,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Observações adicionais..." 
-                      {...field} 
+                    <Textarea
+                      placeholder="Observações adicionais..."
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
