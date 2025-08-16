@@ -59,7 +59,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       priority: task?.priority || "none",
       timeInvestment: task?.timeInvestment || "low",
       category: task?.category || "personal",
-      assignedPersonId: task?.assignedPersonId || undefined,
+      assignedPersonId: task?.assignedPersonId || "",
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       observations: task?.observations || "",
       isRoutine: task?.isRoutine || false,
@@ -453,7 +453,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Equipe Responsável</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a equipe" />
