@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskFilter, TaskStats } from '@/types';
+import { Task, TaskFilter, TaskStats, TaskType, TaskPriority, TaskStatus, TaskTimeInvestment, TaskCategory } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 
@@ -68,14 +67,14 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         id: task.id,
         title: task.title || '',
         description: task.description || '',
-        type: task.type,
-        priority: task.priority,
-        status: task.status,
+        type: task.type as TaskType,
+        priority: task.priority as TaskPriority,
+        status: task.status as TaskStatus,
         scheduledDate: task.scheduled_date,
         assignedPersonId: task.assigned_person_id || undefined,
-        timeInvestment: task.time_investment || 'low',
-        category: task.category || 'personal',
-        subItems: Array.isArray(task.sub_items) ? task.sub_items : [],
+        timeInvestment: (task.time_investment as TaskTimeInvestment) || 'low',
+        category: (task.category as TaskCategory) || 'personal',
+        subItems: Array.isArray(task.sub_items) ? task.sub_items as any[] : [],
         deliveryDates: Array.isArray(task.delivery_dates) ? task.delivery_dates : [],
         observations: task.observations || '',
         order: task.task_order || 0,
@@ -85,8 +84,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         routineStartDate: undefined, // Não existe na tabela atual
         routineEndDate: undefined, // Não existe na tabela atual
         forwardCount: task.forward_count || 0,
-        completionHistory: Array.isArray(task.completion_history) ? task.completion_history : [],
-        forwardHistory: Array.isArray(task.forward_history) ? task.forward_history : [],
+        completionHistory: Array.isArray(task.completion_history) ? task.completion_history as any[] : [],
+        forwardHistory: Array.isArray(task.forward_history) ? task.forward_history as any[] : [],
         createdAt: task.created_at,
         updatedAt: task.updated_at,
         isForwarded: task.is_forwarded || false,
@@ -126,38 +125,36 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         isRoutine: newTask.isRoutine || false,
         isForwarded: false,
         isConcluded: false,
-        concludedAt: null
+        concludedAt: undefined
       };
 
       const { error } = await supabase
         .from('tasks')
-        .insert([
-          {
-            id: task.id,
-            created_at: task.createdAt,
-            updated_at: task.updatedAt,
-            title: task.title,
-            description: task.description,
-            type: task.type,
-            priority: task.priority,
-            status: task.status,
-            scheduled_date: task.scheduledDate,
-            assigned_person_id: task.assignedPersonId,
-            task_order: task.order,
-            observations: task.observations,
-            is_routine: task.isRoutine,
-            forward_count: task.forwardCount,
-            completion_history: task.completionHistory,
-            forward_history: task.forwardHistory,
-            delivery_dates: task.deliveryDates,
-            time_investment: task.timeInvestment,
-            category: task.category,
-            sub_items: task.subItems,
-            is_forwarded: task.isForwarded,
-            is_concluded: task.isConcluded,
-            concluded_at: task.concludedAt
-          }
-        ]);
+        .insert({
+          id: task.id,
+          created_at: task.createdAt,
+          updated_at: task.updatedAt,
+          title: task.title,
+          description: task.description,
+          type: task.type,
+          priority: task.priority,
+          status: task.status,
+          scheduled_date: task.scheduledDate,
+          assigned_person_id: task.assignedPersonId,
+          task_order: task.order,
+          observations: task.observations,
+          is_routine: task.isRoutine,
+          forward_count: task.forwardCount,
+          completion_history: task.completionHistory,
+          forward_history: task.forwardHistory,
+          delivery_dates: task.deliveryDates,
+          time_investment: task.timeInvestment,
+          category: task.category,
+          sub_items: task.subItems,
+          is_forwarded: task.isForwarded,
+          is_concluded: task.isConcluded,
+          concluded_at: task.concludedAt
+        });
 
       if (error) {
         throw error;
@@ -264,7 +261,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   // Reordenar tarefas
   const reorderTasks = async (taskIds: string[]) => {
     try {
-      // Atualizar a ordem de cada tarefa no Supabase
       await Promise.all(
         taskIds.map(async (taskId, index) => {
           const { error } = await supabase
@@ -291,7 +287,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   const forwardTask = async (taskId: string, newAssignedPersonId: string) => {
     try {
-      // Recuperar a tarefa atual
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .select('*')
@@ -306,7 +301,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         throw new Error("Tarefa não encontrada");
       }
 
-      // Atualizar o histórico de repasses
       const currentForwardHistory = Array.isArray(taskData.forward_history) ? taskData.forward_history : [];
       const updatedForwardHistory = [
         ...currentForwardHistory,
@@ -317,10 +311,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       ];
 
-      // Contagem de repasses
       const updatedForwardCount = (taskData.forward_count || 0) + 1;
 
-      // Atualizar a tarefa no Supabase
       const { error } = await supabase
         .from('tasks')
         .update({
@@ -352,7 +344,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   const concludeTask = async (taskId: string) => {
     try {
-      // Recuperar a tarefa atual
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .select('*')
@@ -380,7 +371,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         completionRecord
       ];
 
-      // Atualizar a tarefa no Supabase
       const { error } = await supabase
         .from('tasks')
         .update({
@@ -422,7 +412,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const pendingTasks = tasks.filter(t => t.status === 'pending').length;
 
-    // Tarefas em atraso
     const today = getCurrentDateInSaoPaulo();
     const overdueTasks = tasks.filter(t =>
       t.status === 'pending' && t.scheduledDate < today
