@@ -119,7 +119,7 @@ const TasksPage = () => {
     const keepChecklistStatus = window.confirm('Deseja manter o status dos itens do checklist?');
     
     // Passar essas opções para o modal de reagendamento
-    openForwardTaskModal(task, { keepOrder, keepChecklistStatus });
+    openForwardTaskModal(task);
   };
 
   const handleEditTask = (task: Task) => {

@@ -77,16 +77,39 @@ export function useTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por número máximo de repasses
-      if (filters.maxForwards !== undefined) {
-        if (task.forwardCount > filters.maxForwards) {
+      // Filtro por tempo de investimento
+      if (filters.timeInvestment && filters.timeInvestment.length > 0) {
+        if (!filters.timeInvestment.includes(task.timeInvestment)) {
           return false;
         }
       }
 
-      // Filtro por recorrência
-      if (filters.isRecurrent !== undefined) {
-        if (task.isRecurrent !== filters.isRecurrent) {
+      // Filtro por categoria
+      if (filters.category && filters.category.length > 0) {
+        if (!filters.category.includes(task.category)) {
+          return false;
+        }
+      }
+
+      // Filtro por checklist
+      if (filters.hasChecklist !== undefined) {
+        const hasSubItems = task.subItems && task.subItems.length > 0;
+        if (filters.hasChecklist !== hasSubItems) {
+          return false;
+        }
+      }
+
+      // Filtro por reagendadas
+      if (filters.isForwarded !== undefined) {
+        if (filters.isForwarded !== task.isForwarded) {
+          return false;
+        }
+      }
+
+      // Filtro por sem ordem
+      if (filters.noOrder !== undefined) {
+        const hasNoOrder = !task.order || task.order === 0;
+        if (filters.noOrder !== hasNoOrder) {
           return false;
         }
       }

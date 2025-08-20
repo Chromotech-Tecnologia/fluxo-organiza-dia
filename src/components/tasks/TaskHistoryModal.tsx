@@ -30,8 +30,8 @@ export function TaskHistoryModal({ task, isOpen, onClose }: TaskHistoryModalProp
     // Histórico de reagendamentos
     ...(task.forwardHistory || []).map(forward => ({
       type: 'forward' as const,
-      date: forward.fromDate,
-      toDate: forward.toDate,
+      date: forward.originalDate,
+      toDate: forward.newDate,
       reason: forward.reason,
       forwardedAt: forward.forwardedAt
     }))
@@ -178,4 +178,37 @@ export function TaskHistoryModal({ task, isOpen, onClose }: TaskHistoryModalProp
       </DialogContent>
     </Dialog>
   );
+
+  function getStatusIcon(status: string) {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'not-done':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+    }
+  }
+
+  function getStatusText(status: string) {
+    switch (status) {
+      case 'completed':
+        return 'Feito';
+      case 'not-done':
+        return 'Não Feito';
+      default:
+        return 'Pendente';
+    }
+  }
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'not-done':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    }
+  }
 }
