@@ -160,12 +160,15 @@ export type Database = {
           assigned_person_id: string | null
           category: string | null
           completion_history: Json | null
+          concluded_at: string | null
           created_at: string
           delivery_dates: string[] | null
           description: string | null
           forward_count: number | null
           forward_history: Json | null
           id: string
+          is_concluded: boolean | null
+          is_forwarded: boolean | null
           is_routine: boolean | null
           observations: string | null
           order_index: number | null
@@ -185,12 +188,15 @@ export type Database = {
           assigned_person_id?: string | null
           category?: string | null
           completion_history?: Json | null
+          concluded_at?: string | null
           created_at?: string
           delivery_dates?: string[] | null
           description?: string | null
           forward_count?: number | null
           forward_history?: Json | null
           id?: string
+          is_concluded?: boolean | null
+          is_forwarded?: boolean | null
           is_routine?: boolean | null
           observations?: string | null
           order_index?: number | null
@@ -210,12 +216,15 @@ export type Database = {
           assigned_person_id?: string | null
           category?: string | null
           completion_history?: Json | null
+          concluded_at?: string | null
           created_at?: string
           delivery_dates?: string[] | null
           description?: string | null
           forward_count?: number | null
           forward_history?: Json | null
           id?: string
+          is_concluded?: boolean | null
+          is_forwarded?: boolean | null
           is_routine?: boolean | null
           observations?: string | null
           order_index?: number | null

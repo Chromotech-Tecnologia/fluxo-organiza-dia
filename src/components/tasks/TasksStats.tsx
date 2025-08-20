@@ -24,20 +24,20 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
-  const forwardedTasks = tasks.filter(task => 
-    task.status === 'forwarded-date' || task.status === 'forwarded-person' || task.forwardCount > 0
-  ).length;
+  const forwardedTasks = tasks.filter(task => task.isForwarded).length;
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
   const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
   const personalTasks = tasks.filter(task => task.category === 'personal').length;
+  const concludedTasks = tasks.filter(task => task.isConcluded).length;
+  const notConcludedTasks = tasks.filter(task => !task.isConcluded).length;
   
-  // Novas estatísticas
+  // Tarefas definitivas: completadas E não repassadas
   const definitiveTasks = tasks.filter(task => 
-    task.status === 'completed' && (task.forwardCount === 0 || !task.forwardHistory?.length)
+    task.status === 'completed' && !task.isForwarded
   ).length;
-  const notForwardedTasks = tasks.filter(task => 
-    task.forwardCount === 0 || !task.forwardHistory?.length
-  ).length;
+  
+  // Tarefas não repassadas
+  const notForwardedTasks = tasks.filter(task => !task.isForwarded).length;
 
   const stats = [
     {
@@ -87,7 +87,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
       borderColor: "border-yellow-200"
     },
     {
-      label: "Definitivo",
+      label: "Definitivas",
       value: definitiveTasks,
       percentage: totalTasks > 0 ? Math.round((definitiveTasks / totalTasks) * 100) : 0,
       icon: Star,
@@ -105,37 +105,50 @@ export function TasksStats({ tasks }: TasksStatsProps) {
       borderColor: "border-emerald-200"
     },
     {
-      label: "Reuniões",
-      value: meetingTasks,
-      percentage: totalTasks > 0 ? Math.round((meetingTasks / totalTasks) * 100) : 0,
-      icon: Users,
-      color: "text-orange-600",
-      bgColor: "bg-orange-100",
-      borderColor: "border-orange-200"
-    },
-    {
-      label: "Delegadas",
-      value: delegatedTasks,
-      percentage: totalTasks > 0 ? Math.round((delegatedTasks / totalTasks) * 100) : 0,
-      icon: Calendar,
+      label: "Concluídas",
+      value: concludedTasks,
+      percentage: totalTasks > 0 ? Math.round((concludedTasks / totalTasks) * 100) : 0,
+      icon: CheckCircle,
       color: "text-indigo-600",
       bgColor: "bg-indigo-100",
       borderColor: "border-indigo-200"
     },
     {
-      label: "Pessoal",
-      value: personalTasks,
-      percentage: totalTasks > 0 ? Math.round((personalTasks / totalTasks) * 100) : 0,
-      icon: Briefcase,
-      color: "text-pink-600",
-      bgColor: "bg-pink-100",
-      borderColor: "border-pink-200"
+      label: "Não Concluídas",
+      value: notConcludedTasks,
+      percentage: totalTasks > 0 ? Math.round((notConcludedTasks / totalTasks) * 100) : 0,
+      icon: AlertCircle,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+      borderColor: "border-orange-200",
+      isAlert: notConcludedTasks > 0
+    },
+    {
+      label: "Reuniões",
+      value: meetingTasks,
+      percentage: totalTasks > 0 ? Math.round((meetingTasks / totalTasks) * 100) : 0,
+      icon: Users,
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-100",
+      borderColor: "border-cyan-200"
     }
   ];
 
+  // Verificar se o dia está fechado (todas as tarefas concluídas)
+  const isDayClosed = totalTasks > 0 && concludedTasks === totalTasks;
+
   return (
-    <Card>
+    <Card className={isDayClosed ? "border-green-500 bg-green-50" : ""}>
       <CardContent className="p-4">
+        {isDayClosed && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">🎉 Dia Fechado! Todas as tarefas foram concluídas!</span>
+            </div>
+          </div>
+        )}
+        
         <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
           {stats.map((stat) => {
             const IconComponent = stat.icon;

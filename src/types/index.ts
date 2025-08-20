@@ -124,6 +124,9 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   scheduledDate: string;
+  isForwarded: boolean;
+  isConcluded: boolean;
+  concludedAt?: string;
 }
 
 export interface DailyReport {
@@ -160,6 +163,8 @@ export interface TaskFilter {
   isDefinitive?: boolean;
   notForwarded?: boolean;
   noOrder?: boolean;
+  isConcluded?: boolean;
+  notConcluded?: boolean;
 }
 
 export interface TaskStats {

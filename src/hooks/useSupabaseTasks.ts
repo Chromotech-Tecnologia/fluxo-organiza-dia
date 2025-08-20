@@ -20,6 +20,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
+        .order('task_order', { ascending: true })
         .order('order_index', { ascending: true })
         .order('scheduled_date')
         .order('created_at');
@@ -67,6 +68,14 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         query = query.eq('is_routine', filters.isRoutine);
       }
 
+      if (filters?.isConcluded !== undefined) {
+        query = query.eq('is_concluded', filters.isConcluded);
+      }
+
+      if (filters?.notConcluded !== undefined) {
+        query = query.eq('is_concluded', !filters.notConcluded);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
@@ -97,7 +106,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         recurrence: task.routine_config as any,
         order: task.task_order || task.order_index || 0,
         createdAt: task.created_at,
-        updatedAt: task.updated_at
+        updatedAt: task.updated_at,
+        isForwarded: task.is_forwarded || false,
+        isConcluded: task.is_concluded || false,
+        concludedAt: task.concluded_at
       }));
 
       // Aplicar filtros específicos que precisam ser feitos no frontend
@@ -109,19 +121,19 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       if (filters?.hasForwards !== undefined) {
         convertedTasks = convertedTasks.filter(task => 
-          filters.hasForwards ? (task.forwardCount > 0 || task.status === 'forwarded-date' || task.status === 'forwarded-person') : (task.forwardCount === 0 && task.status !== 'forwarded-date' && task.status !== 'forwarded-person')
+          filters.hasForwards ? task.isForwarded : !task.isForwarded
         );
       }
 
       if (filters?.isDefinitive !== undefined) {
         convertedTasks = convertedTasks.filter(task => 
-          filters.isDefinitive ? (task.status === 'completed' && (task.forwardCount === 0 || !task.forwardHistory?.length)) : !(task.status === 'completed' && (task.forwardCount === 0 || !task.forwardHistory?.length))
+          filters.isDefinitive ? (task.status === 'completed' && !task.isForwarded) : !(task.status === 'completed' && !task.isForwarded)
         );
       }
 
       if (filters?.notForwarded !== undefined) {
         convertedTasks = convertedTasks.filter(task => 
-          filters.notForwarded ? (task.forwardCount === 0 || !task.forwardHistory?.length) : (task.forwardCount > 0 || task.forwardHistory?.length > 0)
+          filters.notForwarded ? !task.isForwarded : task.isForwarded
         );
       }
 
@@ -220,6 +232,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         supabaseUpdates.task_order = updates.order;
         supabaseUpdates.order_index = updates.order;
       }
+      if (updates.isForwarded !== undefined) supabaseUpdates.is_forwarded = updates.isForwarded;
+      if (updates.isConcluded !== undefined) supabaseUpdates.is_concluded = updates.isConcluded;
+      if (updates.concludedAt !== undefined) supabaseUpdates.concluded_at = updates.concludedAt;
 
       const { error } = await supabase
         .from('tasks')
@@ -239,6 +254,35 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       toast({
         title: "Erro",
         description: "Erro ao atualizar tarefa",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Marcar tarefa como concluída
+  const concludeTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          is_concluded: true,
+          concluded_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      await loadTasks();
+      
+      toast({
+        title: "Sucesso",
+        description: "Tarefa concluída com sucesso!"
+      });
+    } catch (error) {
+      console.error('Erro ao concluir tarefa:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao concluir tarefa",
         variant: "destructive"
       });
     }
@@ -421,6 +465,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     reorderTasks,
     getTasksByDate,
     getStats,
+    concludeTask,
     refetch: loadTasks
   };
 }

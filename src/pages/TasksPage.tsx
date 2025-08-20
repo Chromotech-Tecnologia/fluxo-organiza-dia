@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Filter, Calendar } from "lucide-react";
+import { Plus, Search, Filter, Calendar, CheckCircle } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
@@ -28,7 +27,7 @@ const TasksPage = () => {
     }
   });
   const { openTaskModal } = useModalStore();
-  const { tasks, updateTask, reorderTasks, refetch } = useSupabaseTasks(taskFilters);
+  const { tasks, updateTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -99,6 +98,14 @@ const TasksPage = () => {
     }
   };
 
+  const handleConcludeTask = async (taskId: string) => {
+    await concludeTask(taskId);
+    refetch();
+  };
+
+  // Verificar se todas as tarefas do período estão concluídas
+  const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -129,6 +136,18 @@ const TasksPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Indicador de Dia Fechado */}
+      {allTasksConcluded && (
+        <Card className="border-green-500 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">🎉 Período Fechado! Todas as tarefas foram concluídas!</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filtros */}
       <TaskFilters 
@@ -187,6 +206,7 @@ const TasksPage = () => {
                     <TaskCard 
                       task={task} 
                       onStatusChange={(status) => handleStatusChange(task.id, status)}
+                      onConclude={() => handleConcludeTask(task.id)}
                       currentViewDate={taskFilters.dateRange?.start}
                     />
                   </div>
