@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -146,11 +147,11 @@ export function TaskFiltersHorizontal({
         {/* Equipe Delegada */}
         {teamsWithDelegatedTasks.length > 0 && (
           <Select
-            value={currentFilters.assignedPersonId || ""}
+            value={currentFilters.assignedPersonId || "all"}
             onValueChange={(value) =>
               onFiltersChange({
                 ...currentFilters,
-                assignedPersonId: value || undefined
+                assignedPersonId: value === "all" ? undefined : value
               })
             }
           >
@@ -194,7 +195,7 @@ export function TaskFiltersHorizontal({
                 </label>
                 <div className="space-y-2">
                   {[
-                    { value: 'personal-task', label: 'Pessoal' },
+                    { value: 'own-task', label: 'Pessoal' },
                     { value: 'meeting', label: 'Reunião' },
                     { value: 'delegated-task', label: 'Delegada' }
                   ].map((type) => (

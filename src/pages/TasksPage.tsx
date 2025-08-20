@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,51 +138,59 @@ const TasksPage = () => {
     if (isMultipleDays || sortBy !== 'order') return;
 
     const { active, over } = event;
+    if (!active.id || !over?.id || active.id === over.id) return;
 
-    if (active.id !== over?.id) {
-      // Encontrar a tarefa que está sendo movida
-      const movedTask = displayTasks.find(task => task.id === active.id);
-      if (!movedTask) return;
+    const activeTaskId = active.id as string;
+    const overTaskId = over.id as string;
 
-      // Obter TODAS as tarefas do mesmo dia (não apenas as filtradas)
-      const allTasksForDate = tasks.filter(task => task.scheduledDate === movedTask.scheduledDate);
-      
-      // Encontrar as posições na lista filtrada (para o drag & drop)
-      const oldIndexInFiltered = displayTasks.findIndex(task => task.id === active.id);
-      const newIndexInFiltered = displayTasks.findIndex(task => task.id === over?.id);
-      
-      // Reorganizar apenas a lista filtrada para o UI
-      const reorderedFiltered = arrayMove(displayTasks, oldIndexInFiltered, newIndexInFiltered);
-      
-      // Calcular a nova ordem considerando TODAS as tarefas do dia
-      const targetTask = displayTasks[newIndexInFiltered];
-      const newOrder = targetTask?.order || (newIndexInFiltered + 1);
-      
-      // Reorganizar todas as tarefas do dia baseado na nova posição
-      const updatedAllTasks = [...allTasksForDate];
-      
-      // Remover a tarefa movida da lista
-      const taskIndex = updatedAllTasks.findIndex(t => t.id === active.id);
-      const [movedTaskItem] = updatedAllTasks.splice(taskIndex, 1);
-      
-      // Encontrar onde inserir na lista completa
-      let insertIndex;
-      if (newOrder <= 1) {
-        insertIndex = 0;
-      } else if (newOrder >= updatedAllTasks.length + 1) {
-        insertIndex = updatedAllTasks.length;
-      } else {
-        insertIndex = Math.min(newOrder - 1, updatedAllTasks.length);
+    // Encontrar as tarefas
+    const activeTask = displayTasks.find(task => task.id === activeTaskId);
+    const overTask = displayTasks.find(task => task.id === overTaskId);
+    
+    if (!activeTask || !overTask) return;
+
+    // Se as tarefas não são do mesmo dia, não permitir reordenamento
+    if (activeTask.scheduledDate !== overTask.scheduledDate) return;
+
+    const activeOrder = activeTask.order || 0;
+    const overOrder = overTask.order || 0;
+
+    // Obter TODAS as tarefas do mesmo dia (não apenas as filtradas)
+    const allTasksForDate = tasks.filter(task => task.scheduledDate === activeTask.scheduledDate);
+    
+    // Criar o novo array de IDs baseado na nova ordem
+    const updatedTasks = allTasksForDate.map(task => {
+      if (task.id === activeTaskId) {
+        // A tarefa movida assume a posição da tarefa de destino
+        return { ...task, order: overOrder };
+      } else if (activeOrder < overOrder) {
+        // Movendo para baixo: tarefas entre activeOrder e overOrder sobem uma posição
+        if (task.order > activeOrder && task.order <= overOrder) {
+          return { ...task, order: task.order - 1 };
+        }
+      } else if (activeOrder > overOrder) {
+        // Movendo para cima: tarefas entre overOrder e activeOrder descem uma posição
+        if (task.order >= overOrder && task.order < activeOrder) {
+          return { ...task, order: task.order + 1 };
+        }
       }
-      
-      // Inserir na nova posição
-      updatedAllTasks.splice(insertIndex, 0, movedTaskItem);
-      
-      // Reordenar todas as tarefas do dia
-      const taskIds = updatedAllTasks.map(task => task.id);
-      
-      reorderTasks(taskIds);
-    }
+      return task;
+    });
+
+    // Ordenar pelo nova ordem e criar array de IDs
+    const taskIds = updatedTasks
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(task => task.id);
+
+    console.log('Reordenando tarefas:', {
+      activeTask: activeTask.title,
+      activeOrder,
+      overTask: overTask.title,
+      overOrder,
+      newOrder: taskIds
+    });
+
+    reorderTasks(taskIds);
   };
 
   const handleConcludeTask = async (taskId: string) => {

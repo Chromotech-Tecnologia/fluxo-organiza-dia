@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -287,7 +288,7 @@ export function TaskCardImproved({
                       e.stopPropagation();
                       handleStatusClick('not-done');
                     }}
-                    className={`h-7 px-2 text-xs min-w-[70px] ${
+                    className={`h-7 px-2 text-xs min-w-[80px] ${
                       lastCompletion?.status === 'not-done' 
                         ? 'bg-red-500 text-white border-red-500 hover:bg-red-600'
                         : 'text-red-600 border-red-600 hover:bg-red-50'
@@ -304,7 +305,7 @@ export function TaskCardImproved({
                         e.stopPropagation();
                         onForward();
                       }}
-                      className={`h-7 px-2 text-xs min-w-[70px] ${
+                      className={`h-7 px-2 text-xs min-w-[80px] ${
                         wasRescheduled
                           ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
                           : 'text-orange-600 border-orange-600 hover:bg-orange-50'

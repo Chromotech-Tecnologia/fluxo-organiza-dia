@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFilter, TaskPriority, TaskStatus, TaskType, SubItem } from "@/types";
@@ -219,10 +220,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   const reorderTasks = async (taskIds: string[]) => {
     console.log('Reordenando tarefas:', taskIds);
 
-    // Atualizar a ordem de cada tarefa individualmente
+    // Atualizar a ordem de cada tarefa individualmente com ordem 1-based
     for (let i = 0; i < taskIds.length; i++) {
       const taskId = taskIds[i];
-      const newOrder = i;
+      const newOrder = i + 1; // Ordem 1-based
 
       const { error } = await supabase
         .from('tasks')

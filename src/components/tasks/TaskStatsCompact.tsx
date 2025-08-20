@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Task } from "@/types";
-import { Clock, CheckCircle, XCircle, Hourglass, RotateCcw, User, Calendar, Timer } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Hourglass, RotateCcw, User, Calendar, Timer, Hash, Building2 } from "lucide-react";
 
 interface TaskStatsCompactProps {
   tasks: Task[];
@@ -19,11 +19,21 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   const rescheduledTasks = tasks.filter(task => 
     task.forwardHistory && task.forwardHistory.length > 0
   ).length;
+  const notRescheduledTasks = tasks.filter(task => 
+    !task.forwardHistory || task.forwardHistory.length === 0
+  ).length;
+  const rescheduledCompletedTasks = tasks.filter(task => 
+    task.forwardHistory && task.forwardHistory.length > 0 && task.status === 'completed'
+  ).length;
+  const rescheduledNotCompletedTasks = tasks.filter(task => 
+    task.forwardHistory && task.forwardHistory.length > 0 && task.status !== 'completed'
+  ).length;
 
   // Tipos de Tarefas
   const personalTasks = tasks.filter(task => task.type === 'own-task').length;
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
   const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
+  const professionalTasks = tasks.filter(task => task.category === 'business').length;
 
   // Tempo Estimado
   const getTimeInMinutes = (timeInvestment: string) => {
@@ -38,6 +48,18 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   const totalEstimatedMinutes = tasks.reduce((total, task) => {
     return total + getTimeInMinutes(task.timeInvestment);
   }, 0);
+
+  const completedEstimatedMinutes = tasks
+    .filter(task => task.status === 'completed')
+    .reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
+
+  const notDoneEstimatedMinutes = tasks
+    .filter(task => task.status === 'not-done')
+    .reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
+
+  const pendingEstimatedMinutes = tasks
+    .filter(task => task.status === 'pending')
+    .reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
 
   const formatTime = (minutes: number) => {
     if (minutes < 60) {
@@ -63,6 +85,12 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-blue-600">Total</span>
+            <span className="text-sm font-medium text-blue-600">
+              {totalTasks} (100%)
+            </span>
+          </div>
           <div className="flex justify-between items-center">
             <span className="text-xs text-green-600">Feitas</span>
             <span className="text-sm font-medium text-green-600">
@@ -92,11 +120,23 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
             Reagendamentos
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-blue-600">Reagendadas</span>
-            <span className="text-sm font-medium text-blue-600">
-              {rescheduledTasks} ({calculatePercentage(rescheduledTasks)}%)
+            <span className="text-xs text-gray-600">Não Reagendadas</span>
+            <span className="text-sm font-medium text-gray-600">
+              {notRescheduledTasks} ({calculatePercentage(notRescheduledTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-green-600">Concluídas</span>
+            <span className="text-sm font-medium text-green-600">
+              {rescheduledCompletedTasks} ({calculatePercentage(rescheduledCompletedTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-red-600">Não Concluídas</span>
+            <span className="text-sm font-medium text-red-600">
+              {rescheduledNotCompletedTasks} ({calculatePercentage(rescheduledNotCompletedTasks)}%)
             </span>
           </div>
         </CardContent>
@@ -129,6 +169,12 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
               {delegatedTasks} ({calculatePercentage(delegatedTasks)}%)
             </span>
           </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-blue-600">Profissional</span>
+            <span className="text-sm font-medium text-blue-600">
+              {professionalTasks} ({calculatePercentage(professionalTasks)}%)
+            </span>
+          </div>
         </CardContent>
       </Card>
 
@@ -140,11 +186,29 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
             Tempo Estimado
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-xs text-indigo-600">Total</span>
             <span className="text-sm font-medium text-indigo-600">
               {formatTime(totalEstimatedMinutes)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-green-600">Feitas</span>
+            <span className="text-sm font-medium text-green-600">
+              {formatTime(completedEstimatedMinutes)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-red-600">Não Feitas</span>
+            <span className="text-sm font-medium text-red-600">
+              {formatTime(notDoneEstimatedMinutes)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-yellow-600">Pendentes</span>
+            <span className="text-sm font-medium text-yellow-600">
+              {formatTime(pendingEstimatedMinutes)}
             </span>
           </div>
         </CardContent>
