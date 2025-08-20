@@ -21,7 +21,7 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   ).length;
 
   // Tipos de Tarefas
-  const personalTasks = tasks.filter(task => task.type === 'personal-task').length;
+  const personalTasks = tasks.filter(task => task.type === 'own-task').length;
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
   const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
 

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DeleteModal } from "@/components/modals/DeleteModal";
@@ -17,14 +18,6 @@ export default function PeoplePage() {
   const { teamMembers, deleteTeamMember, refetch: refetchTeamMembers } = useSupabaseTeamMembers();
   const { openPersonModal, openTeamMemberModal, openDeleteModal } = useModalStore();
   const { toast } = useToast();
-
-  const handleEditPerson = (person: Person) => {
-    openPersonModal(person);
-  };
-
-  const handleDeletePerson = (person: Person) => {
-    openDeleteModal('person', person);
-  };
 
   const handleEditTeamMember = (teamMember: TeamMember) => {
     openTeamMemberModal(teamMember);
@@ -75,8 +68,6 @@ export default function PeoplePage() {
               <PersonCard
                 key={person.id}
                 person={person}
-                onEdit={() => handleEditPerson(person)}
-                onDelete={() => handleDeletePerson(person)}
               />
             ))}
           </div>
