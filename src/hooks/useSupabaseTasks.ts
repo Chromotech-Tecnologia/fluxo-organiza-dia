@@ -1,449 +1,231 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskFilter, TaskStats, TaskType, TaskPriority, TaskStatus, TaskTimeInvestment, TaskCategory } from '@/types';
-import { toast } from '@/hooks/use-toast';
-import { getCurrentDateInSaoPaulo } from '@/lib/utils';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Task, TaskFilter, TaskPriority, TaskStatus, TaskType, SubItem } from "@/types";
 
 export function useSupabaseTasks(filters?: TaskFilter) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryKey = ['tasks', filters];
 
-  // Carregar tarefas do Supabase
-  const loadTasks = async () => {
-    setLoading(true);
-    try {
+  const { data: tasks = [], isLoading, refetch } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      console.log('Buscando tarefas com filtros:', filters);
+      
       let query = supabase
         .from('tasks')
-        .select('*');
+        .select('*')
+        .order('task_order', { ascending: true });
 
-      // Aplicar filtros se fornecidos
-      if (filters) {
-        // Filtro por data
-        if (filters.dateRange) {
-          const startDate = filters.dateRange.start;
-          const endDate = filters.dateRange.end;
-          query = query.gte('scheduled_date', startDate).lte('scheduled_date', endDate);
-        }
-
-        // Filtro por tipo
-        if (filters.type && filters.type.length > 0) {
-          query = query.in('type', filters.type);
-        }
-
-        // Filtro por prioridade
-        if (filters.priority && filters.priority.length > 0) {
-          query = query.in('priority', filters.priority);
-        }
-
-        // Filtro por status
-        if (filters.status && filters.status.length > 0) {
-          query = query.in('status', filters.status);
-        }
-
-        // Filtro por pessoa
-        if (filters.assignedPersonId) {
-          query = query.eq('assigned_person_id', filters.assignedPersonId);
-        }
-
-        // Filtro por número máximo de repasses
-        if (filters.maxForwards !== undefined) {
-          query = query.lte('forward_count', filters.maxForwards);
-        }
-
-        // Filtro por recorrência (usando is_routine como proxy)
-        if (filters.isRecurrent !== undefined) {
-          query = query.eq('is_routine', filters.isRecurrent);
+      // Aplicar filtros de data
+      if (filters?.dateRange) {
+        if (filters.dateRange.start && filters.dateRange.end) {
+          query = query
+            .gte('scheduled_date', filters.dateRange.start)
+            .lte('scheduled_date', filters.dateRange.end);
         }
       }
 
-      const { data, error } = await query.order('task_order', { ascending: true });
+      // Aplicar outros filtros
+      if (filters?.type && filters.type.length > 0) {
+        query = query.in('type', filters.type);
+      }
+
+      if (filters?.priority && filters.priority.length > 0) {
+        query = query.in('priority', filters.priority);
+      }
+
+      if (filters?.status && filters.status.length > 0) {
+        query = query.in('status', filters.status);
+      }
+
+      if (filters?.assignedPersonId) {
+        query = query.eq('assigned_person_id', filters.assignedPersonId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
+        console.error('Erro ao buscar tarefas:', error);
         throw error;
       }
 
-      // Mapear os dados para o formato esperado
-      const mappedTasks: Task[] = (data || []).map(task => ({
+      console.log('Tarefas encontradas:', data?.length || 0);
+
+      // Converter dados do Supabase para o tipo Task
+      const convertedTasks: Task[] = (data || []).map(task => ({
         id: task.id,
-        title: task.title || '',
+        title: task.title,
         description: task.description || '',
         type: task.type as TaskType,
         priority: task.priority as TaskPriority,
         status: task.status as TaskStatus,
         scheduledDate: task.scheduled_date,
-        assignedPersonId: task.assigned_person_id || undefined,
-        timeInvestment: (task.time_investment as TaskTimeInvestment) || 'low',
-        category: (task.category as TaskCategory) || 'personal',
-        subItems: Array.isArray(task.sub_items) ? task.sub_items as any[] : [],
-        deliveryDates: Array.isArray(task.delivery_dates) ? task.delivery_dates : [],
+        assignedPersonId: task.assigned_person_id || '',
+        timeInvestment: task.time_investment as 'low' | 'medium' | 'high',
+        category: task.category as 'personal' | 'work' | 'health' | 'education',
+        subItems: task.sub_items as SubItem[] || [],
         observations: task.observations || '',
-        order: task.task_order || 0,
-        isRecurrent: false, // Não existe na tabela atual
-        isRoutine: task.is_routine || false,
-        routineCycle: undefined, // Não existe na tabela atual
-        routineStartDate: undefined, // Não existe na tabela atual
-        routineEndDate: undefined, // Não existe na tabela atual
+        completionHistory: task.completion_history as any[] || [],
+        forwardHistory: task.forward_history as any[] || [],
         forwardCount: task.forward_count || 0,
-        completionHistory: Array.isArray(task.completion_history) ? task.completion_history as any[] : [],
-        forwardHistory: Array.isArray(task.forward_history) ? task.forward_history as any[] : [],
+        deliveryDates: task.delivery_dates || [],
+        isRoutine: task.is_routine || false,
+        recurrence: task.routine_config as any,
+        order: task.task_order || 0,
         createdAt: task.created_at,
         updatedAt: task.updated_at,
-        isForwarded: task.is_forwarded || false,
-        isConcluded: task.is_concluded || false,
-        concludedAt: task.concluded_at || undefined
+        isRecurrent: false,
+        isForwarded: task.forward_count > 0,
+        isConcluded: !!task.concluded_at
       }));
 
-      setTasks(mappedTasks);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar tarefas do Supabase",
-        variant: "destructive"
-      });
-      console.error("Supabase error:", error);
-    } finally {
-      setLoading(false);
+      return convertedTasks;
+    },
+  });
+
+  const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+    console.log('Adicionando nova tarefa:', taskData);
+    
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        scheduled_date: taskData.scheduledDate,
+        type: taskData.type,
+        priority: taskData.priority,
+        status: taskData.status,
+        assigned_person_id: taskData.assignedPersonId || null,
+        time_investment: taskData.timeInvestment,
+        category: taskData.category,
+        sub_items: taskData.subItems as any,
+        observations: taskData.observations || null,
+        completion_history: taskData.completionHistory as any,
+        forward_history: taskData.forwardHistory as any,
+        forward_count: taskData.forwardCount,
+        delivery_dates: taskData.deliveryDates,
+        is_routine: taskData.isRoutine,
+        routine_config: taskData.recurrence as any,
+        task_order: taskData.order
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao adicionar tarefa:', error);
+      throw error;
     }
+
+    console.log('Tarefa adicionada:', data);
+    refetch();
+    return data;
   };
 
-  // Adicionar nova tarefa
-  const addTask = async (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'isForwarded' | 'isConcluded' | 'concludedAt'> | Task) => {
-    try {
-      const task: Task = 'id' in newTask ? newTask : {
-        ...newTask,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        completionHistory: [],
-        forwardHistory: [],
-        forwardCount: 0,
-        status: 'pending',
-        order: 0,
-        deliveryDates: [],
-        timeInvestment: newTask.timeInvestment || 'low',
-        category: newTask.category || 'personal',
-        isRoutine: newTask.isRoutine || false,
-        isForwarded: false,
-        isConcluded: false,
-        concludedAt: undefined
-      };
-
-      const { error } = await supabase
-        .from('tasks')
-        .insert({
-          title: task.title,
-          description: task.description,
-          type: task.type,
-          priority: task.priority,
-          status: task.status,
-          scheduled_date: task.scheduledDate,
-          assigned_person_id: task.assignedPersonId,
-          task_order: task.order,
-          observations: task.observations,
-          is_routine: task.isRoutine,
-          forward_count: task.forwardCount,
-          completion_history: task.completionHistory,
-          forward_history: task.forwardHistory,
-          delivery_dates: task.deliveryDates,
-          time_investment: task.timeInvestment,
-          category: task.category,
-          sub_items: task.subItems,
-          is_forwarded: task.isForwarded,
-          is_concluded: task.isConcluded,
-          concluded_at: task.concludedAt
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      loadTasks();
-
-      toast({
-        title: "Sucesso",
-        description: "Tarefa criada com sucesso!"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao criar tarefa",
-        variant: "destructive"
-      });
-      console.error("Supabase error:", error);
-    }
-  };
-
-  // Atualizar tarefa
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
-    try {
-      const supabaseUpdates: { [key: string]: any } = {
-        updated_at: new Date().toISOString(),
-      };
+    console.log('Atualizando tarefa:', taskId, updates);
 
-      // Mapear os campos para o formato do Supabase
-      if (updates.title !== undefined) supabaseUpdates.title = updates.title;
-      if (updates.description !== undefined) supabaseUpdates.description = updates.description;
-      if (updates.type !== undefined) supabaseUpdates.type = updates.type;
-      if (updates.priority !== undefined) supabaseUpdates.priority = updates.priority;
-      if (updates.status !== undefined) supabaseUpdates.status = updates.status;
-      if (updates.scheduledDate !== undefined) supabaseUpdates.scheduled_date = updates.scheduledDate;
-      if (updates.assignedPersonId !== undefined) supabaseUpdates.assigned_person_id = updates.assignedPersonId;
-      if (updates.timeInvestment !== undefined) supabaseUpdates.time_investment = updates.timeInvestment;
-      if (updates.category !== undefined) supabaseUpdates.category = updates.category;
-      if (updates.subItems !== undefined) supabaseUpdates.sub_items = updates.subItems;
-      if (updates.deliveryDates !== undefined) supabaseUpdates.delivery_dates = updates.deliveryDates;
-      if (updates.observations !== undefined) supabaseUpdates.observations = updates.observations;
-      if (updates.order !== undefined) supabaseUpdates.task_order = updates.order;
-      if (updates.isRoutine !== undefined) supabaseUpdates.is_routine = updates.isRoutine;
-      if (updates.forwardCount !== undefined) supabaseUpdates.forward_count = updates.forwardCount;
-      if (updates.completionHistory !== undefined) supabaseUpdates.completion_history = updates.completionHistory;
-      if (updates.forwardHistory !== undefined) supabaseUpdates.forward_history = updates.forwardHistory;
-      if (updates.isForwarded !== undefined) supabaseUpdates.is_forwarded = updates.isForwarded;
-      if (updates.isConcluded !== undefined) supabaseUpdates.is_concluded = updates.isConcluded;
-      if (updates.concludedAt !== undefined) supabaseUpdates.concluded_at = updates.concludedAt;
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        title: updates.title,
+        description: updates.description,
+        scheduled_date: updates.scheduledDate,
+        type: updates.type,
+        priority: updates.priority,
+        status: updates.status,
+        assigned_person_id: updates.assignedPersonId || null,
+        time_investment: updates.timeInvestment,
+        category: updates.category,
+        sub_items: updates.subItems as any,
+        observations: updates.observations,
+        completion_history: updates.completionHistory as any,
+        forward_history: updates.forwardHistory as any,
+        forward_count: updates.forwardCount,
+        delivery_dates: updates.deliveryDates,
+        is_routine: updates.isRoutine,
+        routine_config: updates.recurrence as any,
+        task_order: updates.order,
+        concluded_at: updates.isConcluded ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', taskId)
+      .select()
+      .single();
 
-      const { error } = await supabase
-        .from('tasks')
-        .update(supabaseUpdates)
-        .eq('id', taskId);
-
-      if (error) {
-        throw error;
-      }
-
-      loadTasks();
-
-      toast({
-        title: "Sucesso",
-        description: "Tarefa atualizada com sucesso!"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar tarefa",
-        variant: "destructive"
-      });
-      console.error("Supabase error:", error);
+    if (error) {
+      console.error('Erro ao atualizar tarefa:', error);
+      throw error;
     }
+
+    console.log('Tarefa atualizada:', data);
+    refetch();
+    return data;
   };
 
-  // Deletar tarefa
   const deleteTask = async (taskId: string) => {
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
+    console.log('Deletando tarefa:', taskId);
 
-      if (error) {
-        throw error;
-      }
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskId);
 
-      loadTasks();
-
-      toast({
-        title: "Sucesso",
-        description: "Tarefa removida com sucesso!"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao remover tarefa",
-        variant: "destructive"
-      });
-      console.error("Supabase error:", error);
+    if (error) {
+      console.error('Erro ao deletar tarefa:', error);
+      throw error;
     }
+
+    console.log('Tarefa deletada:', taskId);
+    refetch();
   };
 
-  // Reordenar tarefas
   const reorderTasks = async (taskIds: string[]) => {
-    try {
-      await Promise.all(
-        taskIds.map(async (taskId, index) => {
-          const { error } = await supabase
-            .from('tasks')
-            .update({ task_order: index })
-            .eq('id', taskId);
+    console.log('Reordenando tarefas:', taskIds);
 
-          if (error) {
-            throw error;
-          }
-        })
-      );
-
-      loadTasks();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao reordenar tarefas",
-        variant: "destructive"
-      });
-      console.error("Supabase error:", error);
-    }
-  };
-
-  const forwardTask = async (taskId: string, newAssignedPersonId: string) => {
-    try {
-      const { data: taskData, error: taskError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('id', taskId)
-        .single();
-
-      if (taskError) {
-        throw taskError;
-      }
-
-      if (!taskData) {
-        throw new Error("Tarefa não encontrada");
-      }
-
-      const currentForwardHistory = Array.isArray(taskData.forward_history) ? taskData.forward_history : [];
-      const updatedForwardHistory = [
-        ...currentForwardHistory,
-        {
-          forwardedAt: getCurrentDateInSaoPaulo(),
-          fromPersonId: taskData.assigned_person_id,
-          toPersonId: newAssignedPersonId
-        }
-      ];
-
-      const updatedForwardCount = (taskData.forward_count || 0) + 1;
+    // Atualizar a ordem de cada tarefa individualmente
+    for (let i = 0; i < taskIds.length; i++) {
+      const taskId = taskIds[i];
+      const newOrder = i;
 
       const { error } = await supabase
         .from('tasks')
-        .update({
-          assigned_person_id: newAssignedPersonId,
-          forward_history: updatedForwardHistory,
-          forward_count: updatedForwardCount
-        })
+        .update({ task_order: newOrder })
         .eq('id', taskId);
 
       if (error) {
+        console.error(`Erro ao atualizar a ordem da tarefa ${taskId}:`, error);
         throw error;
       }
-
-      loadTasks();
-
-      toast({
-        title: "Sucesso",
-        description: "Tarefa repassada com sucesso!"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao repassar tarefa",
-        variant: "destructive"
-      });
-      console.error("Supabase error:", error);
     }
+
+    console.log('Tarefas reordenadas com sucesso.');
+    refetch();
   };
 
   const concludeTask = async (taskId: string) => {
-    try {
-      const { data: taskData, error: taskError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('id', taskId)
-        .single();
+    console.log('Concluindo tarefa:', taskId);
 
-      if (taskError) {
-        throw taskError;
-      }
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        concluded_at: new Date().toISOString(),
+        status: 'completed'
+      })
+      .eq('id', taskId);
 
-      if (!taskData) {
-        throw new Error("Tarefa não encontrada");
-      }
-
-      const currentCompletionHistory = Array.isArray(taskData.completion_history) ? taskData.completion_history : [];
-      const completionRecord = {
-        completedAt: getCurrentDateInSaoPaulo(),
-        status: 'completed',
-        date: taskData.scheduled_date,
-        wasForwarded: taskData.is_forwarded || false
-      };
-
-      const updatedCompletionHistory = [
-        ...currentCompletionHistory,
-        completionRecord
-      ];
-
-      const { error } = await supabase
-        .from('tasks')
-        .update({
-          status: 'completed',
-          completion_history: updatedCompletionHistory,
-          is_concluded: true,
-          concluded_at: getCurrentDateInSaoPaulo()
-        })
-        .eq('id', taskId);
-
-      if (error) {
-        throw error;
-      }
-
-      loadTasks();
-
-      toast({
-        title: "Sucesso",
-        description: "Tarefa concluída com sucesso!"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao concluir tarefa",
-        variant: "destructive"
-      });
-      console.error("Supabase error:", error);
+    if (error) {
+      console.error('Erro ao concluir tarefa:', error);
+      throw error;
     }
+
+    console.log('Tarefa concluída:', taskId);
   };
-
-  // Obter tarefas por data
-  const getTasksByDate = (date: string): Task[] => {
-    return tasks.filter(task => task.scheduledDate === date);
-  };
-
-  // Obter estatísticas
-  const getStats = (): TaskStats => {
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
-    const pendingTasks = tasks.filter(t => t.status === 'pending').length;
-
-    const today = getCurrentDateInSaoPaulo();
-    const overdueTasks = tasks.filter(t =>
-      t.status === 'pending' && t.scheduledDate < today
-    ).length;
-
-    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-    const averageForwards = totalTasks > 0
-      ? tasks.reduce((acc, task) => acc + task.forwardCount, 0) / totalTasks
-      : 0;
-
-    return {
-      totalTasks,
-      completedTasks,
-      pendingTasks,
-      overdueTasks,
-      completionRate,
-      averageForwards
-    };
-  };
-
-  useEffect(() => {
-    loadTasks();
-  }, [JSON.stringify(filters)]);
 
   return {
     tasks,
-    loading,
+    loading: isLoading,
     addTask,
     updateTask,
     deleteTask,
     reorderTasks,
-    forwardTask,
     concludeTask,
-    getTasksByDate,
-    getStats,
-    refetch: loadTasks
+    refetch
   };
 }
