@@ -1,4 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -76,23 +77,33 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
 
   return (
     <Card>
-      <CardContent className="p-4">
-        <div className="space-y-4">
-          {/* Filtro de Data com DateRangePicker */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">Período</label>
-            <DateRangePicker
-              startDate={currentFilters.dateRange?.start || ''}
-              endDate={currentFilters.dateRange?.end || ''}
-              onStartDateChange={(date) => handleDateRangeChange(date, currentFilters.dateRange?.end || date)}
-              onEndDateChange={(date) => handleDateRangeChange(currentFilters.dateRange?.start || date, date)}
-            />
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg">Filtros</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Grupo: Período */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+            <h3 className="font-medium text-sm text-foreground">Período</h3>
           </div>
+          <DateRangePicker
+            startDate={currentFilters.dateRange?.start || ''}
+            endDate={currentFilters.dateRange?.end || ''}
+            onStartDateChange={(date) => handleDateRangeChange(date, currentFilters.dateRange?.end || date)}
+            onEndDateChange={(date) => handleDateRangeChange(currentFilters.dateRange?.start || date, date)}
+          />
+        </div>
 
-          {/* Filtros de Tipo, Prioridade e Status */}
+        {/* Grupo: Categorização */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+            <h3 className="font-medium text-sm text-foreground">Categorização</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label className="text-sm font-medium mb-2 block">Tipo</Label>
+              <Label className="text-xs font-medium mb-2 block text-muted-foreground">Tipo</Label>
               <Select onValueChange={(value) => handleTypeChange(value === 'all' ? [] : [value as TaskType])}>
                 <SelectTrigger className="text-left">
                   <SelectValue placeholder="Todos os Tipos" />
@@ -107,7 +118,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
             </div>
 
             <div>
-              <Label className="text-sm font-medium mb-2 block">Prioridade</Label>
+              <Label className="text-xs font-medium mb-2 block text-muted-foreground">Prioridade</Label>
               <Select onValueChange={(value) => handlePriorityChange(value === 'all' ? [] : [value as TaskPriority])}>
                 <SelectTrigger className="text-left">
                   <SelectValue placeholder="Todas as Prioridades" />
@@ -122,7 +133,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
             </div>
 
             <div>
-              <Label className="text-sm font-medium mb-2 block">Status</Label>
+              <Label className="text-xs font-medium mb-2 block text-muted-foreground">Status</Label>
               <Select onValueChange={(value) => handleStatusChange(value === 'all' ? [] : [value as TaskStatus])}>
                 <SelectTrigger className="text-left">
                   <SelectValue placeholder="Todos os Status" />
@@ -138,19 +149,31 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
               </Select>
             </div>
           </div>
+        </div>
 
-          {/* Filtro por Pessoa Designada */}
+        {/* Grupo: Atribuição */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 bg-purple-500 rounded-full"></div>
+            <h3 className="font-medium text-sm text-foreground">Atribuição</h3>
+          </div>
           <div>
-            <Label className="text-sm font-medium mb-2 block">Pessoa Designada</Label>
+            <Label className="text-xs font-medium mb-2 block text-muted-foreground">Pessoa Designada</Label>
             <PeopleSelect
               value={assignedPersonId}
               onChange={handleAssignedPersonChange}
               placeholder="Todas as Pessoas"
             />
           </div>
+        </div>
 
-          {/* Novos Filtros de Estado */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Grupo: Estado da Tarefa */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
+            <h3 className="font-medium text-sm text-foreground">Estado da Tarefa</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isConcluded"
@@ -179,10 +202,12 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
               <label htmlFor="notConcluded" className="text-sm">Não Concluídas</label>
             </div>
           </div>
+        </div>
 
-          {/* Botão de Limpar Filtros */}
-          <Button variant="ghost" onClick={handleClearFilters}>
-            Limpar Filtros
+        {/* Botão de Limpar Filtros */}
+        <div className="pt-4 border-t">
+          <Button variant="ghost" onClick={handleClearFilters} className="w-full">
+            Limpar Todos os Filtros
           </Button>
         </div>
       </CardContent>

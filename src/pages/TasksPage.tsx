@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ const TasksPage = () => {
       end: getCurrentDateInSaoPaulo()
     }
   });
-  const { openTaskModal } = useModalStore();
+  const { openTaskModal, openForwardTaskModal } = useModalStore();
   const { tasks, updateTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
 
   const sensors = useSensors(
@@ -81,6 +82,10 @@ const TasksPage = () => {
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
     }
+  };
+
+  const handleForwardTask = (task: Task) => {
+    openForwardTaskModal(task);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -207,6 +212,7 @@ const TasksPage = () => {
                       task={task} 
                       onStatusChange={(status) => handleStatusChange(task.id, status)}
                       onConclude={() => handleConcludeTask(task.id)}
+                      onForward={() => handleForwardTask(task)}
                       currentViewDate={taskFilters.dateRange?.start}
                     />
                   </div>

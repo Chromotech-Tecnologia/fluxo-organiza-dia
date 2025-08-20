@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Calendar, User, GripVertical } from "lucide-react";
+import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward } from "lucide-react";
 import { Task } from "@/types";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,10 +14,11 @@ interface TaskCardProps {
   task: Task;
   onStatusChange: (status: Task['status']) => void;
   onConclude: () => void;
+  onForward: () => void;
   currentViewDate?: string;
 }
 
-export function TaskCard({ task, onStatusChange, onConclude, currentViewDate }: TaskCardProps) {
+export function TaskCard({ task, onStatusChange, onConclude, onForward, currentViewDate }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -33,6 +34,9 @@ export function TaskCard({ task, onStatusChange, onConclude, currentViewDate }: 
 
   // Determinar se a tarefa está repassada (cor amarelada)
   const isTaskForwarded = task.isForwarded || task.status === 'forwarded-date' || task.status === 'forwarded-person';
+
+  // Corrigir a data para não mostrar um dia anterior
+  const taskDate = new Date(task.scheduledDate + 'T00:00:00');
 
   return (
     <Card 
@@ -85,11 +89,9 @@ export function TaskCard({ task, onStatusChange, onConclude, currentViewDate }: 
               </Badge>
             )}
             
-            {task.scheduledDate && (
-              <Badge variant="secondary">
-                {format(new Date(task.scheduledDate), 'dd/MM/yyyy', { locale: ptBR })}
-              </Badge>
-            )}
+            <Badge variant="secondary">
+              {format(taskDate, 'dd/MM/yyyy', { locale: ptBR })}
+            </Badge>
             
             {task.isForwarded && (
               <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
@@ -123,6 +125,16 @@ export function TaskCard({ task, onStatusChange, onConclude, currentViewDate }: 
                   className="text-red-600 border-red-600 hover:bg-red-50"
                 >
                   Não Feito
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onForward}
+                  className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                >
+                  <Forward className="h-3 w-3 mr-1" />
+                  Repassar
                 </Button>
                 
                 <Button
