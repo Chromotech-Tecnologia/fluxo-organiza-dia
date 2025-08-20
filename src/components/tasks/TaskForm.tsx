@@ -229,7 +229,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormControl>
                   <PersonTeamSelect
                     value={field.value || ''}
-                    onChange={field.onChange}
+                    onValueChange={field.onChange}
                     placeholder="Selecione uma pessoa ou membro da equipe"
                   />
                 </FormControl>
