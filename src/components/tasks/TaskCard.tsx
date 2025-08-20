@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,45 +7,55 @@ import { Task } from "@/types";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { useSupabaseTasks } from '@/hooks/useSupabaseTasks';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TaskCardProps {
   task: Task;
   onStatusChange: (status: Task['status']) => void;
+  onConclude: () => void;
   currentViewDate?: string;
 }
 
-export function TaskCard({ task, onStatusChange, currentViewDate }: TaskCardProps) {
-  const handleStatusChange = (status: Task['status']) => {
-    onStatusChange(status);
-  };
+export function TaskCard({ task, onStatusChange, onConclude, currentViewDate }: TaskCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: task.id });
 
-  const handleConcludeTask = async () => {
-    if (task.isConcluded) return;
-    
-    try {
-      const { updateTask } = useSupabaseTasks();
-      await updateTask(task.id, {
-        isConcluded: true,
-        concludedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Erro ao concluir tarefa:', error);
-    }
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
   };
 
   // Determinar se a tarefa está repassada (cor amarelada)
   const isTaskForwarded = task.isForwarded || task.status === 'forwarded-date' || task.status === 'forwarded-person';
 
   return (
-    <Card className={`${
-      task.isConcluded ? 'border-green-500 bg-green-50' : 
-      isTaskForwarded ? 'border-yellow-500 bg-yellow-50' : ''
-    }`}>
+    <Card 
+      ref={setNodeRef}
+      style={style}
+      className={`${
+        task.isConcluded ? 'border-green-500 bg-green-50' : 
+        isTaskForwarded ? 'border-yellow-500 bg-yellow-50' : ''
+      }`}
+    >
       <CardContent className="p-4">
         <div className="space-y-3">
           <div className="flex justify-between items-start">
-            <div className="text-lg font-semibold">{task.title}</div>
+            <div className="flex items-center gap-2">
+              <div
+                {...attributes}
+                {...listeners}
+                className="cursor-grab hover:cursor-grabbing"
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-lg font-semibold">{task.title}</div>
+            </div>
           </div>
 
           <div className="text-sm text-muted-foreground">
@@ -95,14 +106,34 @@ export function TaskCard({ task, onStatusChange, currentViewDate }: TaskCardProp
 
           <div className="flex gap-2 pt-2">
             {!task.isConcluded && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleConcludeTask}
-                className="text-green-600 border-green-600 hover:bg-green-50"
-              >
-                Concluir
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onStatusChange('completed')}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                >
+                  Feito
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onStatusChange('not-done')}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                >
+                  Não Feito
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onConclude}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  Concluir
+                </Button>
+              </>
             )}
           </div>
         </div>

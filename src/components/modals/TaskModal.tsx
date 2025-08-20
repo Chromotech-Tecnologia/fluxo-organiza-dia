@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalStore } from "@/stores/useModalStore";
 import { TaskForm } from "@/components/tasks/TaskForm";
@@ -42,7 +43,9 @@ export function TaskModal() {
           forwardCount: 0,
           deliveryDates: [],
           isRecurrent: false,
-          completionHistory: []
+          completionHistory: [],
+          isForwarded: false,
+          isConcluded: false
         });
         toast({
           title: "Tarefa criada",
