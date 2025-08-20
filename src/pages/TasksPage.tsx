@@ -27,8 +27,8 @@ const TasksPage = () => {
       end: getCurrentDateInSaoPaulo()
     }
   });
-  const { openTaskModal, openForwardTaskModal } = useModalStore();
-  const { tasks, updateTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
+  const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
+  const { tasks, updateTask, deleteTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -86,6 +86,19 @@ const TasksPage = () => {
 
   const handleForwardTask = (task: Task) => {
     openForwardTaskModal(task);
+  };
+
+  const handleEditTask = (task: Task) => {
+    openTaskModal(task);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    openDeleteModal('task', task);
+  };
+
+  const handleTaskHistory = (task: Task) => {
+    // TODO: Implementar modal de histórico
+    console.log('Abrir histórico da tarefa:', task);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -200,7 +213,7 @@ const TasksPage = () => {
             modifiers={[restrictToVerticalAxis]}
           >
             <SortableContext items={filteredTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
-              {filteredTasks.map((task) => (
+              {filteredTasks.map((task, index) => (
                 <div key={task.id} className="flex items-start gap-3">
                   <Checkbox
                     checked={selectedTasks.some(t => t.id === task.id)}
@@ -210,9 +223,13 @@ const TasksPage = () => {
                   <div className="flex-1">
                     <TaskCard 
                       task={task} 
+                      taskIndex={index}
                       onStatusChange={(status) => handleStatusChange(task.id, status)}
                       onConclude={() => handleConcludeTask(task.id)}
                       onForward={() => handleForwardTask(task)}
+                      onEdit={() => handleEditTask(task)}
+                      onDelete={() => handleDeleteTask(task)}
+                      onHistory={() => handleTaskHistory(task)}
                       currentViewDate={taskFilters.dateRange?.start}
                     />
                   </div>

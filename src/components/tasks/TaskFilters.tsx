@@ -1,17 +1,16 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { TaskFilter, TaskPriority, TaskStatus, TaskType } from "@/types";
-import { useEffect, useState } from "react";
-import { PeopleSelect } from "../people/PeopleSelect";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { X, Filter } from "lucide-react";
+import { TaskFilter, TaskType, TaskPriority, TaskStatus } from "@/types";
+import { DateRangePicker } from "./DateRangePicker";
+import { PeopleSelect } from "@/components/people/PeopleSelect";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-import { format, addDays, subDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format, subDays, addDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TaskFiltersProps {
   currentFilters: TaskFilter;
@@ -19,308 +18,196 @@ interface TaskFiltersProps {
 }
 
 export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProps) {
-  const [selectedTypes, setSelectedTypes] = useState<TaskType[]>(currentFilters.type || []);
-  const [selectedPriorities, setSelectedPriorities] = useState<TaskPriority[]>(currentFilters.priority || []);
-  const [selectedStatuses, setSelectedStatuses] = useState<TaskStatus[]>(currentFilters.status || []);
-  const [assignedPersonId, setAssignedPersonId] = useState<string | undefined>(currentFilters.assignedPersonId);
-
   const today = getCurrentDateInSaoPaulo();
   const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
   const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
 
-  const handleDateQuickSelect = (dateType: 'hoje' | 'ontem' | 'amanha') => {
-    let date = today;
-    if (dateType === 'ontem') date = yesterday;
-    if (dateType === 'amanha') date = tomorrow;
-    
+  const handleQuickDateFilter = (dateType: 'today' | 'yesterday' | 'tomorrow') => {
+    let targetDate: string;
+    switch (dateType) {
+      case 'yesterday':
+        targetDate = yesterday;
+        break;
+      case 'tomorrow':
+        targetDate = tomorrow;
+        break;
+      default:
+        targetDate = today;
+    }
+
     onFiltersChange({
       ...currentFilters,
-      dateRange: { start: date, end: date }
-    });
-  };
-
-  const handleDateChange = (start: string, end: string) => {
-    onFiltersChange({
-      ...currentFilters,
-      dateRange: { start, end }
-    });
-  };
-
-  const handleTypeToggle = (type: TaskType) => {
-    const newTypes = selectedTypes.includes(type)
-      ? selectedTypes.filter(t => t !== type)
-      : [...selectedTypes, type];
-    
-    setSelectedTypes(newTypes);
-    onFiltersChange({
-      ...currentFilters,
-      type: newTypes
-    });
-  };
-
-  const handlePriorityToggle = (priority: TaskPriority) => {
-    const newPriorities = selectedPriorities.includes(priority)
-      ? selectedPriorities.filter(p => p !== priority)
-      : [...selectedPriorities, priority];
-    
-    setSelectedPriorities(newPriorities);
-    onFiltersChange({
-      ...currentFilters,
-      priority: newPriorities
-    });
-  };
-
-  const handleStatusToggle = (status: TaskStatus) => {
-    const newStatuses = selectedStatuses.includes(status)
-      ? selectedStatuses.filter(s => s !== status)
-      : [...selectedStatuses, status];
-    
-    setSelectedStatuses(newStatuses);
-    onFiltersChange({
-      ...currentFilters,
-      status: newStatuses
-    });
-  };
-
-  const handleAssignedPersonChange = (personId: string | undefined) => {
-    setAssignedPersonId(personId);
-    onFiltersChange({
-      ...currentFilters,
-      assignedPersonId: personId
-    });
-  };
-
-  const handleClearFilters = () => {
-    setSelectedTypes([]);
-    setSelectedPriorities([]);
-    setSelectedStatuses([]);
-    setAssignedPersonId(undefined);
-    onFiltersChange({
       dateRange: {
-        start: today,
-        end: today
+        start: targetDate,
+        end: targetDate
       }
     });
   };
 
-  const formatDateBrazilian = (dateStr: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr + 'T00:00:00');
-    return format(date, 'dd/MM/yyyy', { locale: ptBR });
+  const clearAllFilters = () => {
+    onFiltersChange({});
   };
 
-  useEffect(() => {
-    setSelectedTypes(currentFilters.type || []);
-    setSelectedPriorities(currentFilters.priority || []);
-    setSelectedStatuses(currentFilters.status || []);
-    setAssignedPersonId(currentFilters.assignedPersonId);
-  }, [currentFilters]);
+  const hasActiveFilters = !!(
+    currentFilters.dateRange ||
+    currentFilters.type?.length ||
+    currentFilters.priority?.length ||
+    currentFilters.status?.length ||
+    currentFilters.assignedPersonId
+  );
 
   return (
     <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Filtros</CardTitle>
-          <Badge variant="secondary">
-            {selectedTypes.length + selectedPriorities.length + selectedStatuses.length + (assignedPersonId ? 1 : 0)} ativos
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Data */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Data</Label>
-          <div className="flex gap-2 flex-wrap">
-            <Button 
-              size="sm" 
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          
+          {/* Data */}
+          <div className="flex items-center gap-1">
+            <Button
               variant={currentFilters.dateRange?.start === today && currentFilters.dateRange?.end === today ? "default" : "outline"}
-              onClick={() => handleDateQuickSelect('hoje')}
+              size="sm"
+              onClick={() => handleQuickDateFilter('today')}
+              className="h-7 px-2 text-xs"
             >
               Hoje
             </Button>
-            <Button 
-              size="sm" 
+            <Button
               variant={currentFilters.dateRange?.start === yesterday && currentFilters.dateRange?.end === yesterday ? "default" : "outline"}
-              onClick={() => handleDateQuickSelect('ontem')}
+              size="sm"
+              onClick={() => handleQuickDateFilter('yesterday')}
+              className="h-7 px-2 text-xs"
             >
               Ontem
             </Button>
-            <Button 
-              size="sm" 
+            <Button
               variant={currentFilters.dateRange?.start === tomorrow && currentFilters.dateRange?.end === tomorrow ? "default" : "outline"}
-              onClick={() => handleDateQuickSelect('amanha')}
+              size="sm"
+              onClick={() => handleQuickDateFilter('tomorrow')}
+              className="h-7 px-2 text-xs"
             >
               Amanhã
             </Button>
+            <DateRangePicker
+              value={currentFilters.dateRange}
+              onChange={(dateRange) => onFiltersChange({ ...currentFilters, dateRange })}
+            />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs text-muted-foreground">De</Label>
-              <Input
-                type="date"
-                value={currentFilters.dateRange?.start || today}
-                onChange={(e) => handleDateChange(e.target.value, currentFilters.dateRange?.end || e.target.value)}
-                className="text-sm"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Até</Label>
-              <Input
-                type="date"
-                value={currentFilters.dateRange?.end || today}
-                onChange={(e) => handleDateChange(currentFilters.dateRange?.start || e.target.value, e.target.value)}
-                className="text-sm"
-              />
-            </div>
+
+          {/* Tipo */}
+          <Select
+            value={currentFilters.type?.[0] || "all"}
+            onValueChange={(value) => {
+              const type = value === "all" ? undefined : [value as TaskType];
+              onFiltersChange({ ...currentFilters, type });
+            }}
+          >
+            <SelectTrigger className="w-32 h-7 text-xs">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="own-task">Própria</SelectItem>
+              <SelectItem value="meeting">Reunião</SelectItem>
+              <SelectItem value="delegated-task">Delegada</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Prioridade */}
+          <Select
+            value={currentFilters.priority?.[0] || "all"}
+            onValueChange={(value) => {
+              const priority = value === "all" ? undefined : [value as TaskPriority];
+              onFiltersChange({ ...currentFilters, priority });
+            }}
+          >
+            <SelectTrigger className="w-32 h-7 text-xs">
+              <SelectValue placeholder="Prioridade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="none">Nenhuma</SelectItem>
+              <SelectItem value="priority">Prioridade</SelectItem>
+              <SelectItem value="extreme">Extrema</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Status */}
+          <Select
+            value={currentFilters.status?.[0] || "all"}
+            onValueChange={(value) => {
+              const status = value === "all" ? undefined : [value as TaskStatus];
+              onFiltersChange({ ...currentFilters, status });
+            }}
+          >
+            <SelectTrigger className="w-32 h-7 text-xs">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="completed">Concluída</SelectItem>
+              <SelectItem value="not-done">Não Feita</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Pessoa */}
+          <div className="w-40">
+            <PeopleSelect
+              value={currentFilters.assignedPersonId || ""}
+              onValueChange={(value) => {
+                onFiltersChange({
+                  ...currentFilters,
+                  assignedPersonId: value || undefined
+                });
+              }}
+              placeholder="Pessoa"
+              className="h-7 text-xs"
+            />
           </div>
-          {currentFilters.dateRange && (
-            <p className="text-xs text-muted-foreground">
-              {formatDateBrazilian(currentFilters.dateRange.start)} - {formatDateBrazilian(currentFilters.dateRange.end)}
-            </p>
+
+          {/* Limpar filtros */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Limpar
+            </Button>
           )}
         </div>
 
-        {/* Tipo */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Tipo</Label>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant={selectedTypes.includes('meeting') ? "default" : "outline"}
-              onClick={() => handleTypeToggle('meeting')}
-            >
-              Reunião
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedTypes.includes('own-task') ? "default" : "outline"}
-              onClick={() => handleTypeToggle('own-task')}
-            >
-              Própria
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedTypes.includes('delegated-task') ? "default" : "outline"}
-              onClick={() => handleTypeToggle('delegated-task')}
-            >
-              Delegada
-            </Button>
-          </div>
-        </div>
-
-        {/* Prioridade */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Prioridade</Label>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant={selectedPriorities.includes('none') ? "default" : "outline"}
-              onClick={() => handlePriorityToggle('none')}
-            >
-              Sem Prioridade
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedPriorities.includes('priority') ? "default" : "outline"}
-              onClick={() => handlePriorityToggle('priority')}
-            >
-              Prioridade
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedPriorities.includes('extreme') ? "default" : "outline"}
-              onClick={() => handlePriorityToggle('extreme')}
-            >
-              Extrema
-            </Button>
-          </div>
-        </div>
-
-        {/* Status */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Status</Label>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant={selectedStatuses.includes('pending') ? "default" : "outline"}
-              onClick={() => handleStatusToggle('pending')}
-            >
-              Pendente
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedStatuses.includes('completed') ? "default" : "outline"}
-              onClick={() => handleStatusToggle('completed')}
-            >
-              Feito
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedStatuses.includes('not-done') ? "default" : "outline"}
-              onClick={() => handleStatusToggle('not-done')}
-            >
-              Não Feito
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedStatuses.includes('forwarded-date') ? "default" : "outline"}
-              onClick={() => handleStatusToggle('forwarded-date')}
-            >
-              Repassada
-            </Button>
-          </div>
-        </div>
-
-        {/* Pessoa */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Pessoa Designada</Label>
-          <PeopleSelect
-            value={assignedPersonId}
-            onChange={handleAssignedPersonChange}
-            placeholder="Todas as Pessoas"
-          />
-        </div>
-
-        {/* Estado da Tarefa */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Estado</Label>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isConcluded"
-                checked={currentFilters.isConcluded || false}
-                onCheckedChange={(checked) => 
-                  onFiltersChange({
-                    ...currentFilters,
-                    isConcluded: checked as boolean
-                  })
+        {/* Filtros ativos */}
+        {hasActiveFilters && (
+          <div className="flex gap-1 mt-2 flex-wrap">
+            {currentFilters.dateRange && (
+              <Badge variant="secondary" className="text-xs">
+                {currentFilters.dateRange.start === currentFilters.dateRange.end
+                  ? format(new Date(currentFilters.dateRange.start + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR })
+                  : `${format(new Date(currentFilters.dateRange.start + 'T00:00:00'), 'dd/MM', { locale: ptBR })} - ${format(new Date(currentFilters.dateRange.end + 'T00:00:00'), 'dd/MM', { locale: ptBR })}`
                 }
-              />
-              <label htmlFor="isConcluded" className="text-sm">Concluídas</label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="notConcluded"
-                checked={currentFilters.notConcluded || false}
-                onCheckedChange={(checked) => 
-                  onFiltersChange({
-                    ...currentFilters,
-                    notConcluded: checked as boolean
-                  })
-                }
-              />
-              <label htmlFor="notConcluded" className="text-sm">Não Concluídas</label>
-            </div>
+              </Badge>
+            )}
+            {currentFilters.type?.map(type => (
+              <Badge key={type} variant="secondary" className="text-xs">
+                {type === 'own-task' ? 'Própria' : type === 'meeting' ? 'Reunião' : 'Delegada'}
+              </Badge>
+            ))}
+            {currentFilters.priority?.map(priority => (
+              <Badge key={priority} variant="secondary" className="text-xs">
+                {priority === 'none' ? 'Sem Prioridade' : priority === 'priority' ? 'Prioridade' : 'Extrema'}
+              </Badge>
+            ))}
+            {currentFilters.status?.map(status => (
+              <Badge key={status} variant="secondary" className="text-xs">
+                {status === 'pending' ? 'Pendente' : status === 'completed' ? 'Concluída' : 'Não Feita'}
+              </Badge>
+            ))}
           </div>
-        </div>
-
-        {/* Botão de Limpar Filtros */}
-        <div className="pt-4 border-t">
-          <Button variant="ghost" onClick={handleClearFilters} className="w-full">
-            Limpar Todos os Filtros
-          </Button>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
