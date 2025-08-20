@@ -67,10 +67,10 @@ export function TaskFiltersHorizontal({
       count++;
     }
     
-    if (currentFilters.types && currentFilters.types.length > 0) count++;
-    if (currentFilters.priorities && currentFilters.priorities.length > 0) count++;
-    if (currentFilters.timeInvestments && currentFilters.timeInvestments.length > 0) count++;
-    if (currentFilters.statuses && currentFilters.statuses.length > 0) count++;
+    if (currentFilters.type && Array.isArray(currentFilters.type) && currentFilters.type.length > 0) count++;
+    if (currentFilters.priority && Array.isArray(currentFilters.priority) && currentFilters.priority.length > 0) count++;
+    if (currentFilters.timeInvestment && Array.isArray(currentFilters.timeInvestment) && currentFilters.timeInvestment.length > 0) count++;
+    if (currentFilters.status && Array.isArray(currentFilters.status) && currentFilters.status.length > 0) count++;
     if (currentFilters.assignedPersonId) count++;
     if (searchQuery.trim()) count++;
     if (sortBy !== 'order') count++;
@@ -161,7 +161,7 @@ export function TaskFiltersHorizontal({
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as equipes</SelectItem>
+              <SelectItem value="all">Todas as equipes</SelectItem>
               {teamsWithDelegatedTasks.map((team) => (
                 <SelectItem key={team.id} value={team.id}>
                   {team.name}
@@ -201,15 +201,15 @@ export function TaskFiltersHorizontal({
                     <div key={type.value} className="flex items-center space-x-2">
                       <Checkbox
                         id={`type-${type.value}`}
-                        checked={currentFilters.types?.includes(type.value as any) || false}
+                        checked={Array.isArray(currentFilters.type) && currentFilters.type.includes(type.value as any) || false}
                         onCheckedChange={(checked) => {
-                          const currentTypes = currentFilters.types || [];
+                          const currentTypes = Array.isArray(currentFilters.type) ? currentFilters.type : [];
                           const newTypes = checked
                             ? [...currentTypes, type.value as any]
                             : currentTypes.filter(t => t !== type.value);
                           onFiltersChange({
                             ...currentFilters,
-                            types: newTypes.length > 0 ? newTypes : undefined
+                            type: newTypes.length > 0 ? newTypes : undefined
                           });
                         }}
                       />
@@ -236,15 +236,15 @@ export function TaskFiltersHorizontal({
                     <div key={priority.value} className="flex items-center space-x-2">
                       <Checkbox
                         id={`priority-${priority.value}`}
-                        checked={currentFilters.priorities?.includes(priority.value as any) || false}
+                        checked={Array.isArray(currentFilters.priority) && currentFilters.priority.includes(priority.value as any) || false}
                         onCheckedChange={(checked) => {
-                          const currentPriorities = currentFilters.priorities || [];
+                          const currentPriorities = Array.isArray(currentFilters.priority) ? currentFilters.priority : [];
                           const newPriorities = checked
                             ? [...currentPriorities, priority.value as any]
                             : currentPriorities.filter(p => p !== priority.value);
                           onFiltersChange({
                             ...currentFilters,
-                            priorities: newPriorities.length > 0 ? newPriorities : undefined
+                            priority: newPriorities.length > 0 ? newPriorities : undefined
                           });
                         }}
                       />
@@ -271,15 +271,15 @@ export function TaskFiltersHorizontal({
                     <div key={time.value} className="flex items-center space-x-2">
                       <Checkbox
                         id={`time-${time.value}`}
-                        checked={currentFilters.timeInvestments?.includes(time.value as any) || false}
+                        checked={Array.isArray(currentFilters.timeInvestment) && currentFilters.timeInvestment.includes(time.value as any) || false}
                         onCheckedChange={(checked) => {
-                          const currentTimes = currentFilters.timeInvestments || [];
+                          const currentTimes = Array.isArray(currentFilters.timeInvestment) ? currentFilters.timeInvestment : [];
                           const newTimes = checked
                             ? [...currentTimes, time.value as any]
                             : currentTimes.filter(t => t !== time.value);
                           onFiltersChange({
                             ...currentFilters,
-                            timeInvestments: newTimes.length > 0 ? newTimes : undefined
+                            timeInvestment: newTimes.length > 0 ? newTimes : undefined
                           });
                         }}
                       />
@@ -303,15 +303,15 @@ export function TaskFiltersHorizontal({
                     <div key={status.value} className="flex items-center space-x-2">
                       <Checkbox
                         id={`status-${status.value}`}
-                        checked={currentFilters.statuses?.includes(status.value as any) || false}
+                        checked={Array.isArray(currentFilters.status) && currentFilters.status.includes(status.value as any) || false}
                         onCheckedChange={(checked) => {
-                          const currentStatuses = currentFilters.statuses || [];
+                          const currentStatuses = Array.isArray(currentFilters.status) ? currentFilters.status : [];
                           const newStatuses = checked
                             ? [...currentStatuses, status.value as any]
                             : currentStatuses.filter(s => s !== status.value);
                           onFiltersChange({
                             ...currentFilters,
-                            statuses: newStatuses.length > 0 ? newStatuses : undefined
+                            status: newStatuses.length > 0 ? newStatuses : undefined
                           });
                         }}
                       />
@@ -338,42 +338,42 @@ export function TaskFiltersHorizontal({
       {/* Tags de filtros ativos */}
       {activeFiltersCount > 0 && (
         <div className="flex gap-1 flex-wrap">
-          {currentFilters.types && currentFilters.types.length > 0 && (
+          {currentFilters.type && Array.isArray(currentFilters.type) && currentFilters.type.length > 0 && (
             <Badge variant="secondary" className="gap-1">
-              Tipos: {currentFilters.types.length}
+              Tipos: {currentFilters.type.length}
               <X
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => clearSpecificFilter('types')}
+                onClick={() => clearSpecificFilter('type')}
               />
             </Badge>
           )}
           
-          {currentFilters.priorities && currentFilters.priorities.length > 0 && (
+          {currentFilters.priority && Array.isArray(currentFilters.priority) && currentFilters.priority.length > 0 && (
             <Badge variant="secondary" className="gap-1">
-              Prioridades: {currentFilters.priorities.length}
+              Prioridades: {currentFilters.priority.length}
               <X
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => clearSpecificFilter('priorities')}
+                onClick={() => clearSpecificFilter('priority')}
               />
             </Badge>
           )}
           
-          {currentFilters.timeInvestments && currentFilters.timeInvestments.length > 0 && (
+          {currentFilters.timeInvestment && Array.isArray(currentFilters.timeInvestment) && currentFilters.timeInvestment.length > 0 && (
             <Badge variant="secondary" className="gap-1">
-              Tempo: {currentFilters.timeInvestments.length}
+              Tempo: {currentFilters.timeInvestment.length}
               <X
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => clearSpecificFilter('timeInvestments')}
+                onClick={() => clearSpecificFilter('timeInvestment')}
               />
             </Badge>
           )}
           
-          {currentFilters.statuses && currentFilters.statuses.length > 0 && (
+          {currentFilters.status && Array.isArray(currentFilters.status) && currentFilters.status.length > 0 && (
             <Badge variant="secondary" className="gap-1">
-              Status: {currentFilters.statuses.length}
+              Status: {currentFilters.status.length}
               <X
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => clearSpecificFilter('statuses')}
+                onClick={() => clearSpecificFilter('status')}
               />
             </Badge>
           )}

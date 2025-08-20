@@ -1,184 +1,139 @@
-
-import { useState, useCallback, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search, Filter } from 'lucide-react';
-import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
-import { useSupabaseSkills } from '@/hooks/useSupabaseSkills';
-import { useModalStore } from '@/stores/useModalStore';
-import { TeamMemberCard } from '@/components/team/TeamMemberCard';
-import { TeamMemberFilter } from '@/types';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { DeleteModal } from "@/components/modals/DeleteModal";
+import { PersonModal } from "@/components/modals/PersonModal";
+import { TeamMemberModal } from "@/components/modals/TeamMemberModal";
+import { PersonCard } from "@/components/people/PersonCard";
+import { TeamMemberCard } from "@/components/team/TeamMemberCard";
+import { useModalStore } from "@/stores/useModalStore";
+import { useSupabasePeople } from "@/hooks/useSupabasePeople";
+import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
+import { Plus, User, Users } from "lucide-react";
+import { Person, TeamMember } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PeoplePage() {
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ativo' | 'inativo' | 'all'>('all');
-  const [skillFilter, setSkillFilter] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
-  
-  // Memoizar os filtros para evitar recriação desnecessária
-  const filters: TeamMemberFilter = useMemo(() => ({
-    search: search.trim() || undefined,
-    status: statusFilter === 'all' ? undefined : statusFilter,
-    skillIds: skillFilter.length > 0 ? skillFilter : undefined,
-  }), [search, statusFilter, skillFilter]);
+  const { people, deletePerson, refetch: refetchPeople } = useSupabasePeople();
+  const { teamMembers, deleteTeamMember, refetch: refetchTeamMembers } = useSupabaseTeamMembers();
+  const { openPersonModal, openTeamMemberModal, openDeleteModal } = useModalStore();
+  const { toast } = useToast();
 
-  const { teamMembers, loading } = useSupabaseTeamMembers(filters);
-  const { skills } = useSupabaseSkills();
-  const { openTeamMemberModal } = useModalStore();
+  const handleEditPerson = (person: Person) => {
+    openPersonModal(person);
+  };
 
-  // Usar useCallback para evitar re-renderizações desnecessárias
-  const clearFilters = useCallback(() => {
-    setSearch('');
-    setStatusFilter('all');
-    setSkillFilter([]);
-  }, []);
+  const handleDeletePerson = (person: Person) => {
+    openDeleteModal('person', person);
+  };
 
-  const toggleSkillFilter = useCallback((skillId: string) => {
-    setSkillFilter(prev => 
-      prev.includes(skillId) 
-        ? prev.filter(id => id !== skillId)
-        : [...prev, skillId]
-    );
-  }, []);
+  const handleEditTeamMember = (teamMember: TeamMember) => {
+    openTeamMemberModal(teamMember);
+  };
 
-  const handleNewMember = useCallback(() => {
-    try {
-      openTeamMemberModal();
-    } catch (error) {
-      console.error('Erro ao abrir modal:', error);
-    }
-  }, [openTeamMemberModal]);
-
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  }, []);
-
-  const handleStatusChange = useCallback((value: 'ativo' | 'inativo' | 'all') => {
-    setStatusFilter(value);
-  }, []);
-
-  const toggleFilters = useCallback(() => {
-    setShowFilters(prev => !prev);
-  }, []);
+  const handleDeleteTeamMember = (teamMember: TeamMember) => {
+    openDeleteModal('teamMember', teamMember);
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Equipe</h1>
-          <p className="text-muted-foreground">
-            Gerencie os membros da sua equipe
-          </p>
+    <div className="space-y-6">
+      {/* Pessoas */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Pessoas</h2>
+            <p className="text-muted-foreground">
+              Gerencie as pessoas da sua organização
+            </p>
+          </div>
+          <Button className="gap-2" onClick={() => openPersonModal()}>
+            <Plus className="h-4 w-4" />
+            Nova Pessoa
+          </Button>
         </div>
-        <Button onClick={handleNewMember}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Membro
-        </Button>
-      </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Membros da Equipe</CardTitle>
-              <CardDescription>
-                {loading ? (
-                  'Carregando...'
-                ) : (
-                  `${teamMembers.length} membro${teamMembers.length !== 1 ? 's' : ''} encontrado${teamMembers.length !== 1 ? 's' : ''}`
-                )}
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              onClick={toggleFilters}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, cargo, email ou origem..."
-              value={search}
-              onChange={handleSearchChange}
-              className="max-w-sm"
-            />
-          </div>
-
-          {showFilters && (
-            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">Filtros</h4>
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Limpar
+        {people.length === 0 ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center py-12">
+                <User className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  Nenhuma pessoa cadastrada
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Comece adicionando a primeira pessoa da sua organização
+                </p>
+                <Button className="gap-2" onClick={() => openPersonModal()}>
+                  <Plus className="h-4 w-4" />
+                  Adicionar Primeira Pessoa
                 </Button>
               </div>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
-                  <Select value={statusFilter} onValueChange={handleStatusChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="ativo">Ativo</SelectItem>
-                      <SelectItem value="inativo">Inativo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Habilidades</label>
-                  <div className="max-h-32 overflow-y-auto border rounded p-2 space-y-1 bg-background">
-                    {skills.map((skill) => (
-                      <label key={skill.id} className="flex items-center space-x-2 text-sm cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={skillFilter.includes(skill.id)}
-                          onChange={() => toggleSkillFilter(skill.id)}
-                          className="rounded"
-                        />
-                        <span>{skill.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {people.map((person) => (
+              <PersonCard
+                key={person.id}
+                person={person}
+                onEdit={() => handleEditPerson(person)}
+                onDelete={() => handleDeletePerson(person)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
-          {loading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Carregando membros da equipe...</p>
-            </div>
-          ) : teamMembers.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {search || statusFilter !== 'all' || skillFilter.length > 0
-                  ? 'Nenhum membro encontrado com os filtros aplicados.'
-                  : 'Nenhum membro da equipe cadastrado ainda.'}
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {teamMembers.map((teamMember) => (
-                <TeamMemberCard
-                  key={teamMember.id}
-                  teamMember={teamMember}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Membros da Equipe */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Membros da Equipe</h2>
+            <p className="text-muted-foreground">
+              Gerencie os membros da sua equipe
+            </p>
+          </div>
+          <Button className="gap-2" onClick={() => openTeamMemberModal()}>
+            <Plus className="h-4 w-4" />
+            Novo Membro
+          </Button>
+        </div>
+
+        {teamMembers.length === 0 ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center py-12">
+                <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  Nenhum membro da equipe cadastrado
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Comece adicionando o primeiro membro da sua equipe
+                </p>
+                <Button className="gap-2" onClick={() => openTeamMemberModal()}>
+                  <Plus className="h-4 w-4" />
+                  Adicionar Primeiro Membro
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {teamMembers.map((teamMember) => (
+              <TeamMemberCard 
+                key={teamMember.id} 
+                teamMember={teamMember}
+                onEdit={() => handleEditTeamMember(teamMember)}
+                onDelete={() => handleDeleteTeamMember(teamMember)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modais */}
+      <PersonModal />
+      <TeamMemberModal />
+      <DeleteModal />
     </div>
   );
 }

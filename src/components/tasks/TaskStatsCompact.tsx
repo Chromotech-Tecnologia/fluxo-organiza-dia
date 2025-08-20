@@ -1,9 +1,7 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, Calendar, AlertCircle, ArrowRight, XCircle, User } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Task } from "@/types";
-import { calculateTotalEstimatedTime, formatTime } from "@/lib/taskUtils";
+import { Clock, CheckCircle, XCircle, Hourglass, RotateCcw, User, Calendar, Timer } from "lucide-react";
 
 interface TaskStatsCompactProps {
   tasks: Task[];
@@ -11,168 +9,143 @@ interface TaskStatsCompactProps {
 
 export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => {
-    const hasCompletion = t.completionHistory && t.completionHistory.length > 0;
-    const lastCompletion = hasCompletion ? t.completionHistory[t.completionHistory.length - 1] : null;
-    return lastCompletion?.status === 'completed' || t.isConcluded;
-  }).length;
-  
-  const notDoneTasks = tasks.filter(t => {
-    const hasCompletion = t.completionHistory && t.completionHistory.length > 0;
-    const lastCompletion = hasCompletion ? t.completionHistory[t.completionHistory.length - 1] : null;
-    return lastCompletion?.status === 'not-done';
-  }).length;
 
-  const pendingTasks = tasks.filter(t => {
-    const hasCompletion = t.completionHistory && t.completionHistory.length > 0;
-    const lastCompletion = hasCompletion ? t.completionHistory[t.completionHistory.length - 1] : null;
-    return !lastCompletion && !t.isConcluded;
-  }).length;
+  // Status das Tarefas
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
+  const pendingTasks = tasks.filter(task => task.status === 'pending').length;
 
-  const forwardedTasks = tasks.filter(t => t.forwardCount > 0).length;
-  const personalTasks = tasks.filter(t => t.type === 'personal-task').length;
-  const meetingTasks = tasks.filter(t => t.type === 'meeting').length;
-  const delegatedTasks = tasks.filter(t => t.type === 'delegated-task').length;
+  // Reagendamentos
+  const rescheduledTasks = tasks.filter(task => 
+    task.forwardHistory && task.forwardHistory.length > 0
+  ).length;
 
-  const totalEstimatedTime = calculateTotalEstimatedTime(tasks);
-  
-  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  const notDoneRate = totalTasks > 0 ? Math.round((notDoneTasks / totalTasks) * 100) : 0;
-  const pendingRate = totalTasks > 0 ? Math.round((pendingTasks / totalTasks) * 100) : 0;
-  const forwardedRate = totalTasks > 0 ? Math.round((forwardedTasks / totalTasks) * 100) : 0;
-  const personalRate = totalTasks > 0 ? Math.round((personalTasks / totalTasks) * 100) : 0;
-  const meetingRate = totalTasks > 0 ? Math.round((meetingTasks / totalTasks) * 100) : 0;
-  const delegatedRate = totalTasks > 0 ? Math.round((delegatedTasks / totalTasks) * 100) : 0;
+  // Tipos de Tarefas
+  const personalTasks = tasks.filter(task => task.type === 'personal-task').length;
+  const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
+  const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
 
-  if (totalTasks === 0) {
-    return null;
-  }
+  // Tempo Estimado
+  const getTimeInMinutes = (timeInvestment: string) => {
+    switch (timeInvestment) {
+      case 'low': return 5;
+      case 'medium': return 60;
+      case 'high': return 120;
+      default: return 0;
+    }
+  };
+
+  const totalEstimatedMinutes = tasks.reduce((total, task) => {
+    return total + getTimeInMinutes(task.timeInvestment);
+  }, 0);
+
+  const formatTime = (minutes: number) => {
+    if (minutes < 60) {
+      return `${minutes}min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+  };
+
+  const calculatePercentage = (value: number) => {
+    return totalTasks > 0 ? Math.round((value / totalTasks) * 100) : 0;
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-4">
       {/* Status das Tarefas */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium text-sm mb-3 text-center">Status das Tarefas</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Total</span>
-              </div>
-              <Badge variant="outline">{totalTasks}</Badge>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Feitas</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-green-600">{completedTasks}</span>
-                <Badge variant="secondary" className="text-xs">({completionRate}%)</Badge>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <XCircle className="h-4 w-4 text-red-600" />
-                <span className="text-sm">Não feitas</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-red-600">{notDoneTasks}</span>
-                <Badge variant="secondary" className="text-xs">({notDoneRate}%)</Badge>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-orange-600" />
-                <span className="text-sm">Pendentes</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className={`text-sm font-medium ${pendingTasks > 0 ? 'text-orange-600 bg-orange-100 px-2 py-1 rounded border border-orange-300' : 'text-orange-600'}`}>
-                  {pendingTasks}
-                </span>
-                <Badge variant="secondary" className="text-xs">({pendingRate}%)</Badge>
-              </div>
-            </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-1">
+            <CheckCircle className="h-4 w-4" />
+            Status das Tarefas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-green-600">Feitas</span>
+            <span className="text-sm font-medium text-green-600">
+              {completedTasks} ({calculatePercentage(completedTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-red-600">Não Feitas</span>
+            <span className="text-sm font-medium text-red-600">
+              {notDoneTasks} ({calculatePercentage(notDoneTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-yellow-600">Pendentes</span>
+            <span className="text-sm font-medium text-yellow-600">
+              {pendingTasks} ({calculatePercentage(pendingTasks)}%)
+            </span>
           </div>
         </CardContent>
       </Card>
 
       {/* Reagendamentos */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium text-sm mb-3 text-center">Reagendamentos</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <ArrowRight className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm">Reagendadas</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-yellow-600">{forwardedTasks}</span>
-                <Badge variant="secondary" className="text-xs">({forwardedRate}%)</Badge>
-              </div>
-            </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-1">
+            <RotateCcw className="h-4 w-4" />
+            Reagendamentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-blue-600">Reagendadas</span>
+            <span className="text-sm font-medium text-blue-600">
+              {rescheduledTasks} ({calculatePercentage(rescheduledTasks)}%)
+            </span>
           </div>
         </CardContent>
       </Card>
 
       {/* Tipos de Tarefas */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium text-sm mb-3 text-center">Tipos de Tarefas</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-blue-600" />
-                <span className="text-sm">Pessoais</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-blue-600">{personalTasks}</span>
-                <Badge variant="secondary" className="text-xs">({personalRate}%)</Badge>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-purple-600" />
-                <span className="text-sm">Reuniões</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-purple-600">{meetingTasks}</span>
-                <Badge variant="secondary" className="text-xs">({meetingRate}%)</Badge>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-indigo-600" />
-                <span className="text-sm">Delegadas</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-indigo-600">{delegatedTasks}</span>
-                <Badge variant="secondary" className="text-xs">({delegatedRate}%)</Badge>
-              </div>
-            </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-1">
+            <User className="h-4 w-4" />
+            Tipos de Tarefas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-purple-600">Pessoais</span>
+            <span className="text-sm font-medium text-purple-600">
+              {personalTasks} ({calculatePercentage(personalTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-orange-600">Reuniões</span>
+            <span className="text-sm font-medium text-orange-600">
+              {meetingTasks} ({calculatePercentage(meetingTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-teal-600">Delegadas</span>
+            <span className="text-sm font-medium text-teal-600">
+              {delegatedTasks} ({calculatePercentage(delegatedTasks)}%)
+            </span>
           </div>
         </CardContent>
       </Card>
 
       {/* Tempo Estimado */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium text-sm mb-3 text-center">Tempo Estimado</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-600" />
-                <span className="text-sm">Total</span>
-              </div>
-              <span className="text-lg font-bold text-blue-600">{formatTime(totalEstimatedTime)}</span>
-            </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-1">
+            <Timer className="h-4 w-4" />
+            Tempo Estimado
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-indigo-600">Total</span>
+            <span className="text-sm font-medium text-indigo-600">
+              {formatTime(totalEstimatedMinutes)}
+            </span>
           </div>
         </CardContent>
       </Card>
