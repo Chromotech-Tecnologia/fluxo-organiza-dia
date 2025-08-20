@@ -1,16 +1,14 @@
 
-import React from 'react';
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, X, Filter } from "lucide-react";
 import { TaskFilter, TaskType, TaskPriority, TaskStatus } from "@/types";
 import { DateRangePicker } from "./DateRangePicker";
-import { PeopleSelect } from "@/components/people/PeopleSelect";
+import { PeopleSelect } from "../people/PeopleSelect";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-import { format, subDays, addDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface TaskFiltersProps {
   currentFilters: TaskFilter;
@@ -18,38 +16,97 @@ interface TaskFiltersProps {
 }
 
 export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProps) {
-  const today = getCurrentDateInSaoPaulo();
-  const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
-  const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
+  const [showFilters, setShowFilters] = useState(false);
 
-  const handleQuickDateFilter = (dateType: 'today' | 'yesterday' | 'tomorrow') => {
-    let targetDate: string;
-    switch (dateType) {
+  const getQuickDateOption = (option: 'today' | 'yesterday' | 'tomorrow') => {
+    const today = new Date();
+    let targetDate = new Date();
+    
+    switch (option) {
       case 'yesterday':
-        targetDate = yesterday;
+        targetDate.setDate(today.getDate() - 1);
         break;
       case 'tomorrow':
-        targetDate = tomorrow;
+        targetDate.setDate(today.getDate() + 1);
         break;
+      case 'today':
       default:
         targetDate = today;
+        break;
     }
+    
+    const dateStr = targetDate.toISOString().split('T')[0];
+    return { start: dateStr, end: dateStr };
+  };
 
+  const handleQuickDateFilter = (option: 'today' | 'yesterday' | 'tomorrow') => {
+    const dateRange = getQuickDateOption(option);
     onFiltersChange({
       ...currentFilters,
-      dateRange: {
-        start: targetDate,
-        end: targetDate
-      }
+      dateRange
+    });
+  };
+
+  const handleDateRangeChange = (dateRange: { start: string; end: string } | undefined) => {
+    onFiltersChange({
+      ...currentFilters,
+      dateRange
+    });
+  };
+
+  const handleTypeFilter = (type: TaskType) => {
+    const currentTypes = currentFilters.type || [];
+    const newTypes = currentTypes.includes(type)
+      ? currentTypes.filter(t => t !== type)
+      : [...currentTypes, type];
+    
+    onFiltersChange({
+      ...currentFilters,
+      type: newTypes.length > 0 ? newTypes : undefined
+    });
+  };
+
+  const handlePriorityFilter = (priority: TaskPriority) => {
+    const currentPriorities = currentFilters.priority || [];
+    const newPriorities = currentPriorities.includes(priority)
+      ? currentPriorities.filter(p => p !== priority)
+      : [...currentPriorities, priority];
+    
+    onFiltersChange({
+      ...currentFilters,
+      priority: newPriorities.length > 0 ? newPriorities : undefined
+    });
+  };
+
+  const handleStatusFilter = (status: TaskStatus) => {
+    const currentStatuses = currentFilters.status || [];
+    const newStatuses = currentStatuses.includes(status)
+      ? currentStatuses.filter(s => s !== status)
+      : [...currentStatuses, status];
+    
+    onFiltersChange({
+      ...currentFilters,
+      status: newStatuses.length > 0 ? newStatuses : undefined
+    });
+  };
+
+  const handlePersonFilter = (personId: string) => {
+    onFiltersChange({
+      ...currentFilters,
+      assignedPersonId: personId || undefined
     });
   };
 
   const clearAllFilters = () => {
-    onFiltersChange({});
+    onFiltersChange({
+      dateRange: {
+        start: getCurrentDateInSaoPaulo(),
+        end: getCurrentDateInSaoPaulo()
+      }
+    });
   };
 
   const hasActiveFilters = !!(
-    currentFilters.dateRange ||
     currentFilters.type?.length ||
     currentFilters.priority?.length ||
     currentFilters.status?.length ||
@@ -57,155 +114,134 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
   );
 
   return (
-    <Card>
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          
-          {/* Data */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant={currentFilters.dateRange?.start === today && currentFilters.dateRange?.end === today ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleQuickDateFilter('today')}
-              className="h-7 px-2 text-xs"
-            >
-              Hoje
-            </Button>
-            <Button
-              variant={currentFilters.dateRange?.start === yesterday && currentFilters.dateRange?.end === yesterday ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleQuickDateFilter('yesterday')}
-              className="h-7 px-2 text-xs"
-            >
-              Ontem
-            </Button>
-            <Button
-              variant={currentFilters.dateRange?.start === tomorrow && currentFilters.dateRange?.end === tomorrow ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleQuickDateFilter('tomorrow')}
-              className="h-7 px-2 text-xs"
-            >
-              Amanhã
-            </Button>
+    <Card className="max-h-20 overflow-hidden">
+      <CardContent className="p-3 space-y-2">
+        {/* Linha 1: Filtros de data rápidos */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 py-0 text-xs"
+                onClick={() => handleQuickDateFilter('yesterday')}
+              >
+                Ontem
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 py-0 text-xs"
+                onClick={() => handleQuickDateFilter('today')}
+              >
+                Hoje
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 py-0 text-xs"
+                onClick={() => handleQuickDateFilter('tomorrow')}
+              >
+                Amanhã
+              </Button>
+            </div>
+            
             <DateRangePicker
-              value={currentFilters.dateRange}
-              onChange={(dateRange) => onFiltersChange({ ...currentFilters, dateRange })}
+              dateRange={currentFilters.dateRange}
+              onDateRangeChange={handleDateRangeChange}
             />
           </div>
 
-          {/* Tipo */}
-          <Select
-            value={currentFilters.type?.[0] || "all"}
-            onValueChange={(value) => {
-              const type = value === "all" ? undefined : [value as TaskType];
-              onFiltersChange({ ...currentFilters, type });
-            }}
-          >
-            <SelectTrigger className="w-32 h-7 text-xs">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="own-task">Própria</SelectItem>
-              <SelectItem value="meeting">Reunião</SelectItem>
-              <SelectItem value="delegated-task">Delegada</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Prioridade */}
-          <Select
-            value={currentFilters.priority?.[0] || "all"}
-            onValueChange={(value) => {
-              const priority = value === "all" ? undefined : [value as TaskPriority];
-              onFiltersChange({ ...currentFilters, priority });
-            }}
-          >
-            <SelectTrigger className="w-32 h-7 text-xs">
-              <SelectValue placeholder="Prioridade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="none">Nenhuma</SelectItem>
-              <SelectItem value="priority">Prioridade</SelectItem>
-              <SelectItem value="extreme">Extrema</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Status */}
-          <Select
-            value={currentFilters.status?.[0] || "all"}
-            onValueChange={(value) => {
-              const status = value === "all" ? undefined : [value as TaskStatus];
-              onFiltersChange({ ...currentFilters, status });
-            }}
-          >
-            <SelectTrigger className="w-32 h-7 text-xs">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
-              <SelectItem value="completed">Concluída</SelectItem>
-              <SelectItem value="not-done">Não Feita</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Pessoa */}
-          <div className="w-40">
-            <PeopleSelect
-              value={currentFilters.assignedPersonId || ""}
-              onValueChange={(value) => {
-                onFiltersChange({
-                  ...currentFilters,
-                  assignedPersonId: value || undefined
-                });
-              }}
-              placeholder="Pessoa"
-              className="h-7 text-xs"
-            />
-          </div>
-
-          {/* Limpar filtros */}
-          {hasActiveFilters && (
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant={showFilters ? "default" : "outline"}
               size="sm"
-              onClick={clearAllFilters}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-6 px-2 py-0 text-xs gap-1"
             >
-              <X className="h-3 w-3 mr-1" />
-              Limpar
+              <Filter className="h-3 w-3" />
+              Filtros
             </Button>
-          )}
+            
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="h-6 px-2 py-0 text-xs gap-1"
+              >
+                <X className="h-3 w-3" />
+                Limpar
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Filtros ativos */}
-        {hasActiveFilters && (
-          <div className="flex gap-1 mt-2 flex-wrap">
-            {currentFilters.dateRange && (
-              <Badge variant="secondary" className="text-xs">
-                {currentFilters.dateRange.start === currentFilters.dateRange.end
-                  ? format(new Date(currentFilters.dateRange.start + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR })
-                  : `${format(new Date(currentFilters.dateRange.start + 'T00:00:00'), 'dd/MM', { locale: ptBR })} - ${format(new Date(currentFilters.dateRange.end + 'T00:00:00'), 'dd/MM', { locale: ptBR })}`
-                }
-              </Badge>
-            )}
-            {currentFilters.type?.map(type => (
-              <Badge key={type} variant="secondary" className="text-xs">
-                {type === 'own-task' ? 'Própria' : type === 'meeting' ? 'Reunião' : 'Delegada'}
-              </Badge>
-            ))}
-            {currentFilters.priority?.map(priority => (
-              <Badge key={priority} variant="secondary" className="text-xs">
-                {priority === 'none' ? 'Sem Prioridade' : priority === 'priority' ? 'Prioridade' : 'Extrema'}
-              </Badge>
-            ))}
-            {currentFilters.status?.map(status => (
-              <Badge key={status} variant="secondary" className="text-xs">
-                {status === 'pending' ? 'Pendente' : status === 'completed' ? 'Concluída' : 'Não Feita'}
-              </Badge>
-            ))}
+        {/* Linha 2: Filtros expandidos (quando showFilters é true) */}
+        {showFilters && (
+          <div className="flex items-center gap-4 pt-1 border-t">
+            {/* Tipos */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">Tipo:</span>
+              <div className="flex gap-1">
+                {(['task', 'routine', 'appointment'] as TaskType[]).map((type) => (
+                  <Badge
+                    key={type}
+                    variant={currentFilters.type?.includes(type) ? "default" : "outline"}
+                    className="h-5 px-2 text-xs cursor-pointer"
+                    onClick={() => handleTypeFilter(type)}
+                  >
+                    {type === 'task' ? 'Tarefa' : type === 'routine' ? 'Rotina' : 'Compromisso'}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Prioridades */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">Prioridade:</span>
+              <div className="flex gap-1">
+                {(['high', 'medium', 'low'] as TaskPriority[]).map((priority) => (
+                  <Badge
+                    key={priority}
+                    variant={currentFilters.priority?.includes(priority) ? "default" : "outline"}
+                    className="h-5 px-2 text-xs cursor-pointer"
+                    onClick={() => handlePriorityFilter(priority)}
+                  >
+                    {priority === 'high' ? 'Alta' : priority === 'medium' ? 'Média' : 'Baixa'}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">Status:</span>
+              <div className="flex gap-1">
+                {(['pending', 'completed', 'not-done'] as TaskStatus[]).map((status) => (
+                  <Badge
+                    key={status}
+                    variant={currentFilters.status?.includes(status) ? "default" : "outline"}
+                    className="h-5 px-2 text-xs cursor-pointer"
+                    onClick={() => handleStatusFilter(status)}
+                  >
+                    {status === 'pending' ? 'Pendente' : status === 'completed' ? 'Feito' : 'Não Feito'}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Pessoa */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">Pessoa:</span>
+              <PeopleSelect
+                value={currentFilters.assignedPersonId || ''}
+                onChange={handlePersonFilter}
+                placeholder="Todas"
+                className="h-6 text-xs"
+              />
+            </div>
           </div>
         )}
       </CardContent>

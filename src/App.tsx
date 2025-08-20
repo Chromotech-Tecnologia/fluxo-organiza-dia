@@ -30,43 +30,53 @@ import BackupPage from "./pages/BackupPage";
 import { SkillsPage } from "./pages/SkillsPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Create QueryClient outside of component to avoid re-creation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthGuard>
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/tasks" element={<TasksPage />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/people" element={<PeoplePage />} />
-              <Route path="/skills" element={<SkillsPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/daily-close" element={<DailyClosePage />} />
-              <Route path="/stats" element={<StatsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/backup" element={<BackupPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AppLayout>
-          
-          {/* Global Modals */}
-          <TaskModal />
-          <PersonModal />
-          <SkillModal />
-          <TeamMemberModal />
-          <ForwardTaskModal />
-          <DeleteModal />
-          <DailyCloseModal />
-        </AuthGuard>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthGuard>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/tasks" element={<TasksPage />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/people" element={<PeoplePage />} />
+                <Route path="/skills" element={<SkillsPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/daily-close" element={<DailyClosePage />} />
+                <Route path="/stats" element={<StatsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/backup" element={<BackupPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AppLayout>
+            
+            {/* Global Modals */}
+            <TaskModal />
+            <PersonModal />
+            <SkillModal />
+            <TeamMemberModal />
+            <ForwardTaskModal />
+            <DeleteModal />
+            <DailyCloseModal />
+          </AuthGuard>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
