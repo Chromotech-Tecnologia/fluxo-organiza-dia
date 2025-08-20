@@ -36,6 +36,9 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const notDoneRate = totalTasks > 0 ? Math.round((notDoneTasks / totalTasks) * 100) : 0;
+  const pendingRate = totalTasks > 0 ? Math.round((pendingTasks / totalTasks) * 100) : 0;
+  const unscheduledRate = totalTasks > 0 ? Math.round((unscheduledTasks / totalTasks) * 100) : 0;
+  const forwardedRate = totalTasks > 0 ? Math.round((forwardedTasks / totalTasks) * 100) : 0;
 
   if (totalTasks === 0) {
     return null;
@@ -72,20 +75,23 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
             </div>
           </div>
 
-          {/* Não Concluídas | Não Agendadas */}
+          {/* Pendentes */}
           <div className="text-center">
-            <div className="flex flex-col">
-              <div className="text-sm font-bold text-orange-600">{unscheduledTasks}</div>
-              <div className="text-xs text-muted-foreground">Não agendadas</div>
+            <div className={`text-lg font-bold ${pendingTasks > 0 ? 'text-orange-600 bg-orange-100 px-2 py-1 rounded border-2 border-orange-300' : 'text-orange-600'}`}>
+              {pendingTasks}
             </div>
-            <div className="flex flex-col mt-1">
-              <div className={`text-sm font-bold ${pendingTasks > 0 ? 'text-orange-600 bg-orange-100 px-2 py-1 rounded border-2 border-orange-300' : 'text-orange-600'}`}>
-                {pendingTasks}
-              </div>
-              <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Pendentes
-              </div>
+            <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              Pendentes ({pendingRate}%)
+            </div>
+          </div>
+
+          {/* Não Agendadas */}
+          <div className="text-center">
+            <div className="text-lg font-bold text-orange-600">{unscheduledTasks}</div>
+            <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              Não agendadas ({unscheduledRate}%)
             </div>
           </div>
 
@@ -94,7 +100,7 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
             <div className="text-lg font-bold text-yellow-600">{forwardedTasks}</div>
             <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
               <ArrowRight className="h-3 w-3" />
-              Reagendadas
+              Reagendadas ({forwardedRate}%)
             </div>
           </div>
 
