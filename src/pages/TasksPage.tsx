@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,8 @@ import { Plus, CheckCircle } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
-import { TaskStatsImproved } from "@/components/tasks/TaskStatsImproved";
-import { TaskFiltersImproved } from "@/components/tasks/TaskFiltersImproved";
+import { TaskStatsCompact } from "@/components/tasks/TaskStatsCompact";
+import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
 import { RescheduleModal } from "@/components/modals/RescheduleModal";
@@ -202,8 +201,8 @@ const TasksPage = () => {
         </Card>
       )}
 
-      {/* Filtros Melhorados */}
-      <TaskFiltersImproved 
+      {/* Filtros Horizontais */}
+      <TaskFiltersHorizontal 
         currentFilters={taskFilters}
         onFiltersChange={setTaskFilters}
         searchQuery={searchQuery}
@@ -212,8 +211,8 @@ const TasksPage = () => {
         onSortChange={setSortBy}
       />
 
-      {/* Resumo de Estatísticas Melhorado */}
-      <TaskStatsImproved tasks={displayTasks} />
+      {/* Resumo de Estatísticas Compacto */}
+      <TaskStatsCompact tasks={displayTasks} />
 
       {/* Lista de Tarefas com Drag & Drop */}
       <div className="grid gap-4">

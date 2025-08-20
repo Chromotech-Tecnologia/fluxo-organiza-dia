@@ -240,15 +240,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "tasks_assigned_person_id_fkey"
-            columns: ["assigned_person_id"]
-            isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       team_members: {
         Row: {

@@ -108,7 +108,7 @@ export function TaskCardImproved({
       onClick={handleCardClick}
     >
       <CardContent className="p-3">
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* Header */}
           <div className="flex justify-between items-start gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -184,104 +184,10 @@ export function TaskCardImproved({
             </div>
           )}
 
-          {/* Layout horizontal: Checklist à esquerda, Botões à direita */}
-          <div className="flex items-center justify-between gap-3">
-            {/* Checklist compacto */}
-            {totalSubItems > 0 && (
-              <div className="flex-1 max-w-[200px]">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                  <span>Checklist</span>
-                  <span>{completedSubItems}/{totalSubItems}</span>
-                </div>
-                <Progress value={checklistProgress} className="h-1.5" />
-              </div>
-            )}
-
-            {/* Botões de ação compactos */}
-            <div className="flex gap-1 flex-shrink-0">
-              {!task.isConcluded && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusClick('completed');
-                    }}
-                    className={`h-7 px-2 text-xs ${
-                      lastCompletion?.status === 'completed' 
-                        ? 'bg-green-100 text-green-800 border-green-500' 
-                        : 'text-green-600 border-green-600 hover:bg-green-50'
-                    }`}
-                  >
-                    {lastCompletion?.status === 'completed' ? '✓' : 'Feito'}
-                  </Button>
-                  
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusClick('not-done');
-                    }}
-                    className={`h-7 px-2 text-xs ${
-                      lastCompletion?.status === 'not-done' 
-                        ? 'bg-red-100 text-red-800 border-red-500' 
-                        : 'text-red-600 border-red-600 hover:bg-red-50'
-                    }`}
-                  >
-                    {lastCompletion?.status === 'not-done' ? '✓' : 'Não'}
-                  </Button>
-                  
-                  {canReschedule && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onForward();
-                      }}
-                      className="h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50 bg-orange-100"
-                    >
-                      ✓ Reagendado
-                    </Button>
-                  )}
-                  
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onConclude();
-                    }}
-                    className="h-7 px-2 text-xs text-blue-600 border-blue-600 hover:bg-blue-50"
-                  >
-                    Concluir
-                  </Button>
-                </>
-              )}
-
-              {task.isConcluded && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUnconclude();
-                  }}
-                  className="h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50"
-                >
-                  <Undo className="h-3 w-3 mr-1" />
-                  Desfazer
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Tags */}
+          {/* Tags - data completa com ano + outras tags */}
           <div className="flex gap-1 flex-wrap">
             <Badge variant="secondary" className="text-xs h-5">
-              {format(taskDate, 'dd/MM', { locale: ptBR })}
+              {format(taskDate, 'dd/MM/yyyy', { locale: ptBR })}
             </Badge>
 
             {/* Prioridade */}
@@ -320,6 +226,100 @@ export function TaskCardImproved({
                 <Clock className="h-2.5 w-2.5 mr-1" />
                 {task.timeInvestment === 'medium' ? 'Médio' : 'Alto'}
               </Badge>
+            )}
+          </div>
+
+          {/* Layout inferior: Botões de ação à esquerda, Checklist à direita */}
+          <div className="flex justify-between items-end gap-4">
+            {/* Botões de ação no rodapé esquerdo */}
+            <div className="flex gap-1 flex-shrink-0">
+              {!task.isConcluded && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStatusClick('completed');
+                    }}
+                    className={`h-7 px-2 text-xs min-w-[50px] ${
+                      lastCompletion?.status === 'completed' 
+                        ? 'bg-green-100 text-green-800 border-green-500' 
+                        : 'text-green-600 border-green-600 hover:bg-green-50'
+                    }`}
+                  >
+                    {lastCompletion?.status === 'completed' ? '✓ Feito' : 'Feito'}
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStatusClick('not-done');
+                    }}
+                    className={`h-7 px-2 text-xs min-w-[50px] ${
+                      lastCompletion?.status === 'not-done' 
+                        ? 'bg-red-100 text-red-800 border-red-500' 
+                        : 'text-red-600 border-red-600 hover:bg-red-50'
+                    }`}
+                  >
+                    {lastCompletion?.status === 'not-done' ? '✓ Não' : 'Não'}
+                  </Button>
+                  
+                  {canReschedule && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onForward();
+                      }}
+                      className="h-7 px-2 text-xs min-w-[70px] text-orange-600 border-orange-600 hover:bg-orange-50 bg-orange-100"
+                    >
+                      ✓ Reagendar
+                    </Button>
+                  )}
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onConclude();
+                    }}
+                    className="h-7 px-2 text-xs min-w-[60px] text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    Concluir
+                  </Button>
+                </>
+              )}
+
+              {task.isConcluded && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnconclude();
+                  }}
+                  className="h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50"
+                >
+                  <Undo className="h-3 w-3 mr-1" />
+                  Desfazer
+                </Button>
+              )}
+            </div>
+
+            {/* Checklist compacto no lado direito */}
+            {totalSubItems > 0 && (
+              <div className="flex-shrink-0 min-w-[120px] max-w-[200px]">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>Checklist</span>
+                  <span>{completedSubItems}/{totalSubItems}</span>
+                </div>
+                <Progress value={checklistProgress} className="h-1.5" />
+              </div>
             )}
           </div>
         </div>

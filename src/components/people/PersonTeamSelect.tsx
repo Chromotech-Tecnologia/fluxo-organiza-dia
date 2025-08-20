@@ -1,116 +1,98 @@
 
+import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
-import { cn } from "@/lib/utils";
 import { User, Users } from "lucide-react";
 
 interface PersonTeamSelectProps {
   value?: string;
-  onChange: (value: string | undefined) => void;
+  onValueChange: (value: string) => void;
   placeholder?: string;
-  className?: string;
 }
 
-export function PersonTeamSelect({ 
-  value, 
-  onChange, 
-  placeholder = "Selecione uma pessoa ou membro da equipe", 
-  className 
-}: PersonTeamSelectProps) {
+export function PersonTeamSelect({ value, onValueChange, placeholder = "Selecionar pessoa ou equipe..." }: PersonTeamSelectProps) {
+  // Usar filtros específicos para evitar re-renders desnecessários
   const { people, loading: loadingPeople } = useSupabasePeople();
   const { teamMembers, loading: loadingTeamMembers } = useSupabaseTeamMembers({
-    status: 'ativo' // Filtrar apenas membros ativos
+    status: 'ativo'
   });
 
   const isLoading = loadingPeople || loadingTeamMembers;
 
-  // Combinar pessoas e membros da equipe em uma única lista
-  const allOptions = [
-    ...people.map(person => ({
-      id: person.id,
-      name: person.name,
-      role: person.role,
-      type: 'person' as const
-    })),
-    ...teamMembers.map(member => ({
-      id: member.id,
-      name: member.name,
-      role: member.role,
-      type: 'teamMember' as const
-    }))
-  ].sort((a, b) => a.name.localeCompare(b.name));
+  // Debug apenas uma vez quando os dados mudam
+  React.useEffect(() => {
+    if (!isLoading) {
+      console.log('PersonTeamSelect options:', {
+        people: people.length,
+        teamMembers: teamMembers.length,
+        total: people.length + teamMembers.length,
+        isLoading
+      });
+    }
+  }, [people.length, teamMembers.length, isLoading]);
 
-  console.log('PersonTeamSelect options:', {
-    people: people.length,
-    teamMembers: teamMembers.length,
-    total: allOptions.length,
-    isLoading
-  });
+  if (isLoading) {
+    return (
+      <Select disabled>
+        <SelectTrigger>
+          <SelectValue placeholder="Carregando..." />
+        </SelectTrigger>
+      </Select>
+    );
+  }
 
   return (
-    <Select 
-      value={value || "all"} 
-      onValueChange={(newValue) => onChange(newValue === "all" ? undefined : newValue)}
-      disabled={isLoading}
-    >
-      <SelectTrigger className={cn("h-10 text-sm", className)}>
-        <SelectValue placeholder={isLoading ? "Carregando..." : placeholder} />
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger>
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="max-h-60">
-        <SelectItem value="all">{placeholder}</SelectItem>
-        
-        {/* Seção de Pessoas */}
+      <SelectContent>
         {people.length > 0 && (
           <>
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 flex items-center gap-1">
-              <User className="h-3 w-3" />
-              Pessoas
-            </div>
+            <SelectItem disabled value="people-header" className="font-semibold text-xs">
+              <div className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                PESSOAS
+              </div>
+            </SelectItem>
             {people.map((person) => (
               <SelectItem key={`person-${person.id}`} value={person.id}>
                 <div className="flex items-center gap-2">
-                  <User className="h-3 w-3 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">{person.name}</div>
-                    {person.role && (
-                      <div className="text-xs text-muted-foreground">{person.role}</div>
-                    )}
-                  </div>
+                  <User className="h-3 w-3 text-blue-500" />
+                  <span>{person.name}</span>
+                  {person.role && <span className="text-xs text-muted-foreground">({person.role})</span>}
                 </div>
               </SelectItem>
             ))}
           </>
         )}
-
-        {/* Seção de Membros da Equipe */}
+        
         {teamMembers.length > 0 && (
           <>
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              Equipe
-            </div>
+            {people.length > 0 && <SelectItem disabled value="separator" className="border-t">---</SelectItem>}
+            <SelectItem disabled value="team-header" className="font-semibold text-xs">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                EQUIPE
+              </div>
+            </SelectItem>
             {teamMembers.map((member) => (
               <SelectItem key={`team-${member.id}`} value={member.id}>
                 <div className="flex items-center gap-2">
-                  <Users className="h-3 w-3 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">{member.name}</div>
-                    {member.role && (
-                      <div className="text-xs text-muted-foreground">{member.role}</div>
-                    )}
-                  </div>
+                  <Users className="h-3 w-3 text-green-500" />
+                  <span>{member.name}</span>
+                  {member.role && <span className="text-xs text-muted-foreground">({member.role})</span>}
                 </div>
               </SelectItem>
             ))}
           </>
         )}
-
-        {/* Estado vazio */}
-        {!isLoading && allOptions.length === 0 && (
-          <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-            Nenhuma pessoa ou membro da equipe ativo encontrado.
-          </div>
+        
+        {people.length === 0 && teamMembers.length === 0 && (
+          <SelectItem disabled value="empty">
+            Nenhuma pessoa ou membro da equipe ativo encontrado
+          </SelectItem>
         )}
       </SelectContent>
     </Select>

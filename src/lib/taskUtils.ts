@@ -1,4 +1,3 @@
-
 import { Task } from "@/types";
 
 // Tipos de ordenação disponíveis
@@ -84,17 +83,18 @@ export function sortTasks(tasks: Task[], sortBy: SortOption): Task[] {
   }
 }
 
-// Função para obter cor do número da ordem (termômetro)
+// Função para obter cor do número da ordem (termômetro invertido: vermelho -> verde)
 export function getOrderNumberColor(order: number, maxOrder: number): string {
   if (!order || order === 0) return 'text-gray-400';
   
   const percentage = Math.min(order / maxOrder, 1);
   
-  if (percentage <= 0.2) return 'text-black';
-  if (percentage <= 0.4) return 'text-purple-600';
-  if (percentage <= 0.6) return 'text-red-600';
-  if (percentage <= 0.8) return 'text-orange-500';
-  return 'text-green-600';
+  // Invertido: ordem baixa = vermelho, ordem alta = verde
+  if (percentage <= 0.2) return 'text-red-600 bg-red-50 border-red-300';
+  if (percentage <= 0.4) return 'text-red-500 bg-red-50 border-red-200';  
+  if (percentage <= 0.6) return 'text-orange-500 bg-orange-50 border-orange-200';
+  if (percentage <= 0.8) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+  return 'text-green-600 bg-green-50 border-green-300';
 }
 
 // Função para obter cor de prioridade
