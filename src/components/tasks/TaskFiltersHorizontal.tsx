@@ -1,13 +1,11 @@
 
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Search, X, Filter, Calendar, Tag, User, Clock, ArrowUpDown, Users, ChevronDown } from "lucide-react";
+import { Search, X, Filter, Calendar, ArrowUpDown, Users, ChevronDown } from "lucide-react";
 import { TaskFilter } from "@/types";
 import { DateRangePicker } from "./DateRangePicker";
 import { SORT_OPTIONS, SortOption } from "@/lib/taskUtils";
@@ -26,7 +24,7 @@ interface TaskFiltersHorizontalProps {
 }
 
 export function TaskFiltersHorizontal({
-  currentFilters,
+  currentFilters,  
   onFiltersChange,
   searchQuery,
   onSearchChange,
@@ -84,17 +82,68 @@ export function TaskFiltersHorizontal({
     });
   };
 
+  const toggleType = (type: 'own-task' | 'meeting' | 'delegated-task') => {
+    const currentTypes = Array.isArray(currentFilters.type) ? currentFilters.type : [];
+    const newTypes = currentTypes.includes(type)
+      ? currentTypes.filter(t => t !== type)
+      : [...currentTypes, type];
+    
+    onFiltersChange({
+      ...currentFilters,
+      type: newTypes.length > 0 ? newTypes : undefined
+    });
+  };
+
+  const togglePriority = (priority: 'extreme' | 'priority' | 'none') => {
+    const currentPriorities = Array.isArray(currentFilters.priority) ? currentFilters.priority : [];
+    const newPriorities = currentPriorities.includes(priority)
+      ? currentPriorities.filter(p => p !== priority)
+      : [...currentPriorities, priority];
+    
+    onFiltersChange({
+      ...currentFilters,
+      priority: newPriorities.length > 0 ? newPriorities : undefined
+    });
+  };
+
+  const toggleTimeInvestment = (time: 'low' | 'medium' | 'high') => {
+    const currentTimes = Array.isArray(currentFilters.timeInvestment) ? currentFilters.timeInvestment : [];
+    const newTimes = currentTimes.includes(time)
+      ? currentTimes.filter(t => t !== time)
+      : [...currentTimes, time];
+    
+    onFiltersChange({
+      ...currentFilters,
+      timeInvestment: newTimes.length > 0 ? newTimes : undefined
+    });
+  };
+
   // Verificar se status está ativo
   const isStatusActive = (status: 'pending' | 'completed' | 'not-done') => {
     return Array.isArray(currentFilters.status) && currentFilters.status.includes(status);
   };
 
-  // Verificar se data está ativa
+  // Verificar se tipo está ativo
+  const isTypeActive = (type: 'own-task' | 'meeting' | 'delegated-task') => {
+    return Array.isArray(currentFilters.type) && currentFilters.type.includes(type);
+  };
+
+  // Verificar se prioridade está ativa
+  const isPriorityActive = (priority: 'extreme' | 'priority' | 'none') => {
+    return Array.isArray(currentFilters.priority) && currentFilters.priority.includes(priority);
+  };
+
+  // Verificar se tempo está ativo
+  const isTimeActive = (time: 'low' | 'medium' | 'high') => {
+    return Array.isArray(currentFilters.timeInvestment) && currentFilters.timeInvestment.includes(time);
+  };
+
+  // Verificar se data está ativa (agora exclusiva)
   const isDateActive = (dateStr: string) => {
     return currentFilters.dateRange?.start === dateStr && currentFilters.dateRange?.end === dateStr;
   };
 
-  // Contar filtros ativos
+  // Contar filtros ativos (todos os filtros, não apenas avançados)
   const getActiveFiltersCount = () => {
     let count = 0;
     
@@ -185,9 +234,9 @@ export function TaskFiltersHorizontal({
         </Select>
       </div>
 
-      {/* Segunda linha: Datas rápidas e Status */}
+      {/* Segunda linha: Datas rápidas, Date Range e Status */}
       <div className="flex gap-2 flex-wrap items-center">
-        {/* Botões de data rápida */}
+        {/* Botões de data rápida - agora exclusivos */}
         <Button
           variant={isDateActive(yesterday) ? "default" : "outline"}
           size="sm"
@@ -215,6 +264,9 @@ export function TaskFiltersHorizontal({
           Amanhã
         </Button>
 
+        {/* Separador visual */}
+        <div className="h-6 w-px bg-border" />
+
         {/* Seletor de período personalizado */}
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
@@ -235,6 +287,9 @@ export function TaskFiltersHorizontal({
             }
           />
         </div>
+
+        {/* Separador visual */}
+        <div className="h-6 w-px bg-border" />
 
         {/* Status buttons */}
         <div className="flex gap-1">
@@ -278,109 +333,97 @@ export function TaskFiltersHorizontal({
         </CollapsibleTrigger>
         
         <CollapsibleContent className="mt-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/30">
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
             {/* Tipos */}
             <div>
-              <label className="text-sm font-medium mb-2 flex items-center gap-1">
-                <Tag className="h-3 w-3" />
-                Tipos
-              </label>
-              <div className="space-y-2">
-                {[
-                  { value: 'own-task', label: 'Pessoal' },
-                  { value: 'meeting', label: 'Reunião' },
-                  { value: 'delegated-task', label: 'Delegada' }
-                ].map((type) => (
-                  <div key={type.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`type-${type.value}`}
-                      checked={Array.isArray(currentFilters.type) && currentFilters.type.includes(type.value as any) || false}
-                      onCheckedChange={(checked) => {
-                        const currentTypes = Array.isArray(currentFilters.type) ? currentFilters.type : [];
-                        const newTypes = checked
-                          ? [...currentTypes, type.value as any]
-                          : currentTypes.filter(t => t !== type.value);
-                        onFiltersChange({
-                          ...currentFilters,
-                          type: newTypes.length > 0 ? newTypes : undefined
-                        });
-                      }}
-                    />
-                    <label htmlFor={`type-${type.value}`} className="text-sm">
-                      {type.label}
-                    </label>
-                  </div>
-                ))}
+              <label className="text-sm font-medium mb-2 block">Tipos</label>
+              <div className="flex gap-1 flex-wrap">
+                <Button
+                  variant={isTypeActive('own-task') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => toggleType('own-task')}
+                >
+                  Pessoal
+                </Button>
+                <Button
+                  variant={isTypeActive('meeting') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => toggleType('meeting')}
+                >
+                  Reunião
+                </Button>
+                <Button
+                  variant={isTypeActive('delegated-task') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => toggleType('delegated-task')}
+                >
+                  Delegada
+                </Button>
               </div>
             </div>
 
             {/* Prioridades */}
             <div>
-              <label className="text-sm font-medium mb-2 flex items-center gap-1">
-                <User className="h-3 w-3" />
-                Prioridades
-              </label>
-              <div className="space-y-2">
-                {[
-                  { value: 'extreme', label: 'Extrema' },
-                  { value: 'priority', label: 'Prioridade' },
-                  { value: 'none', label: 'Normal' }
-                ].map((priority) => (
-                  <div key={priority.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`priority-${priority.value}`}
-                      checked={Array.isArray(currentFilters.priority) && currentFilters.priority.includes(priority.value as any) || false}
-                      onCheckedChange={(checked) => {
-                        const currentPriorities = Array.isArray(currentFilters.priority) ? currentFilters.priority : [];
-                        const newPriorities = checked
-                          ? [...currentPriorities, priority.value as any]
-                          : currentPriorities.filter(p => p !== priority.value);
-                        onFiltersChange({
-                          ...currentFilters,
-                          priority: newPriorities.length > 0 ? newPriorities : undefined
-                        });
-                      }}
-                    />
-                    <label htmlFor={`priority-${priority.value}`} className="text-sm">
-                      {priority.label}
-                    </label>
-                  </div>
-                ))}
+              <label className="text-sm font-medium mb-2 block">Prioridades</label>
+              <div className="flex gap-1 flex-wrap">
+                <Button
+                  variant={isPriorityActive('extreme') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => togglePriority('extreme')}
+                >
+                  Extrema
+                </Button>
+                <Button
+                  variant={isPriorityActive('priority') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => togglePriority('priority')}
+                >
+                  Prioridade
+                </Button>
+                <Button
+                  variant={isPriorityActive('none') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => togglePriority('none')}
+                >
+                  Normal
+                </Button>
               </div>
             </div>
 
             {/* Tempo de Investimento */}
             <div>
-              <label className="text-sm font-medium mb-2 flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Tempo
-              </label>
-              <div className="space-y-2">
-                {[
-                  { value: 'low', label: 'Baixo (5min)' },
-                  { value: 'medium', label: 'Médio (1h)' },
-                  { value: 'high', label: 'Alto (2h)' }
-                ].map((time) => (
-                  <div key={time.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`time-${time.value}`}
-                      checked={Array.isArray(currentFilters.timeInvestment) && currentFilters.timeInvestment.includes(time.value as any) || false}
-                      onCheckedChange={(checked) => {
-                        const currentTimes = Array.isArray(currentFilters.timeInvestment) ? currentFilters.timeInvestment : [];
-                        const newTimes = checked
-                          ? [...currentTimes, time.value as any]
-                          : currentTimes.filter(t => t !== time.value);
-                        onFiltersChange({
-                          ...currentFilters,
-                          timeInvestment: newTimes.length > 0 ? newTimes : undefined
-                        });
-                      }}
-                    />
-                    <label htmlFor={`time-${time.value}`} className="text-sm">
-                      {time.label}
-                    </label>
-                  </div>
-                ))}
+              <label className="text-sm font-medium mb-2 block">Tempo de Investimento</label>
+              <div className="flex gap-1 flex-wrap">
+                <Button
+                  variant={isTimeActive('low') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => toggleTimeInvestment('low')}
+                >
+                  Baixo (5min)
+                </Button>
+                <Button
+                  variant={isTimeActive('medium') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => toggleTimeInvestment('medium')}
+                >
+                  Médio (1h)
+                </Button>
+                <Button
+                  variant={isTimeActive('high') ? "default" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => toggleTimeInvestment('high')}
+                >
+                  Alto (2h)
+                </Button>
               </div>
             </div>
           </div>
