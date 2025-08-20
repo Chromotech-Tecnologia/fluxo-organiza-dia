@@ -10,16 +10,18 @@ export function useSupabasePeople() {
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
 
-  // Carregar pessoas do Supabase
+  // Carregar apenas pessoas ativas do Supabase
   const loadPeople = async () => {
     if (!user) return;
     
     setLoading(true);
     try {
+      console.log('Loading active people from Supabase...');
       const { data, error } = await supabase
         .from('people')
         .select('*')
         .eq('user_id', user.id)
+        .eq('active', true) // Filtrar apenas pessoas ativas
         .order('name');
 
       if (error) throw error;
@@ -35,8 +37,10 @@ export function useSupabasePeople() {
         updatedAt: person.updated_at
       }));
 
+      console.log('Active people loaded:', convertedPeople.length);
       setPeople(convertedPeople);
     } catch (error: any) {
+      console.error('Error loading people:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar pessoas: " + error.message,
@@ -177,8 +181,8 @@ export function useSupabasePeople() {
             table: 'people',
             filter: `user_id=eq.${user.id}`
           },
-          () => {
-            console.log('People changed, reloading...');
+          (payload) => {
+            console.log('People changed, reloading...', payload);
             loadPeople();
           }
         )

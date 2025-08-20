@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +26,7 @@ import {
 import { taskFormSchema } from "@/lib/validations/task";
 import { cn } from "@/lib/utils";
 import { SubItemKanban } from "./SubItemKanban";
-import { PeopleSelect } from "../people/PeopleSelect";
+import { PersonTeamSelect } from "../people/PersonTeamSelect";
 
 interface TaskFormProps {
   task?: Task;
@@ -219,19 +218,19 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
           />
         </div>
 
-        {/* Mostrar seleção de pessoa apenas para tarefas delegadas */}
+        {/* Mostrar seleção de pessoa/equipe apenas para tarefas delegadas */}
         {watchedType === "delegated-task" && (
           <FormField
             control={form.control}
             name="assignedPersonId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pessoa Responsável</FormLabel>
+                <FormLabel>Pessoa/Equipe Responsável</FormLabel>
                 <FormControl>
-                  <PeopleSelect
+                  <PersonTeamSelect
                     value={field.value || ''}
                     onChange={field.onChange}
-                    placeholder="Selecione uma pessoa"
+                    placeholder="Selecione uma pessoa ou membro da equipe"
                   />
                 </FormControl>
                 <FormMessage />
