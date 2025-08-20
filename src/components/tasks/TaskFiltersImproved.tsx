@@ -266,7 +266,7 @@ export function TaskFiltersImproved({
               <div>
                 <label className="text-xs font-medium mb-1 block">Equipe Responsável</label>
                 <PeopleSelect
-                  value={currentFilters.assignedPersonId || ''}
+                  value={currentFilters.assignedPersonId || undefined}
                   onChange={(value) => handleFilterChange('assignedPersonId', value || undefined)}
                   placeholder="Selecionar..."
                 />
