@@ -5,7 +5,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn, stringToCalendarDate, calendarDateToString } from "@/lib/utils";
 
 interface DateRangePickerProps {
   startDate: string;
@@ -20,19 +20,19 @@ export function DateRangePicker({
   onStartDateChange,
   onEndDateChange
 }: DateRangePickerProps) {
-  const startDateObj = new Date(startDate + 'T00:00:00');
-  const endDateObj = new Date(endDate + 'T00:00:00');
+  const startDateObj = stringToCalendarDate(startDate);
+  const endDateObj = stringToCalendarDate(endDate);
 
   const handleStartDateSelect = (date: Date | undefined) => {
     if (date) {
-      const dateStr = format(date, 'yyyy-MM-dd');
+      const dateStr = calendarDateToString(date);
       onStartDateChange(dateStr);
     }
   };
 
   const handleEndDateSelect = (date: Date | undefined) => {
     if (date) {
-      const dateStr = format(date, 'yyyy-MM-dd');
+      const dateStr = calendarDateToString(date);
       onEndDateChange(dateStr);
     }
   };
@@ -57,6 +57,7 @@ export function DateRangePicker({
             onSelect={handleStartDateSelect}
             initialFocus
             className={cn("p-3 pointer-events-auto")}
+            locale={ptBR}
           />
         </PopoverContent>
       </Popover>
@@ -81,6 +82,7 @@ export function DateRangePicker({
             onSelect={handleEndDateSelect}
             initialFocus
             className={cn("p-3 pointer-events-auto")}
+            locale={ptBR}
           />
         </PopoverContent>
       </Popover>

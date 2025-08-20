@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,8 @@ import { CalendarIcon, X, Filter, Trash2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TaskFilter } from "@/types";
-import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-import { format, addDays, subDays } from 'date-fns';
+import { getCurrentDateInSaoPaulo, stringToCalendarDate, calendarDateToString, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo } from "@/lib/utils";
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SortOption, SORT_OPTIONS } from "@/lib/taskUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -33,11 +34,10 @@ export function TaskFiltersHorizontal({
 }: TaskFiltersHorizontalProps) {
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const today = getCurrentDateInSaoPaulo();
+  const yesterday = getYesterdayInSaoPaulo();
+  const tomorrow = getTomorrowInSaoPaulo();
 
-  const handleQuickDateFilter = (days: number) => {
-    const targetDate = days === 0 ? today : days > 0 ? addDays(new Date(today), days) : subDays(new Date(today), Math.abs(days));
-    const dateString = format(targetDate, 'yyyy-MM-dd');
-    
+  const handleQuickDateFilter = (dateString: string) => {
     onFiltersChange({
       ...currentFilters,
       dateRange: {
@@ -50,7 +50,7 @@ export function TaskFiltersHorizontal({
   const handleDateRangeChange = (field: 'start' | 'end', date: Date | undefined) => {
     if (!date) return;
     
-    const dateString = format(date, 'yyyy-MM-dd');
+    const dateString = calendarDateToString(date);
     onFiltersChange({
       ...currentFilters,
       dateRange: {
@@ -95,8 +95,8 @@ export function TaskFiltersHorizontal({
           <div className="flex gap-1">
             <Button
               size="sm"
-              variant={currentFilters.dateRange?.start === format(subDays(new Date(today), 1), 'yyyy-MM-dd') ? "default" : "outline"}
-              onClick={() => handleQuickDateFilter(-1)}
+              variant={currentFilters.dateRange?.start === yesterday && currentFilters.dateRange?.end === yesterday ? "default" : "outline"}
+              onClick={() => handleQuickDateFilter(yesterday)}
               className="h-8 px-3 text-xs"
             >
               Ontem
@@ -104,15 +104,15 @@ export function TaskFiltersHorizontal({
             <Button
               size="sm"
               variant={currentFilters.dateRange?.start === today && currentFilters.dateRange?.end === today ? "default" : "outline"}
-              onClick={() => handleQuickDateFilter(0)}
+              onClick={() => handleQuickDateFilter(today)}
               className="h-8 px-3 text-xs"
             >
               Hoje
             </Button>
             <Button
               size="sm"
-              variant={currentFilters.dateRange?.start === format(addDays(new Date(today), 1), 'yyyy-MM-dd') ? "default" : "outline"}
-              onClick={() => handleQuickDateFilter(1)}
+              variant={currentFilters.dateRange?.start === tomorrow && currentFilters.dateRange?.end === tomorrow ? "default" : "outline"}
+              onClick={() => handleQuickDateFilter(tomorrow)}
               className="h-8 px-3 text-xs"
             >
               Amanhã
@@ -128,13 +128,13 @@ export function TaskFiltersHorizontal({
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
                   <CalendarIcon className="h-3 w-3 mr-1" />
-                  {currentFilters.dateRange?.start ? format(new Date(currentFilters.dateRange.start), 'dd/MM', { locale: ptBR }) : 'Data'}
+                  {currentFilters.dateRange?.start ? format(stringToCalendarDate(currentFilters.dateRange.start), 'dd/MM', { locale: ptBR }) : 'Data'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={currentFilters.dateRange?.start ? new Date(currentFilters.dateRange.start) : undefined}
+                  selected={currentFilters.dateRange?.start ? stringToCalendarDate(currentFilters.dateRange.start) : undefined}
                   onSelect={(date) => handleDateRangeChange('start', date)}
                   locale={ptBR}
                 />
@@ -146,13 +146,13 @@ export function TaskFiltersHorizontal({
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
                   <CalendarIcon className="h-3 w-3 mr-1" />
-                  {currentFilters.dateRange?.end ? format(new Date(currentFilters.dateRange.end), 'dd/MM', { locale: ptBR }) : 'Data'}
+                  {currentFilters.dateRange?.end ? format(stringToCalendarDate(currentFilters.dateRange.end), 'dd/MM', { locale: ptBR }) : 'Data'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={currentFilters.dateRange?.end ? new Date(currentFilters.dateRange.end) : undefined}
+                  selected={currentFilters.dateRange?.end ? stringToCalendarDate(currentFilters.dateRange.end) : undefined}
                   onSelect={(date) => handleDateRangeChange('end', date)}
                   locale={ptBR}
                 />
