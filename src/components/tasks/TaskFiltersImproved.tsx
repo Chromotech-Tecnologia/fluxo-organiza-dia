@@ -72,8 +72,16 @@ export function TaskFiltersImproved({
         {/* Filtros Primeira Linha */}
         <div className="flex flex-wrap gap-2">
           <DateRangePicker
-            dateRange={currentFilters.dateRange}
-            onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
+            startDate={currentFilters.dateRange?.start || new Date().toISOString().split('T')[0]}
+            endDate={currentFilters.dateRange?.end || new Date().toISOString().split('T')[0]}
+            onStartDateChange={(date) => handleFilterChange('dateRange', { 
+              start: date, 
+              end: currentFilters.dateRange?.end || date 
+            })}
+            onEndDateChange={(date) => handleFilterChange('dateRange', { 
+              start: currentFilters.dateRange?.start || date, 
+              end: date 
+            })}
           />
           
           <Button 
