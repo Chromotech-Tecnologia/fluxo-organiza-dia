@@ -13,13 +13,13 @@ import { TeamMemberFilter } from '@/types';
 
 export default function PeoplePage() {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ativo' | 'inativo' | ''>('');
+  const [statusFilter, setStatusFilter] = useState<'ativo' | 'inativo' | 'all'>('all');
   const [skillFilter, setSkillFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   
   const filters: TeamMemberFilter = {
     search: search || undefined,
-    status: statusFilter || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
     skillIds: skillFilter.length > 0 ? skillFilter : undefined,
   };
 
@@ -29,7 +29,7 @@ export default function PeoplePage() {
 
   const clearFilters = () => {
     setSearch('');
-    setStatusFilter('');
+    setStatusFilter('all');
     setSkillFilter([]);
   };
 
@@ -111,7 +111,7 @@ export default function PeoplePage() {
                       <SelectValue placeholder="Todos os status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="ativo">Ativo</SelectItem>
                       <SelectItem value="inativo">Inativo</SelectItem>
                     </SelectContent>
@@ -145,7 +145,7 @@ export default function PeoplePage() {
           ) : teamMembers.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
-                {search || statusFilter || skillFilter.length > 0
+                {search || statusFilter !== 'all' || skillFilter.length > 0
                   ? 'Nenhum membro encontrado com os filtros aplicados.'
                   : 'Nenhum membro da equipe cadastrado ainda.'}
               </p>
