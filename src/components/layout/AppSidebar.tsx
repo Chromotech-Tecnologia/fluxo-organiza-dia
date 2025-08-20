@@ -1,7 +1,9 @@
+
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { authService } from "@/lib/auth";
+import { supabaseAuthService } from "@/lib/supabaseAuth";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Calendar,
   BarChart3,
@@ -54,14 +56,27 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
   const { user, signOut } = useAuthStore();
+  const { toast } = useToast();
 
-  const handleLogout = () => {
-    authService.logout();
-    signOut();
+  const handleLogout = async () => {
+    try {
+      await supabaseAuthService.signOut();
+      signOut();
+      toast({
+        title: 'Sucesso',
+        description: 'Logout realizado com sucesso!',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao fazer logout',
+        variant: 'destructive',
+      });
+    }
   };
 
   const isActive = (path: string) => currentPath === path;
-  const isExpanded = menuItems.some((i) => isActive(i.url));
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive 
@@ -159,7 +174,7 @@ export function AppSidebar() {
         {/* Logout Button */}
         <div className="mt-auto p-4 border-t border-border">
           <div className="mb-2 text-xs text-muted-foreground">
-            {!collapsed && user && <span>Olá, {user.name}</span>}
+            {!collapsed && user && <span>Olá, {user.user_metadata?.name || user.email}</span>}
           </div>
           <Button
             variant="ghost"

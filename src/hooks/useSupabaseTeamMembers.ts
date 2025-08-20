@@ -2,18 +2,23 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, TeamMemberFilter } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuthStore();
 
   // Carregar membros do Supabase
   const loadTeamMembers = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
       let query = supabase
         .from('team_members')
         .select('*')
+        .eq('user_id', user.id)
         .order('name');
 
       // Aplicar filtros no Supabase
@@ -95,6 +100,8 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
 
   // Adicionar novo membro
   const addTeamMember = async (newTeamMember: Omit<TeamMember, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('team_members')
@@ -108,7 +115,8 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           project_ids: [],
           hire_date: null,
           status: newTeamMember.status,
-          notes: ''
+          notes: '',
+          user_id: user.id
         }])
         .select()
         .single();
@@ -200,29 +208,32 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   };
 
   useEffect(() => {
-    loadTeamMembers();
-    
-    // Setup real-time subscription
-    const channel = supabase
-      .channel('team-members-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'team_members'
-        },
-        () => {
-          console.log('Team members changed, reloading...');
-          loadTeamMembers();
-        }
-      )
-      .subscribe();
+    if (user) {
+      loadTeamMembers();
+      
+      // Setup real-time subscription
+      const channel = supabase
+        .channel('team-members-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'team_members',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('Team members changed, reloading...');
+            loadTeamMembers();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [filters]);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [filters, user?.id]);
 
   return {
     teamMembers,

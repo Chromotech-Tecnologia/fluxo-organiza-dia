@@ -1,19 +1,25 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Person } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export function useSupabasePeople() {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuthStore();
 
   // Carregar pessoas do Supabase
   const loadPeople = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('people')
         .select('*')
+        .eq('user_id', user.id)
         .order('name');
 
       if (error) throw error;
@@ -43,6 +49,8 @@ export function useSupabasePeople() {
 
   // Adicionar nova pessoa
   const addPerson = async (newPerson: Omit<Person, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('people')
@@ -53,7 +61,8 @@ export function useSupabasePeople() {
           email: '',
           department: '',
           notes: '',
-          active: true
+          active: true,
+          user_id: user.id
         }])
         .select()
         .single();
@@ -154,29 +163,32 @@ export function useSupabasePeople() {
   };
 
   useEffect(() => {
-    loadPeople();
-    
-    // Setup real-time subscription
-    const channel = supabase
-      .channel('people-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'people'
-        },
-        () => {
-          console.log('People changed, reloading...');
-          loadPeople();
-        }
-      )
-      .subscribe();
+    if (user) {
+      loadPeople();
+      
+      // Setup real-time subscription
+      const channel = supabase
+        .channel('people-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'people',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('People changed, reloading...');
+            loadPeople();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user?.id]);
 
   return {
     people,

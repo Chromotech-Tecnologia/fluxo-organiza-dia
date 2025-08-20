@@ -1,10 +1,10 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authService } from '@/lib/auth';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { supabaseAuthService } from '@/lib/supabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface LoginFormProps {
@@ -15,7 +15,6 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { setUser } = useAuthStore();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,16 +22,16 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const user = await authService.login(email, password);
-      setUser(user);
+      await supabaseAuthService.signIn(email, password);
       toast({
         title: 'Sucesso',
         description: 'Login realizado com sucesso!',
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: 'Erro',
-        description: error instanceof Error ? error.message : 'Erro ao fazer login',
+        description: error.message || 'Erro ao fazer login',
         variant: 'destructive',
       });
     } finally {

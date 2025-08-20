@@ -1,20 +1,26 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export function useSupabaseTasks(filters?: TaskFilter) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuthStore();
 
   // Carregar tarefas do Supabase
   const loadTasks = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
       let query = supabase
         .from('tasks')
         .select('*')
+        .eq('user_id', user.id)
         .order('order_index', { ascending: true })
         .order('scheduled_date')
         .order('created_at');
@@ -102,6 +108,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   // Adicionar nova tarefa
   const addTask = async (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> | Task) => {
+    if (!user) return;
+    
     try {
       const taskData = {
         title: newTask.title,
@@ -122,7 +130,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         is_routine: newTask.isRoutine || false,
         routine_config: newTask.recurrence as any || null,
         task_order: newTask.order || 0,
-        order_index: newTask.order || 0
+        order_index: newTask.order || 0,
+        user_id: user.id
       };
 
       const { error } = await supabase
@@ -338,29 +347,32 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   };
 
   useEffect(() => {
-    loadTasks();
-    
-    // Setup real-time subscription
-    const channel = supabase
-      .channel('tasks-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tasks'
-        },
-        () => {
-          console.log('Tasks changed, reloading...');
-          loadTasks();
-        }
-      )
-      .subscribe();
+    if (user) {
+      loadTasks();
+      
+      // Setup real-time subscription
+      const channel = supabase
+        .channel('tasks-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('Tasks changed, reloading...');
+            loadTasks();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [JSON.stringify(filters)]);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [JSON.stringify(filters), user?.id]);
 
   return {
     tasks,

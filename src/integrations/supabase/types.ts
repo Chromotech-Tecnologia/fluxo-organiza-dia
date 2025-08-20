@@ -26,6 +26,7 @@ export type Database = {
           pending_tasks: number | null
           total_tasks: number | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           completed_tasks?: number | null
@@ -38,6 +39,7 @@ export type Database = {
           pending_tasks?: number | null
           total_tasks?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           completed_tasks?: number | null
@@ -50,6 +52,7 @@ export type Database = {
           pending_tasks?: number | null
           total_tasks?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -65,6 +68,7 @@ export type Database = {
           phone: string | null
           role: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           active?: boolean
@@ -77,6 +81,7 @@ export type Database = {
           phone?: string | null
           role?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           active?: boolean
@@ -89,6 +94,31 @@ export type Database = {
           phone?: string | null
           role?: string | null
           updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -101,6 +131,7 @@ export type Database = {
           level: string | null
           name: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           category?: string | null
@@ -110,6 +141,7 @@ export type Database = {
           level?: string | null
           name: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           category?: string | null
@@ -119,6 +151,7 @@ export type Database = {
           level?: string | null
           name?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -146,6 +179,7 @@ export type Database = {
           title: string
           type: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           assigned_person_id?: string | null
@@ -170,6 +204,7 @@ export type Database = {
           title: string
           type: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           assigned_person_id?: string | null
@@ -194,6 +229,7 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -220,6 +256,7 @@ export type Database = {
           skill_ids: string[] | null
           status: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -235,6 +272,7 @@ export type Database = {
           skill_ids?: string[] | null
           status?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -250,6 +288,7 @@ export type Database = {
           skill_ids?: string[] | null
           status?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

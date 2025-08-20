@@ -1,10 +1,10 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authService } from '@/lib/auth';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { supabaseAuthService } from '@/lib/supabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface RegisterFormProps {
@@ -17,7 +17,6 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { setUser } = useAuthStore();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,17 +33,28 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
       return;
     }
 
-    try {
-      const user = await authService.register(email, password, name);
-      setUser(user);
-      toast({
-        title: 'Sucesso',
-        description: 'Conta criada com sucesso!',
-      });
-    } catch (error) {
+    if (password.length < 6) {
       toast({
         title: 'Erro',
-        description: error instanceof Error ? error.message : 'Erro ao criar conta',
+        description: 'A senha deve ter pelo menos 6 caracteres',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await supabaseAuthService.signUp(email, password, name);
+      toast({
+        title: 'Sucesso',
+        description: 'Conta criada com sucesso! Verifique seu email para confirmar.',
+      });
+      onToggleMode(); // Switch to login form
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao criar conta',
         variant: 'destructive',
       });
     } finally {
@@ -90,6 +100,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
             />
           </div>
           <div className="space-y-2">

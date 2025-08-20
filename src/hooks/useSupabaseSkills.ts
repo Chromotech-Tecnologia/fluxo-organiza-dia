@@ -1,19 +1,25 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skill } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export function useSupabaseSkills() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuthStore();
 
   // Carregar skills do Supabase
   const loadSkills = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('skills')
         .select('*')
+        .eq('user_id', user.id)
         .order('name');
 
       if (error) throw error;
@@ -43,6 +49,8 @@ export function useSupabaseSkills() {
 
   // Adicionar nova skill
   const addSkill = async (newSkill: Omit<Skill, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('skills')
@@ -50,7 +58,7 @@ export function useSupabaseSkills() {
           name: newSkill.name,
           category: newSkill.area,
           description: newSkill.observation,
-          
+          user_id: user.id
         }])
         .select()
         .single();
@@ -148,29 +156,32 @@ export function useSupabaseSkills() {
   };
 
   useEffect(() => {
-    loadSkills();
-    
-    // Setup real-time subscription
-    const channel = supabase
-      .channel('skills-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'skills'
-        },
-        () => {
-          console.log('Skills changed, reloading...');
-          loadSkills();
-        }
-      )
-      .subscribe();
+    if (user) {
+      loadSkills();
+      
+      // Setup real-time subscription
+      const channel = supabase
+        .channel('skills-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'skills',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('Skills changed, reloading...');
+            loadSkills();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user?.id]);
 
   return {
     skills,
