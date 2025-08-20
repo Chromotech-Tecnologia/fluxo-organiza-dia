@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +28,8 @@ import { taskFormSchema } from "@/lib/validations/task";
 import { cn } from "@/lib/utils";
 import { SubItemKanban } from "./SubItemKanban";
 import { PersonTeamSelect } from "../people/PersonTeamSelect";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
+import { useToast } from "@/hooks/use-toast";
 
 interface TaskFormProps {
   task?: Task;
@@ -36,6 +39,8 @@ interface TaskFormProps {
 
 export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
+  const { tasks } = useSupabaseTasks({ dateRange: { start: task?.scheduledDate || format(new Date(), 'yyyy-MM-dd'), end: task?.scheduledDate || format(new Date(), 'yyyy-MM-dd') } });
+  const { toast } = useToast();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -58,11 +63,32 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   });
 
   const watchedType = form.watch("type");
+  const watchedScheduledDate = form.watch("scheduledDate");
+
+  // Obter tarefas do mesmo dia para validar ordem
+  const tasksForDate = tasks.filter(t => t.scheduledDate === watchedScheduledDate && t.id !== task?.id);
+  const maxOrder = tasksForDate.length + 1;
+
+  const validateOrder = (value: number) => {
+    if (value < 1 || value > maxOrder) {
+      toast({
+        title: "Ordem inválida",
+        description: `A ordem deve estar entre 1 e ${maxOrder}`,
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
 
   const onFormSubmit: SubmitHandler<TaskFormValues> = (values) => {
+    if (!validateOrder(Number(values.order))) {
+      return;
+    }
+    
     const taskData = {
       ...values,
-      order: Number(values.order), // Converter para número
+      order: Number(values.order),
       subItems: subItems
     };
     onSubmit(taskData);
@@ -156,13 +182,22 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             name="order"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ordem</FormLabel>
+                <FormLabel>Ordem (1 a {maxOrder})</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
-                    placeholder="Ordem da tarefa" 
+                    placeholder={`Ordem da tarefa (1 a ${maxOrder})`}
+                    min={1}
+                    max={maxOrder}
                     {...field}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                    onBlur={(e) => {
+                      const value = Number(e.target.value);
+                      if (value && !validateOrder(value)) {
+                        field.onChange(1);
+                      } else {
+                        field.onChange(value || 0);
+                      }
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

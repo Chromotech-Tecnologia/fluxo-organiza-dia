@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, X, ArrowRight, Trash2, Users } from "lucide-react";
+import { CheckCircle, X, ArrowRight, Trash2, Users, Check } from "lucide-react";
 import { Task } from "@/types";
-import { useTasks } from "@/hooks/useTasks";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useModalStore } from "@/stores/useModalStore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,11 +14,11 @@ interface BulkActionsBarProps {
 }
 
 export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsBarProps) {
-  const { updateTask } = useTasks();
+  const { updateTask, concludeTask, refetch } = useSupabaseTasks();
   const { openForwardTaskModal } = useModalStore();
   const { toast } = useToast();
 
-  const handleBulkStatusChange = (status: Task['status']) => {
+  const handleBulkStatusChange = async (status: Task['status']) => {
     try {
       let updatedCount = 0;
       
@@ -43,7 +44,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           completionRecord
         ];
 
-        updateTask(task.id, { 
+        await updateTask(task.id, { 
           status,
           completionHistory: updatedCompletionHistory,
           updatedAt: new Date().toISOString()
@@ -57,6 +58,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           title: "Tarefas atualizadas",
           description: `${updatedCount} tarefa(s) marcada(s) como ${status === 'completed' ? 'feitas' : 'não feitas'}`,
         });
+        refetch();
       } else {
         toast({
           title: "Nenhuma tarefa atualizada",
@@ -75,12 +77,45 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
     }
   };
 
+  const handleBulkConclude = async () => {
+    try {
+      let concludedCount = 0;
+      
+      for (const task of selectedTasks) {
+        if (!task.isConcluded) {
+          await concludeTask(task.id);
+          concludedCount++;
+        }
+      }
+      
+      if (concludedCount > 0) {
+        toast({
+          title: "Tarefas concluídas",
+          description: `${concludedCount} tarefa(s) concluída(s) com sucesso`,
+        });
+        refetch();
+      } else {
+        toast({
+          title: "Nenhuma tarefa concluída",
+          description: "Todas as tarefas selecionadas já estão concluídas",
+        });
+      }
+      
+      onClearSelection();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao concluir tarefas",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleBulkForward = () => {
-    // Para ações em lote de repasse, abrir modal para cada tarefa
-    // ou criar um modal específico para ações em lote
+    // Para ações em lote de reagendamento, abrir modal para cada tarefa
     toast({
       title: "Funcionalidade em desenvolvimento",
-      description: "Repasse em lote será implementado em breve",
+      description: "Reagendamento em lote será implementado em breve",
     });
   };
 
@@ -122,7 +157,17 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           className="gap-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
         >
           <ArrowRight className="h-4 w-4" />
-          Repassar
+          Reagendar
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleBulkConclude}
+          className="gap-1 border-blue-500 text-blue-700 hover:bg-blue-50"
+        >
+          <Check className="h-4 w-4" />
+          Concluir
         </Button>
         
         <Button

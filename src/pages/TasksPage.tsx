@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,7 +99,7 @@ const TasksPage = () => {
         completedAt: getCurrentDateInSaoPaulo(),
         status: status as 'completed' | 'not-done',
         date: task.scheduledDate,
-        wasForwarded: false
+        wasForwarded: task.forwardHistory && task.forwardHistory.length > 0
       };
 
       const updatedCompletionHistory = [
@@ -138,11 +139,46 @@ const TasksPage = () => {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const oldIndex = displayTasks.findIndex(task => task.id === active.id);
-      const newIndex = displayTasks.findIndex(task => task.id === over?.id);
+      // Encontrar a tarefa que está sendo movida
+      const movedTask = displayTasks.find(task => task.id === active.id);
+      if (!movedTask) return;
+
+      // Obter TODAS as tarefas do mesmo dia (não apenas as filtradas)
+      const allTasksForDate = tasks.filter(task => task.scheduledDate === movedTask.scheduledDate);
       
-      const reorderedTasks = arrayMove(displayTasks, oldIndex, newIndex);
-      const taskIds = reorderedTasks.map(task => task.id);
+      // Encontrar as posições na lista filtrada (para o drag & drop)
+      const oldIndexInFiltered = displayTasks.findIndex(task => task.id === active.id);
+      const newIndexInFiltered = displayTasks.findIndex(task => task.id === over?.id);
+      
+      // Reorganizar apenas a lista filtrada para o UI
+      const reorderedFiltered = arrayMove(displayTasks, oldIndexInFiltered, newIndexInFiltered);
+      
+      // Calcular a nova ordem considerando TODAS as tarefas do dia
+      const targetTask = displayTasks[newIndexInFiltered];
+      const newOrder = targetTask?.order || (newIndexInFiltered + 1);
+      
+      // Reorganizar todas as tarefas do dia baseado na nova posição
+      const updatedAllTasks = [...allTasksForDate];
+      
+      // Remover a tarefa movida da lista
+      const taskIndex = updatedAllTasks.findIndex(t => t.id === active.id);
+      const [movedTaskItem] = updatedAllTasks.splice(taskIndex, 1);
+      
+      // Encontrar onde inserir na lista completa
+      let insertIndex;
+      if (newOrder <= 1) {
+        insertIndex = 0;
+      } else if (newOrder >= updatedAllTasks.length + 1) {
+        insertIndex = updatedAllTasks.length;
+      } else {
+        insertIndex = Math.min(newOrder - 1, updatedAllTasks.length);
+      }
+      
+      // Inserir na nova posição
+      updatedAllTasks.splice(insertIndex, 0, movedTaskItem);
+      
+      // Reordenar todas as tarefas do dia
+      const taskIds = updatedAllTasks.map(task => task.id);
       
       reorderTasks(taskIds);
     }

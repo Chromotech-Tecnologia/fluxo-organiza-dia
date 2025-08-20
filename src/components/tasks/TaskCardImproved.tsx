@@ -53,6 +53,9 @@ export function TaskCardImproved({
     transition,
   };
 
+  // Verificar se a tarefa foi reagendada (tem histórico de reagendamentos)
+  const wasRescheduled = task.forwardHistory && task.forwardHistory.length > 0;
+
   // Determinar cores baseadas no status
   const getCardColor = () => {
     if (task.isConcluded) return 'border-green-500 bg-green-50';
@@ -60,8 +63,12 @@ export function TaskCardImproved({
     const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
     const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
     
-    if (lastCompletion?.status === 'completed') return 'border-green-500 bg-green-50';
-    if (lastCompletion?.status === 'not-done') return 'border-red-500 bg-red-50';
+    if (lastCompletion?.status === 'completed') {
+      return wasRescheduled ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-white';
+    }
+    if (lastCompletion?.status === 'not-done') {
+      return wasRescheduled ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white';
+    }
     
     return 'border-border bg-background';
   };
@@ -130,7 +137,14 @@ export function TaskCardImproved({
                 </Badge>
               )}
               
-              <div className="font-semibold text-sm truncate flex-1">{task.title}</div>
+              <div className="font-semibold text-sm truncate flex-1">
+                {task.title}
+                {wasRescheduled && (
+                  <Badge variant="outline" className="ml-2 text-xs bg-orange-100 text-orange-800 border-orange-300">
+                    Reagendada
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {/* Menu de ações */}
@@ -212,8 +226,8 @@ export function TaskCardImproved({
               </Badge>
             )}
 
-            {/* Reagendamentos */}
-            {task.forwardCount > 0 && (
+            {/* Reagendamentos - apenas mostrar se foi reagendada */}
+            {wasRescheduled && task.forwardCount > 0 && (
               <Badge variant="outline" className="text-xs h-5 bg-yellow-100 text-yellow-800 border-yellow-300">
                 <ArrowRight className="h-2.5 w-2.5 mr-1" />
                 {task.forwardCount}x
@@ -244,7 +258,7 @@ export function TaskCardImproved({
                     }}
                     className={`h-7 px-2 text-xs min-w-[50px] ${
                       lastCompletion?.status === 'completed' 
-                        ? 'bg-green-100 text-green-800 border-green-500' 
+                        ? (wasRescheduled ? 'bg-green-100 text-green-800 border-green-500' : 'bg-gray-100 text-gray-700 border-gray-300')
                         : 'text-green-600 border-green-600 hover:bg-green-50'
                     }`}
                   >
@@ -260,7 +274,7 @@ export function TaskCardImproved({
                     }}
                     className={`h-7 px-2 text-xs min-w-[50px] ${
                       lastCompletion?.status === 'not-done' 
-                        ? 'bg-red-100 text-red-800 border-red-500' 
+                        ? (wasRescheduled ? 'bg-red-100 text-red-800 border-red-500' : 'bg-gray-100 text-gray-700 border-gray-300')
                         : 'text-red-600 border-red-600 hover:bg-red-50'
                     }`}
                   >
