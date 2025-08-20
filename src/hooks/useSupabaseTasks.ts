@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats } from '@/types';
@@ -375,7 +376,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         recurrence: task.routine_config as any,
         order: task.task_order || task.order_index || 0,
         createdAt: task.created_at,
-        updatedAt: task.updated_at
+        updatedAt: task.updated_at,
+        isForwarded: task.is_forwarded || false,
+        isConcluded: task.is_concluded || false,
+        concludedAt: task.concluded_at
       }));
     } catch (error) {
       console.error('Erro ao buscar tarefas por data:', error);
