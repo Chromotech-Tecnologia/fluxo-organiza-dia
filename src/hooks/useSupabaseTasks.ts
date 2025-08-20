@@ -84,7 +84,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         createdAt: task.created_at,
         updatedAt: task.updated_at,
         isRecurrent: false,
-        isForwarded: task.forward_count > 0,
+        isForwarded: task.forward_count > 0 || (task.forward_history && task.forward_history.length > 0),
         isConcluded: !!task.concluded_at
       }));
 

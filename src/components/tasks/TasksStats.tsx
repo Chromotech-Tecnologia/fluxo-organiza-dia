@@ -24,7 +24,14 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
-  const forwardedTasks = tasks.filter(task => task.isForwarded).length;
+  
+  // Corrigir a detecção de tarefas reagendadas
+  const forwardedTasks = tasks.filter(task => 
+    task.isForwarded || 
+    task.forwardCount > 0 || 
+    (task.forwardHistory && task.forwardHistory.length > 0)
+  ).length;
+  
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
   const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
   const personalTasks = tasks.filter(task => task.category === 'personal').length;
@@ -33,11 +40,15 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   
   // Tarefas definitivas: completadas E não repassadas
   const definitiveTasks = tasks.filter(task => 
-    task.status === 'completed' && !task.isForwarded
+    task.status === 'completed' && !task.isForwarded && task.forwardCount === 0
   ).length;
   
   // Tarefas não repassadas
-  const notForwardedTasks = tasks.filter(task => !task.isForwarded).length;
+  const notForwardedTasks = tasks.filter(task => 
+    !task.isForwarded && 
+    task.forwardCount === 0 && 
+    (!task.forwardHistory || task.forwardHistory.length === 0)
+  ).length;
 
   const stats = [
     {
@@ -78,7 +89,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
       isAlert: pendingTasks > 0
     },
     {
-      label: "Repassadas",
+      label: "Reagendadas",
       value: forwardedTasks,
       percentage: totalTasks > 0 ? Math.round((forwardedTasks / totalTasks) * 100) : 0,
       icon: ArrowRight,
@@ -96,7 +107,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
       borderColor: "border-purple-200"
     },
     {
-      label: "Não Repassadas",
+      label: "Não Reagendadas",
       value: notForwardedTasks,
       percentage: totalTasks > 0 ? Math.round((notForwardedTasks / totalTasks) * 100) : 0,
       icon: Shield,

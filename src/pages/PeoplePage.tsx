@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,15 @@ export default function PeoplePage() {
     );
   };
 
+  // Prevenir que o modal seja chamado múltiplas vezes
+  const handleNewMember = () => {
+    try {
+      openTeamMemberModal();
+    } catch (error) {
+      console.error('Erro ao abrir modal:', error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -49,7 +59,7 @@ export default function PeoplePage() {
             Gerencie os membros da sua equipe
           </p>
         </div>
-        <Button onClick={() => openTeamMemberModal()}>
+        <Button onClick={handleNewMember}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Membro
         </Button>
@@ -110,9 +120,9 @@ export default function PeoplePage() {
                 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Habilidades</label>
-                  <div className="max-h-32 overflow-y-auto border rounded p-2 space-y-1">
+                  <div className="max-h-32 overflow-y-auto border rounded p-2 space-y-1 bg-background">
                     {skills.map((skill) => (
-                      <label key={skill.id} className="flex items-center space-x-2 text-sm">
+                      <label key={skill.id} className="flex items-center space-x-2 text-sm cursor-pointer">
                         <input
                           type="checkbox"
                           checked={skillFilter.includes(skill.id)}
