@@ -21,7 +21,7 @@ const Dashboard = () => {
     }
   };
   
-  const { tasks: todayTasks, concludeTask, refetch } = useSupabaseTasks(todayFilter);
+  const { tasks: todayTasks, concludeTask, updateTask, refetch } = useSupabaseTasks(todayFilter);
   const { people } = useSupabasePeople();
 
   // Estatísticas de hoje
@@ -45,6 +45,18 @@ const Dashboard = () => {
   const handleConcludeTask = async (taskId: string) => {
     await concludeTask(taskId);
     refetch();
+  };
+
+  const handleUnconcludeTask = async (taskId: string) => {
+    const task = todayTasks.find(t => t.id === taskId);
+    if (task) {
+      await updateTask(taskId, {
+        isConcluded: false,
+        concludedAt: undefined,
+        status: 'pending'
+      });
+      refetch();
+    }
   };
 
   return (
@@ -158,6 +170,7 @@ const Dashboard = () => {
                         }
                       }}
                       onConclude={() => handleConcludeTask(task.id)}
+                      onUnconclude={() => handleUnconcludeTask(task.id)}
                       onForward={() => handleForwardTask(task.id)}
                       currentViewDate={today}
                     />
