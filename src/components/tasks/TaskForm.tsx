@@ -13,7 +13,6 @@ import { Task, TaskFormValues } from '@/types';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 import { Trash2, Plus, GripVertical } from 'lucide-react';
 import { useSupabaseTasks } from '@/hooks/useSupabaseTasks';
-import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 const taskFormSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -26,10 +25,15 @@ const taskFormSchema = z.object({
   assignedPersonId: z.string().optional(),
   observations: z.string().optional(),
   order: z.number().min(1, 'Ordem deve ser maior que 0'),
+  isRoutine: z.boolean().default(false),
+  routineCycle: z.enum(['daily', 'weekly', 'monthly', 'quarterly', 'biannual', 'annual']).optional(),
+  routineStartDate: z.string().optional(),
+  routineEndDate: z.string().optional(),
   subItems: z.array(z.object({
     id: z.string(),
     text: z.string().min(1, 'Item não pode estar vazio'),
-    completed: z.boolean()
+    completed: z.boolean(),
+    order: z.number()
   })),
 });
 
@@ -63,6 +67,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       assignedPersonId: task?.assignedPersonId || '',
       observations: task?.observations || '',
       order: task?.order || Math.max(...tasks.map(t => t.order || 0), 0) + 1,
+      isRoutine: task?.isRoutine || false,
+      routineCycle: task?.routineCycle,
+      routineStartDate: task?.routineStartDate,
+      routineEndDate: task?.routineEndDate,
       subItems: task?.subItems || [],
     },
   });
@@ -86,6 +94,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       id: crypto.randomUUID(),
       text: '',
       completed: false,
+      order: fields.length + 1,
     });
   };
 
@@ -287,7 +296,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   <FormControl>
                     <PeopleSelect
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onChange={field.onChange}
                       placeholder="Selecionar pessoa"
                     />
                   </FormControl>

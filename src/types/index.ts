@@ -187,6 +187,7 @@ export interface TaskFormValues {
   routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
   routineStartDate?: string;
   routineEndDate?: string;
+  subItems: SubItem[];
 }
 
 export interface PersonFormValues {
