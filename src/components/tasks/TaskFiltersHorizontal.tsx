@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -96,7 +95,7 @@ export function TaskFiltersHorizontal({
           <div className="flex gap-1">
             <Button
               size="sm"
-              variant={currentFilters.dateRange?.start === subDays(new Date(today), 1).toISOString().split('T')[0] ? "default" : "outline"}
+              variant={currentFilters.dateRange?.start === format(subDays(new Date(today), 1), 'yyyy-MM-dd') ? "default" : "outline"}
               onClick={() => handleQuickDateFilter(-1)}
               className="h-8 px-3 text-xs"
             >
@@ -112,7 +111,7 @@ export function TaskFiltersHorizontal({
             </Button>
             <Button
               size="sm"
-              variant={currentFilters.dateRange?.start === addDays(new Date(today), 1).toISOString().split('T')[0] ? "default" : "outline"}
+              variant={currentFilters.dateRange?.start === format(addDays(new Date(today), 1), 'yyyy-MM-dd') ? "default" : "outline"}
               onClick={() => handleQuickDateFilter(1)}
               className="h-8 px-3 text-xs"
             >

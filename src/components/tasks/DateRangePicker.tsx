@@ -25,14 +25,14 @@ export function DateRangePicker({
 
   const handleStartDateSelect = (date: Date | undefined) => {
     if (date) {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = format(date, 'yyyy-MM-dd');
       onStartDateChange(dateStr);
     }
   };
 
   const handleEndDateSelect = (date: Date | undefined) => {
     if (date) {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = format(date, 'yyyy-MM-dd');
       onEndDateChange(dateStr);
     }
   };
