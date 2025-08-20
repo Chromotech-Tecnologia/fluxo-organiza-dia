@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFilter, TaskPriority, TaskStatus, TaskType, SubItem } from "@/types";
@@ -61,11 +62,13 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         scheduledDate: task.scheduled_date,
         assignedPersonId: task.assigned_person_id || '',
         timeInvestment: task.time_investment as 'low' | 'medium' | 'high',
-        category: task.category as 'personal' | 'work' | 'health' | 'education',
-        subItems: task.sub_items as SubItem[] || [],
+        category: (task.category === 'work' || task.category === 'health' || task.category === 'education') 
+          ? 'business' 
+          : task.category as 'personal' | 'business',
+        subItems: (task.sub_items as unknown as SubItem[]) || [],
         observations: task.observations || '',
-        completionHistory: task.completion_history as any[] || [],
-        forwardHistory: task.forward_history as any[] || [],
+        completionHistory: (task.completion_history as any[]) || [],
+        forwardHistory: (task.forward_history as any[]) || [],
         forwardCount: task.forward_count || 0,
         deliveryDates: task.delivery_dates || [],
         isRoutine: task.is_routine || false,
@@ -88,6 +91,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     const { data, error } = await supabase
       .from('tasks')
       .insert({
+        title: taskData.title,
+        description: taskData.description,
         scheduled_date: taskData.scheduledDate,
         type: taskData.type,
         priority: taskData.priority,
@@ -103,7 +108,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         delivery_dates: taskData.deliveryDates,
         is_routine: taskData.isRoutine,
         routine_config: taskData.recurrence as any,
-        task_order: taskData.order
+        task_order: taskData.order,
+        user_id: (await supabase.auth.getUser()).data.user?.id
       })
       .select()
       .single();

@@ -152,7 +152,11 @@ const Dashboard = () => {
                     <TaskCard 
                       key={task.id}
                       task={task} 
-                      onStatusChange={(status) => handleStatusChange(task.id, status)}
+                      onStatusChange={(status) => {
+                        if (status === 'completed' || status === 'not-done') {
+                          handleStatusChange(task.id, status);
+                        }
+                      }}
                       onConclude={() => handleConcludeTask(task.id)}
                       onForward={() => handleForwardTask(task.id)}
                       currentViewDate={today}
