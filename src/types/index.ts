@@ -148,11 +148,18 @@ export interface TaskFilter {
   };
   type?: TaskType[];
   priority?: TaskPriority[];
+  timeInvestment?: TaskTimeInvestment[];
   status?: TaskStatus[];
   category?: TaskCategory[];
   assignedPersonId?: string;
   maxForwards?: number;
   isRecurrent?: boolean;
+  hasSubItems?: boolean;
+  hasForwards?: boolean;
+  isRoutine?: boolean;
+  isDefinitive?: boolean;
+  notForwarded?: boolean;
+  noOrder?: boolean;
 }
 
 export interface TaskStats {

@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -7,7 +8,9 @@ import {
   ArrowRight, 
   AlertCircle,
   Calendar,
-  Briefcase 
+  Briefcase,
+  Star,
+  Shield
 } from "lucide-react";
 import { Task } from "@/types";
 
@@ -22,11 +25,19 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
   const forwardedTasks = tasks.filter(task => 
-    task.status === 'forwarded-date' || task.status === 'forwarded-person'
+    task.status === 'forwarded-date' || task.status === 'forwarded-person' || task.forwardCount > 0
   ).length;
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
   const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
   const personalTasks = tasks.filter(task => task.category === 'personal').length;
+  
+  // Novas estatísticas
+  const definitiveTasks = tasks.filter(task => 
+    task.status === 'completed' && (task.forwardCount === 0 || !task.forwardHistory?.length)
+  ).length;
+  const notForwardedTasks = tasks.filter(task => 
+    task.forwardCount === 0 || !task.forwardHistory?.length
+  ).length;
 
   const stats = [
     {
@@ -63,7 +74,8 @@ export function TasksStats({ tasks }: TasksStatsProps) {
       icon: Clock,
       color: "text-slate-600",
       bgColor: "bg-slate-100",
-      borderColor: "border-slate-200"
+      borderColor: "border-slate-200",
+      isAlert: pendingTasks > 0
     },
     {
       label: "Repassadas",
@@ -73,6 +85,24 @@ export function TasksStats({ tasks }: TasksStatsProps) {
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",
       borderColor: "border-yellow-200"
+    },
+    {
+      label: "Definitivo",
+      value: definitiveTasks,
+      percentage: totalTasks > 0 ? Math.round((definitiveTasks / totalTasks) * 100) : 0,
+      icon: Star,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+      borderColor: "border-purple-200"
+    },
+    {
+      label: "Não Repassadas",
+      value: notForwardedTasks,
+      percentage: totalTasks > 0 ? Math.round((notForwardedTasks / totalTasks) * 100) : 0,
+      icon: Shield,
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-100",
+      borderColor: "border-emerald-200"
     },
     {
       label: "Reuniões",
@@ -106,7 +136,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+        <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
           {stats.map((stat) => {
             const IconComponent = stat.icon;
             return (
@@ -114,7 +144,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
                 <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${stat.bgColor} ${stat.borderColor} border mb-2`}>
                   <IconComponent className={`h-5 w-5 ${stat.color}`} />
                 </div>
-                <div className="text-2xl font-bold text-foreground">
+                <div className={`text-2xl font-bold ${stat.isAlert ? 'text-red-600' : 'text-foreground'}`}>
                   {stat.value}
                 </div>
                 <div className="text-xs text-muted-foreground opacity-70">

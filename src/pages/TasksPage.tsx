@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,14 +12,11 @@ import { TaskCard } from "@/components/tasks/TaskCard";
 import { TasksStats } from "@/components/tasks/TasksStats";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-// import { getCurrentDateInSaoPauloISO } from "@/lib/utils";
-
-
-console.log("Data atual SP (start):", getCurrentDateInSaoPaulo());
-console.log("Data atual SP (end):", getCurrentDateInSaoPaulo());
-
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,7 +28,12 @@ const TasksPage = () => {
     }
   });
   const { openTaskModal } = useModalStore();
-  const { tasks, updateTask, refetch } = useSupabaseTasks(taskFilters);
+  const { tasks, updateTask, reorderTasks, refetch } = useSupabaseTasks(taskFilters);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -81,6 +84,21 @@ const TasksPage = () => {
     }
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = filteredTasks.findIndex(task => task.id === active.id);
+      const newIndex = filteredTasks.findIndex(task => task.id === over?.id);
+      
+      const reorderedTasks = arrayMove(filteredTasks, oldIndex, newIndex);
+      const taskIds = reorderedTasks.map(task => task.id);
+      
+      // Atualizar ordem no banco
+      reorderTasks(taskIds);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,7 +145,7 @@ const TasksPage = () => {
       {/* Resumo de Estatísticas */}
       <TasksStats tasks={filteredTasks} />
 
-      {/* Lista de Tarefas */}
+      {/* Lista de Tarefas com Drag & Drop */}
       <div className="grid gap-4">
         {filteredTasks.length === 0 ? (
           <Card>
@@ -151,22 +169,31 @@ const TasksPage = () => {
             </CardContent>
           </Card>
         ) : (
-          filteredTasks.map((task) => (
-            <div key={task.id} className="flex items-start gap-3">
-              <Checkbox
-                checked={selectedTasks.some(t => t.id === task.id)}
-                onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
-                className="mt-4"
-              />
-              <div className="flex-1">
-                <TaskCard 
-                  task={task} 
-                  onStatusChange={(status) => handleStatusChange(task.id, status)}
-                  currentViewDate={taskFilters.dateRange?.start}
-                />
-              </div>
-            </div>
-          ))
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis]}
+          >
+            <SortableContext items={filteredTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+              {filteredTasks.map((task) => (
+                <div key={task.id} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedTasks.some(t => t.id === task.id)}
+                    onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
+                    className="mt-4"
+                  />
+                  <div className="flex-1">
+                    <TaskCard 
+                      task={task} 
+                      onStatusChange={(status) => handleStatusChange(task.id, status)}
+                      currentViewDate={taskFilters.dateRange?.start}
+                    />
+                  </div>
+                </div>
+              ))}
+            </SortableContext>
+          </DndContext>
         )}
         
         <BulkActionsBar 

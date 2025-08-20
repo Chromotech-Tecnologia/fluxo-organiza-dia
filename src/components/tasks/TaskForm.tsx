@@ -11,13 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Plus, X } from "lucide-react";
+import { CalendarIcon, Plus, X, Check, Square } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn, calendarDateToString, stringToCalendarDate, getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Task, TaskType, TaskPriority, SubItem } from "@/types";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
-
 
 const taskFormSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -60,10 +59,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       priority: task?.priority || "none",
       timeInvestment: task?.timeInvestment || "low",
       category: task?.category || "personal",
-      // PROBLEMA ESTÁ AQUI - mudando de "" para undefined
-      assignedPersonId: task?.assignedPersonId || undefined, // Era: || ""
+      assignedPersonId: task?.assignedPersonId || undefined,
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       observations: task?.observations || "",
+      order: task?.order || 0,
       isRoutine: task?.isRoutine || false,
       routineCycle: task?.routineCycle || "daily",
       routineStartDate: task?.routineStartDate || getCurrentDateInSaoPaulo(),
@@ -123,6 +122,15 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
     setSubItems(subItems.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
+  };
+
+  const handleEditKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveSubItemEdit();
+    } else if (e.key === 'Escape') {
+      cancelSubItemEdit();
+    }
   };
 
   const typeOptions = [
@@ -290,7 +298,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                         type="number"
                         placeholder="0"
                         min="0"
-                        {...field}
+                        value={field.value || 0}
                         onChange={e => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
@@ -477,7 +485,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                     <FormLabel>Equipe Responsável</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value || ""} // Adicionar esta linha para garantir que nunca seja undefined
+                      value={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -531,16 +539,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                         onSelect={(date) => {
                           if (date) {
                             const dateString = calendarDateToString(date);
-                            console.log('Data selecionada no TaskForm:', date, 'String final:', dateString);
                             field.onChange(dateString);
                           }
                         }}
-                        // REMOVIDO: A restrição que impedia datas anteriores
-                        // disabled={(date) => {
-                        //   const dateString = calendarDateToString(date);
-                        //   const today = getCurrentDateInSaoPaulo();
-                        //   return dateString < today;
-                        // }}
                         initialFocus
                       />
                     </PopoverContent>
@@ -550,7 +551,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               )}
             />
 
-            {/* Subitens */}
+            {/* Subitens Melhorados */}
             <div className="space-y-4">
               <FormLabel>Subitens (Checklist)</FormLabel>
 
@@ -558,20 +559,47 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               <div className="space-y-2">
                 {subItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-2 p-2 border rounded">
-                    <input
-                      type="checkbox"
-                      checked={item.completed}
-                      onChange={() => toggleSubItem(item.id)}
-                      className="h-4 w-4"
-                    />
-                    <span className={cn("flex-1", item.completed && "line-through text-muted-foreground")}>
-                      {item.text}
-                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleSubItem(item.id)}
+                      className="p-1 h-6 w-6"
+                    >
+                      {item.completed ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Square className="h-4 w-4" />
+                      )}
+                    </Button>
+                    
+                    {editingSubItem === item.id ? (
+                      <Input
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onKeyDown={handleEditKeyPress}
+                        onBlur={saveSubItemEdit}
+                        className="flex-1 h-8"
+                        autoFocus
+                      />
+                    ) : (
+                      <span 
+                        className={cn(
+                          "flex-1 cursor-pointer", 
+                          item.completed && "line-through text-muted-foreground"
+                        )}
+                        onClick={() => startEditingSubItem(item.id, item.text)}
+                      >
+                        {item.text}
+                      </span>
+                    )}
+                    
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => removeSubItem(item.id)}
+                      className="p-1 h-6 w-6"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -585,7 +613,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   placeholder="Novo subitem..."
                   value={newSubItem}
                   onChange={(e) => setNewSubItem(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addSubItem()}
+                  onKeyDown={handleKeyPress}
                 />
                 <Button type="button" onClick={addSubItem} variant="outline" size="sm">
                   <Plus className="h-4 w-4" />

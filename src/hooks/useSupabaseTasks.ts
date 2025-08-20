@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats } from '@/types';
@@ -40,6 +39,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         query = query.in('priority', filters.priority);
       }
 
+      if (filters?.timeInvestment && filters.timeInvestment.length > 0) {
+        query = query.in('time_investment', filters.timeInvestment);
+      }
+
       if (filters?.status && filters.status.length > 0) {
         query = query.in('status', filters.status);
       }
@@ -60,12 +63,16 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         query = query.eq('is_routine', filters.isRecurrent);
       }
 
+      if (filters?.isRoutine !== undefined) {
+        query = query.eq('is_routine', filters.isRoutine);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
 
       // Converter dados do Supabase para o formato do frontend
-      const convertedTasks: Task[] = (data || []).map(task => ({
+      let convertedTasks: Task[] = (data || []).map(task => ({
         id: task.id,
         title: task.title,
         description: task.description || '',
@@ -92,6 +99,37 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         createdAt: task.created_at,
         updatedAt: task.updated_at
       }));
+
+      // Aplicar filtros específicos que precisam ser feitos no frontend
+      if (filters?.hasSubItems !== undefined) {
+        convertedTasks = convertedTasks.filter(task => 
+          filters.hasSubItems ? (task.subItems && task.subItems.length > 0) : (!task.subItems || task.subItems.length === 0)
+        );
+      }
+
+      if (filters?.hasForwards !== undefined) {
+        convertedTasks = convertedTasks.filter(task => 
+          filters.hasForwards ? (task.forwardCount > 0 || task.status === 'forwarded-date' || task.status === 'forwarded-person') : (task.forwardCount === 0 && task.status !== 'forwarded-date' && task.status !== 'forwarded-person')
+        );
+      }
+
+      if (filters?.isDefinitive !== undefined) {
+        convertedTasks = convertedTasks.filter(task => 
+          filters.isDefinitive ? (task.status === 'completed' && (task.forwardCount === 0 || !task.forwardHistory?.length)) : !(task.status === 'completed' && (task.forwardCount === 0 || !task.forwardHistory?.length))
+        );
+      }
+
+      if (filters?.notForwarded !== undefined) {
+        convertedTasks = convertedTasks.filter(task => 
+          filters.notForwarded ? (task.forwardCount === 0 || !task.forwardHistory?.length) : (task.forwardCount > 0 || task.forwardHistory?.length > 0)
+        );
+      }
+
+      if (filters?.noOrder !== undefined) {
+        convertedTasks = convertedTasks.filter(task => 
+          filters.noOrder ? (!task.order || task.order === 0) : (task.order && task.order > 0)
+        );
+      }
 
       setTasks(convertedTasks);
     } catch (error) {
