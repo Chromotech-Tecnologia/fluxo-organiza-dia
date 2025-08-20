@@ -143,7 +143,7 @@ export function TaskFiltersHorizontal({
     return currentFilters.dateRange?.start === dateStr && currentFilters.dateRange?.end === dateStr;
   };
 
-  // Contar filtros ativos (todos os filtros, não apenas avançados)
+  // Contar filtros ativos (todos os filtros)
   const getActiveFiltersCount = () => {
     let count = 0;
     
@@ -290,6 +290,9 @@ export function TaskFiltersHorizontal({
 
         {/* Separador visual */}
         <div className="h-6 w-px bg-border" />
+
+        {/* Título Status */}
+        <span className="text-sm font-medium text-muted-foreground">Status:</span>
 
         {/* Status buttons */}
         <div className="flex gap-1">

@@ -128,6 +128,12 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
             </span>
           </div>
           <div className="flex justify-between items-center">
+            <span className="text-xs text-orange-600">Reagendadas</span>
+            <span className="text-sm font-medium text-orange-600">
+              {rescheduledTasks} ({calculatePercentage(rescheduledTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
             <span className="text-xs text-green-600">Concluídas</span>
             <span className="text-sm font-medium text-green-600">
               {rescheduledCompletedTasks} ({calculatePercentage(rescheduledCompletedTasks)}%)
