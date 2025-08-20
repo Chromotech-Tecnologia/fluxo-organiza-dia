@@ -53,13 +53,24 @@ const TasksPage = () => {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
+      // Se status é pending, remover a última baixa
+      if (status === 'pending') {
+        const newHistory = task.completionHistory?.slice(0, -1) || [];
+        updateTask(taskId, { 
+          status: 'pending',
+          completionHistory: newHistory,
+          updatedAt: new Date().toISOString()
+        });
+        return;
+      }
+
       // Verificar se já tem uma baixa
       const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
       const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
       
-      // Não permitir múltiplas baixas do mesmo tipo
+      // Se já tem a mesma baixa, não fazer nada (será tratado no TaskCard)
       if (hasCompletion && lastCompletion?.status === status) {
-        return; // Já tem essa baixa
+        return;
       }
 
       const completionRecord = {
@@ -119,6 +130,23 @@ const TasksPage = () => {
   const handleConcludeTask = async (taskId: string) => {
     await concludeTask(taskId);
     refetch();
+  };
+
+  const handleUnconcludeTask = async (taskId: string) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      await updateTask(taskId, {
+        ...task,
+        isConcluded: false,
+        status: 'pending',
+        updatedAt: new Date().toISOString()
+      });
+      refetch();
+    } catch (error) {
+      console.error('Erro ao desfazer conclusão da tarefa:', error);
+    }
   };
 
   // Verificar se todas as tarefas do período estão concluídas
@@ -226,6 +254,7 @@ const TasksPage = () => {
                       taskIndex={index}
                       onStatusChange={(status) => handleStatusChange(task.id, status)}
                       onConclude={() => handleConcludeTask(task.id)}
+                      onUnconclude={() => handleUnconcludeTask(task.id)}
                       onForward={() => handleForwardTask(task)}
                       onEdit={() => handleEditTask(task)}
                       onDelete={() => handleDeleteTask(task)}

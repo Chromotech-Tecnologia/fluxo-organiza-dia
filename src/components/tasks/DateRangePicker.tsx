@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import { Calendar, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { format, parse, isValid } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface DateRangePickerProps {
   startDate: string;
@@ -15,126 +14,76 @@ interface DateRangePickerProps {
   onEndDateChange: (date: string) => void;
 }
 
-export function DateRangePicker({ 
-  startDate, 
-  endDate, 
-  onStartDateChange, 
-  onEndDateChange 
+export function DateRangePicker({
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange
 }: DateRangePickerProps) {
-  const [startOpen, setStartOpen] = useState(false);
-  const [endOpen, setEndOpen] = useState(false);
-  const [startInputValue, setStartInputValue] = useState(startDate);
-  const [endInputValue, setEndInputValue] = useState(endDate);
+  const startDateObj = new Date(startDate + 'T00:00:00');
+  const endDateObj = new Date(endDate + 'T00:00:00');
 
-  const parseDate = (dateString: string): Date | null => {
-    try {
-      // Tentar formato YYYY-MM-DD primeiro
-      let parsed = parse(dateString, 'yyyy-MM-dd', new Date());
-      if (isValid(parsed)) return parsed;
-      
-      // Tentar formato DD/MM/YYYY
-      parsed = parse(dateString, 'dd/MM/yyyy', new Date());
-      if (isValid(parsed)) return parsed;
-      
-      // Tentar formato DD-MM-YYYY
-      parsed = parse(dateString, 'dd-MM-yyyy', new Date());
-      if (isValid(parsed)) return parsed;
-      
-      return null;
-    } catch {
-      return null;
-    }
-  };
-
-  const handleStartInputChange = (value: string) => {
-    setStartInputValue(value);
-    const parsed = parseDate(value);
-    if (parsed) {
-      onStartDateChange(format(parsed, 'yyyy-MM-dd'));
-    }
-  };
-
-  const handleEndInputChange = (value: string) => {
-    setEndInputValue(value);
-    const parsed = parseDate(value);
-    if (parsed) {
-      onEndDateChange(format(parsed, 'yyyy-MM-dd'));
-    }
-  };
-
-  const handleStartCalendarSelect = (date: Date | undefined) => {
+  const handleStartDateSelect = (date: Date | undefined) => {
     if (date) {
-      const formatted = format(date, 'yyyy-MM-dd');
-      onStartDateChange(formatted);
-      setStartInputValue(formatted);
-      setStartOpen(false);
+      const dateStr = date.toISOString().split('T')[0];
+      onStartDateChange(dateStr);
     }
   };
 
-  const handleEndCalendarSelect = (date: Date | undefined) => {
+  const handleEndDateSelect = (date: Date | undefined) => {
     if (date) {
-      const formatted = format(date, 'yyyy-MM-dd');
-      onEndDateChange(formatted);
-      setEndInputValue(formatted);
-      setEndOpen(false);
+      const dateStr = date.toISOString().split('T')[0];
+      onEndDateChange(dateStr);
     }
   };
 
   return (
-    <div className="flex gap-2">
-      <div className="flex-1">
-        <div className="flex">
-          <Input
-            placeholder="Data inicial (YYYY-MM-DD)"
-            value={startInputValue}
-            onChange={(e) => handleStartInputChange(e.target.value)}
-            className="rounded-r-none"
+    <div className="flex gap-1">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 px-2 py-0 text-xs gap-1"
+          >
+            <CalendarIcon className="h-3 w-3" />
+            {format(startDateObj, 'dd/MM/yyyy', { locale: ptBR })}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <CalendarComponent
+            mode="single"
+            selected={startDateObj}
+            onSelect={handleStartDateSelect}
+            initialFocus
+            className={cn("p-3 pointer-events-auto")}
           />
-          <Popover open={startOpen} onOpenChange={setStartOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="rounded-l-none border-l-0 px-3">
-                <CalendarIcon className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={parseDate(startDate) || undefined}
-                onSelect={handleStartCalendarSelect}
-                locale={ptBR}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+        </PopoverContent>
+      </Popover>
 
-      <div className="flex-1">
-        <div className="flex">
-          <Input
-            placeholder="Data final (YYYY-MM-DD)"
-            value={endInputValue}
-            onChange={(e) => handleEndInputChange(e.target.value)}
-            className="rounded-r-none"
+      <span className="text-xs text-muted-foreground self-center">até</span>
+
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 px-2 py-0 text-xs gap-1"
+          >
+            <CalendarIcon className="h-3 w-3" />
+            {format(endDateObj, 'dd/MM/yyyy', { locale: ptBR })}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <CalendarComponent
+            mode="single"
+            selected={endDateObj}
+            onSelect={handleEndDateSelect}
+            initialFocus
+            className={cn("p-3 pointer-events-auto")}
           />
-          <Popover open={endOpen} onOpenChange={setEndOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="rounded-l-none border-l-0 px-3">
-                <CalendarIcon className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={parseDate(endDate) || undefined}
-                onSelect={handleEndCalendarSelect}
-                locale={ptBR}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

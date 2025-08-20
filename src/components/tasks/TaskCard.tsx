@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical } from "lucide-react";
+import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical, Undo } from "lucide-react";
 import { Task } from "@/types";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -16,6 +16,7 @@ interface TaskCardProps {
   task: Task;
   onStatusChange: (status: Task['status']) => void;
   onConclude: () => void;
+  onUnconclude: () => void;
   onForward: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -28,6 +29,7 @@ export function TaskCard({
   task, 
   onStatusChange, 
   onConclude, 
+  onUnconclude,
   onForward, 
   onEdit,
   onDelete,
@@ -48,16 +50,21 @@ export function TaskCard({
     transition,
   };
 
-  // Determinar se a tarefa está repassada (cor amarelada)
-  const isTaskForwarded = task.isForwarded || task.status === 'forwarded-date' || task.status === 'forwarded-person';
+  // Determinar se a tarefa está reagendada (cor amarelada)
+  const isTaskForwarded = task.isForwarded || task.forwardCount > 0;
 
-  // Corrigir a data para não mostrar um dia anterior
+  // Corrigir a data para formato brasileiro
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
 
   // Calcular progresso do checklist
   const completedSubItems = task.subItems?.filter(item => item.completed).length || 0;
   const totalSubItems = task.subItems?.length || 0;
   const checklistProgress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
+
+  // Verificar se tem baixa (feito ou não feito)
+  const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
+  const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
+  const canReschedule = hasCompletion && (lastCompletion?.status === 'completed' || lastCompletion?.status === 'not-done');
 
   // Função para lidar com clique no card
   const handleCardClick = (e: React.MouseEvent) => {
@@ -71,7 +78,31 @@ export function TaskCard({
     ) {
       return;
     }
-    onEdit?.();
+
+    // Se é tarefa reagendada, perguntar se quer deletar
+    if (isTaskForwarded) {
+      const confirmDelete = window.confirm(
+        `Deseja deletar a tarefa "${task.title}" do dia ${format(taskDate, 'dd/MM/yyyy', { locale: ptBR })} que está reagendada?`
+      );
+      if (confirmDelete && onDelete) {
+        onDelete();
+      }
+      return;
+    }
+
+    onEdit?();
+  };
+
+  const handleStatusClick = (status: 'completed' | 'not-done') => {
+    // Se já tem essa baixa, remover
+    if (lastCompletion?.status === status) {
+      // Remover a última baixa
+      const newHistory = task.completionHistory?.slice(0, -1) || [];
+      onStatusChange('pending');
+      return;
+    }
+    
+    onStatusChange(status);
   };
 
   return (
@@ -152,8 +183,13 @@ export function TaskCard({
             </div>
           )}
 
-          {/* Indicadores de Status */}
+          {/* Indicadores de Status - Data como primeira tag */}
           <div className="flex gap-2 flex-wrap">
+            {/* Data como primeira tag */}
+            <Badge variant="secondary">
+              {format(taskDate, 'dd/MM/yyyy', { locale: ptBR })}
+            </Badge>
+
             {task.type === 'meeting' && (
               <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
                 <Calendar className="h-3 w-3 mr-1" />
@@ -201,17 +237,13 @@ export function TaskCard({
             {task.forwardCount > 0 && (
               <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
                 <ArrowRight className="h-3 w-3 mr-1" />
-                {task.forwardCount} Repasses
+                {task.forwardCount} Reagendamentos
               </Badge>
             )}
             
-            <Badge variant="secondary">
-              {format(taskDate, 'dd/MM/yyyy', { locale: ptBR })}
-            </Badge>
-            
             {task.isForwarded && (
               <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                Repassada
+                Reagendada
               </Badge>
             )}
             
@@ -230,11 +262,15 @@ export function TaskCard({
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onStatusChange('completed');
+                    handleStatusClick('completed');
                   }}
-                  className="text-green-600 border-green-600 hover:bg-green-50"
+                  className={`${
+                    lastCompletion?.status === 'completed' 
+                      ? 'bg-green-100 text-green-800 border-green-500' 
+                      : 'text-green-600 border-green-600 hover:bg-green-50'
+                  }`}
                 >
-                  Feito
+                  {lastCompletion?.status === 'completed' ? '✓ Feito' : 'Feito'}
                 </Button>
                 
                 <Button
@@ -242,25 +278,31 @@ export function TaskCard({
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onStatusChange('not-done');
+                    handleStatusClick('not-done');
                   }}
-                  className="text-red-600 border-red-600 hover:bg-red-50"
+                  className={`${
+                    lastCompletion?.status === 'not-done' 
+                      ? 'bg-red-100 text-red-800 border-red-500' 
+                      : 'text-red-600 border-red-600 hover:bg-red-50'
+                  }`}
                 >
-                  Não Feito
+                  {lastCompletion?.status === 'not-done' ? '✓ Não Feito' : 'Não Feito'}
                 </Button>
                 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onForward();
-                  }}
-                  className="text-orange-600 border-orange-600 hover:bg-orange-50"
-                >
-                  <Forward className="h-3 w-3 mr-1" />
-                  Repassar
-                </Button>
+                {canReschedule && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onForward();
+                    }}
+                    className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                  >
+                    <Forward className="h-3 w-3 mr-1" />
+                    Reagendar
+                  </Button>
+                )}
                 
                 <Button
                   size="sm"
@@ -274,6 +316,21 @@ export function TaskCard({
                   Concluir
                 </Button>
               </>
+            )}
+
+            {task.isConcluded && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnconclude();
+                }}
+                className="text-orange-600 border-orange-600 hover:bg-orange-50"
+              >
+                <Undo className="h-3 w-3 mr-1" />
+                Desfazer Conclusão
+              </Button>
             )}
           </div>
         </div>

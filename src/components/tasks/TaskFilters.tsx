@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, X, Filter } from "lucide-react";
 import { TaskFilter, TaskType, TaskPriority, TaskStatus } from "@/types";
 import { DateRangePicker } from "./DateRangePicker";
@@ -109,14 +108,13 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
   const hasActiveFilters = !!(
     currentFilters.type?.length ||
     currentFilters.priority?.length ||
-    currentFilters.status?.length ||
     currentFilters.assignedPersonId
   );
 
   return (
-    <Card className="max-h-20 overflow-hidden">
+    <Card className="max-h-20 overflow-visible">
       <CardContent className="p-3 space-y-2">
-        {/* Linha 1: Filtros de data rápidos */}
+        {/* Linha 1: Filtros de data e status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -153,6 +151,23 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
               onStartDateChange={(date) => handleDateRangeChange(date, currentFilters.dateRange?.end || getCurrentDateInSaoPaulo())}
               onEndDateChange={(date) => handleDateRangeChange(currentFilters.dateRange?.start || getCurrentDateInSaoPaulo(), date)}
             />
+
+            {/* Status na primeira linha */}
+            <div className="flex items-center gap-1 ml-4">
+              <span className="text-xs text-muted-foreground">Status:</span>
+              <div className="flex gap-1">
+                {(['pending', 'completed', 'not-done'] as TaskStatus[]).map((status) => (
+                  <Badge
+                    key={status}
+                    variant={currentFilters.status?.includes(status) ? "default" : "outline"}
+                    className="h-5 px-2 text-xs cursor-pointer"
+                    onClick={() => handleStatusFilter(status)}
+                  >
+                    {status === 'pending' ? 'Pendente' : status === 'completed' ? 'Feito' : 'Não Feito'}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -212,23 +227,6 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
                     onClick={() => handlePriorityFilter(priority)}
                   >
                     {priority === 'none' ? 'Nenhuma' : priority === 'priority' ? 'Prioridade' : 'Extrema'}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-foreground">Status:</span>
-              <div className="flex gap-1">
-                {(['pending', 'completed', 'not-done'] as TaskStatus[]).map((status) => (
-                  <Badge
-                    key={status}
-                    variant={currentFilters.status?.includes(status) ? "default" : "outline"}
-                    className="h-5 px-2 text-xs cursor-pointer"
-                    onClick={() => handleStatusFilter(status)}
-                  >
-                    {status === 'pending' ? 'Pendente' : status === 'completed' ? 'Feito' : 'Não Feito'}
                   </Badge>
                 ))}
               </div>
