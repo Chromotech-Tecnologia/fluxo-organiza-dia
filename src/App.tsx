@@ -1,3 +1,5 @@
+
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -55,12 +57,12 @@ const App = () => (
           
           {/* Global Modals */}
           <TaskModal />
-      <PersonModal />
-      <SkillModal />
-      <TeamMemberModal />
-      <ForwardTaskModal />
-      <DeleteModal />
-      <DailyCloseModal />
+          <PersonModal />
+          <SkillModal />
+          <TeamMemberModal />
+          <ForwardTaskModal />
+          <DeleteModal />
+          <DailyCloseModal />
         </AuthGuard>
       </BrowserRouter>
     </TooltipProvider>
