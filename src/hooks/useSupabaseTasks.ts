@@ -59,34 +59,40 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       console.log('Tarefas encontradas:', data?.length || 0);
 
       // Converter dados do Supabase para o tipo Task
-      let convertedTasks: Task[] = (data || []).map(task => ({
-        id: task.id,
-        title: task.title,
-        description: task.description || '',
-        type: task.type as TaskType,
-        priority: task.priority as TaskPriority,
-        status: task.status as TaskStatus,
-        scheduledDate: task.scheduled_date,
-        assignedPersonId: task.assigned_person_id || '',
-        timeInvestment: task.time_investment as 'low' | 'medium' | 'high',
-        category: (task.category === 'work' || task.category === 'health' || task.category === 'education') 
-          ? 'business' 
-          : task.category as 'personal' | 'business',
-        subItems: (task.sub_items as unknown as SubItem[]) || [],
-        observations: task.observations || '',
-        completionHistory: (task.completion_history as any[]) || [],
-        forwardHistory: (task.forward_history as any[]) || [],
-        forwardCount: task.forward_count || 0,
-        deliveryDates: task.delivery_dates || [],
-        isRoutine: task.is_routine || false,
-        recurrence: task.routine_config as any,
-        order: task.task_order || 0,
-        createdAt: task.created_at,
-        updatedAt: task.updated_at,
-        isRecurrent: false,
-        isForwarded: task.forward_count > 0 || (task.forward_history && task.forward_history.length > 0),
-        isConcluded: !!task.concluded_at
-      }));
+      let convertedTasks: Task[] = (data || []).map(task => {
+        // Verificar se forward_history é um array válido
+        const forwardHistory = Array.isArray(task.forward_history) ? task.forward_history : [];
+        const hasForwardHistory = forwardHistory.length > 0;
+        
+        return {
+          id: task.id,
+          title: task.title,
+          description: task.description || '',
+          type: task.type as TaskType,
+          priority: task.priority as TaskPriority,
+          status: task.status as TaskStatus,
+          scheduledDate: task.scheduled_date,
+          assignedPersonId: task.assigned_person_id || '',
+          timeInvestment: task.time_investment as 'low' | 'medium' | 'high',
+          category: (task.category === 'work' || task.category === 'health' || task.category === 'education') 
+            ? 'business' 
+            : task.category as 'personal' | 'business',
+          subItems: (task.sub_items as unknown as SubItem[]) || [],
+          observations: task.observations || '',
+          completionHistory: (task.completion_history as any[]) || [],
+          forwardHistory: forwardHistory as any[],
+          forwardCount: task.forward_count || 0,
+          deliveryDates: task.delivery_dates || [],
+          isRoutine: task.is_routine || false,
+          recurrence: task.routine_config as any,
+          order: task.task_order || 0,
+          createdAt: task.created_at,
+          updatedAt: task.updated_at,
+          isRecurrent: false,
+          isForwarded: task.forward_count > 0 || hasForwardHistory,
+          isConcluded: !!task.concluded_at
+        };
+      });
 
       // Aplicar filtros client-side que não podem ser feitos no Supabase
       if (filters?.hasChecklist !== undefined) {
