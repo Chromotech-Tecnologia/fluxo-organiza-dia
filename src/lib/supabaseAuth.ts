@@ -47,9 +47,11 @@ export const supabaseAuthService = {
     return data.session;
   },
 
-  // Get current user
-  getCurrentUser(): User | null {
-    return supabase.auth.getUser().then(({ data }) => data.user);
+  // Get current user - fixed to properly handle async
+  async getCurrentUser(): Promise<User | null> {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data.user;
   },
 
   // Listen to auth state changes
