@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, TeamMemberFilter } from '@/types';
 import { toast } from '@/hooks/use-toast';
@@ -6,31 +7,27 @@ import { useAuthStore } from '@/stores/useAuthStore';
 
 export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [allTeamMembers, setAllTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
 
-  // Carregar membros do Supabase
-  const loadTeamMembers = async () => {
+  // Carregar membros do Supabase (sem filtros)
+  const loadTeamMembers = useCallback(async () => {
     if (!user) return;
     
+    console.log('Loading team members from Supabase...');
     setLoading(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('team_members')
         .select('*')
         .eq('user_id', user.id)
         .order('name');
 
-      // Aplicar filtros no Supabase
-      if (filters?.status) {
-        query = query.eq('status', filters.status);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
 
       // Converter dados do Supabase para o tipo TeamMember
-      let convertedMembers: TeamMember[] = (data || []).map(member => ({
+      const convertedMembers: TeamMember[] = (data || []).map(member => ({
         id: member.id,
         name: member.name,
         role: member.role || '',
@@ -47,20 +44,17 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         },
         skillIds: member.skill_ids || [],
         status: member.status as 'ativo' | 'inativo',
-        isPartner: false, // default
+        isPartner: false,
         origin: '',
         projects: [],
         createdAt: member.created_at,
         updatedAt: member.updated_at
       }));
 
-      // Aplicar filtros no frontend (para filtros mais complexos)
-      if (filters) {
-        convertedMembers = applyFilters(convertedMembers, filters);
-      }
-
-      setTeamMembers(convertedMembers);
+      console.log('Team members loaded:', convertedMembers.length);
+      setAllTeamMembers(convertedMembers);
     } catch (error: any) {
+      console.error('Error loading team members:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar membros da equipe: " + error.message,
@@ -69,11 +63,17 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
-  // Aplicar filtros
-  const applyFilters = (members: TeamMember[], filters: TeamMemberFilter): TeamMember[] => {
-    return members.filter(member => {
+  // Aplicar filtros usando useMemo para otimização
+  const filteredTeamMembers = useMemo(() => {
+    console.log('Applying filters to team members...', filters);
+    
+    if (!filters || (!filters.search && !filters.status && (!filters.skillIds || filters.skillIds.length === 0))) {
+      return allTeamMembers;
+    }
+
+    return allTeamMembers.filter(member => {
       // Filtro de busca por texto
       if (filters.search) {
         const lowercaseSearch = filters.search.toLowerCase();
@@ -86,6 +86,11 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         if (!matchesSearch) return false;
       }
 
+      // Filtro por status
+      if (filters.status && member.status !== filters.status) {
+        return false;
+      }
+
       // Filtro por skills
       if (filters.skillIds && filters.skillIds.length > 0) {
         const hasMatchingSkill = filters.skillIds.some(skillId => 
@@ -96,10 +101,15 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
 
       return true;
     });
-  };
+  }, [allTeamMembers, filters]);
+
+  // Atualizar teamMembers quando os filtros mudarem
+  useEffect(() => {
+    setTeamMembers(filteredTeamMembers);
+  }, [filteredTeamMembers]);
 
   // Adicionar novo membro
-  const addTeamMember = async (newTeamMember: Omit<TeamMember, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addTeamMember = useCallback(async (newTeamMember: Omit<TeamMember, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user) return;
     
     try {
@@ -137,10 +147,10 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
       });
       throw error;
     }
-  };
+  }, [user?.id, loadTeamMembers]);
 
   // Atualizar membro
-  const updateTeamMember = async (teamMemberId: string, updates: Partial<TeamMember>) => {
+  const updateTeamMember = useCallback(async (teamMemberId: string, updates: Partial<TeamMember>) => {
     try {
       const { error } = await supabase
         .from('team_members')
@@ -174,10 +184,10 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
       });
       throw error;
     }
-  };
+  }, [loadTeamMembers]);
 
   // Deletar membro
-  const deleteTeamMember = async (teamMemberId: string) => {
+  const deleteTeamMember = useCallback(async (teamMemberId: string) => {
     try {
       const { error } = await supabase
         .from('team_members')
@@ -200,15 +210,17 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
       });
       throw error;
     }
-  };
+  }, [loadTeamMembers]);
 
   // Obter membro por ID
-  const getTeamMemberById = (teamMemberId: string): TeamMember | undefined => {
+  const getTeamMemberById = useCallback((teamMemberId: string): TeamMember | undefined => {
     return teamMembers.find(tm => tm.id === teamMemberId);
-  };
+  }, [teamMembers]);
 
+  // Carregamento inicial e setup de real-time apenas quando o usuário estiver disponível
   useEffect(() => {
     if (user) {
+      console.log('Setting up team members for user:', user.id);
       loadTeamMembers();
       
       // Setup real-time subscription
@@ -222,18 +234,19 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
             table: 'team_members',
             filter: `user_id=eq.${user.id}`
           },
-          () => {
-            console.log('Team members changed, reloading...');
+          (payload) => {
+            console.log('Team members changed, reloading...', payload);
             loadTeamMembers();
           }
         )
         .subscribe();
 
       return () => {
+        console.log('Cleaning up team members subscription');
         supabase.removeChannel(channel);
       };
     }
-  }, [filters, user?.id]);
+  }, [user?.id, loadTeamMembers]);
 
   return {
     teamMembers,

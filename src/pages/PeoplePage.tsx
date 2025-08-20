@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,38 +17,51 @@ export default function PeoplePage() {
   const [skillFilter, setSkillFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   
-  const filters: TeamMemberFilter = {
-    search: search || undefined,
+  // Memoizar os filtros para evitar recriação desnecessária
+  const filters: TeamMemberFilter = useMemo(() => ({
+    search: search.trim() || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
     skillIds: skillFilter.length > 0 ? skillFilter : undefined,
-  };
+  }), [search, statusFilter, skillFilter]);
 
   const { teamMembers, loading } = useSupabaseTeamMembers(filters);
   const { skills } = useSupabaseSkills();
   const { openTeamMemberModal } = useModalStore();
 
-  const clearFilters = () => {
+  // Usar useCallback para evitar re-renderizações desnecessárias
+  const clearFilters = useCallback(() => {
     setSearch('');
     setStatusFilter('all');
     setSkillFilter([]);
-  };
+  }, []);
 
-  const toggleSkillFilter = (skillId: string) => {
+  const toggleSkillFilter = useCallback((skillId: string) => {
     setSkillFilter(prev => 
       prev.includes(skillId) 
         ? prev.filter(id => id !== skillId)
         : [...prev, skillId]
     );
-  };
+  }, []);
 
-  // Prevenir que o modal seja chamado múltiplas vezes
-  const handleNewMember = () => {
+  const handleNewMember = useCallback(() => {
     try {
       openTeamMemberModal();
     } catch (error) {
       console.error('Erro ao abrir modal:', error);
     }
-  };
+  }, [openTeamMemberModal]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+
+  const handleStatusChange = useCallback((value: 'ativo' | 'inativo' | 'all') => {
+    setStatusFilter(value);
+  }, []);
+
+  const toggleFilters = useCallback(() => {
+    setShowFilters(prev => !prev);
+  }, []);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -71,12 +84,16 @@ export default function PeoplePage() {
             <div>
               <CardTitle>Membros da Equipe</CardTitle>
               <CardDescription>
-                {teamMembers.length} membro{teamMembers.length !== 1 ? 's' : ''} encontrado{teamMembers.length !== 1 ? 's' : ''}
+                {loading ? (
+                  'Carregando...'
+                ) : (
+                  `${teamMembers.length} membro${teamMembers.length !== 1 ? 's' : ''} encontrado${teamMembers.length !== 1 ? 's' : ''}`
+                )}
               </CardDescription>
             </div>
             <Button
               variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={toggleFilters}
             >
               <Filter className="h-4 w-4 mr-2" />
               Filtros
@@ -89,7 +106,7 @@ export default function PeoplePage() {
             <Input
               placeholder="Buscar por nome, cargo, email ou origem..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               className="max-w-sm"
             />
           </div>
@@ -106,7 +123,7 @@ export default function PeoplePage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Status</label>
-                  <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                  <Select value={statusFilter} onValueChange={handleStatusChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos os status" />
                     </SelectTrigger>
