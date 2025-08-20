@@ -90,14 +90,12 @@ export function TaskCard({
       return;
     }
 
-    onEdit?();
+    onEdit?.();
   };
 
   const handleStatusClick = (status: 'completed' | 'not-done') => {
     // Se já tem essa baixa, remover
     if (lastCompletion?.status === status) {
-      // Remover a última baixa
-      const newHistory = task.completionHistory?.slice(0, -1) || [];
       onStatusChange('pending');
       return;
     }
