@@ -47,10 +47,10 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
     });
   };
 
-  const handleDateRangeChange = (dateRange: { start: string; end: string } | undefined) => {
+  const handleDateRangeChange = (startDate: string, endDate: string) => {
     onFiltersChange({
       ...currentFilters,
-      dateRange
+      dateRange: { start: startDate, end: endDate }
     });
   };
 
@@ -148,8 +148,10 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
             </div>
             
             <DateRangePicker
-              dateRange={currentFilters.dateRange}
-              onDateRangeChange={handleDateRangeChange}
+              startDate={currentFilters.dateRange?.start || getCurrentDateInSaoPaulo()}
+              endDate={currentFilters.dateRange?.end || getCurrentDateInSaoPaulo()}
+              onStartDateChange={(date) => handleDateRangeChange(date, currentFilters.dateRange?.end || getCurrentDateInSaoPaulo())}
+              onEndDateChange={(date) => handleDateRangeChange(currentFilters.dateRange?.start || getCurrentDateInSaoPaulo(), date)}
             />
           </div>
 
@@ -185,14 +187,14 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
             <div className="flex items-center gap-1">
               <span className="text-xs text-muted-foreground">Tipo:</span>
               <div className="flex gap-1">
-                {(['task', 'routine', 'appointment'] as TaskType[]).map((type) => (
+                {(['meeting', 'own-task', 'delegated-task'] as TaskType[]).map((type) => (
                   <Badge
                     key={type}
                     variant={currentFilters.type?.includes(type) ? "default" : "outline"}
                     className="h-5 px-2 text-xs cursor-pointer"
                     onClick={() => handleTypeFilter(type)}
                   >
-                    {type === 'task' ? 'Tarefa' : type === 'routine' ? 'Rotina' : 'Compromisso'}
+                    {type === 'meeting' ? 'Reunião' : type === 'own-task' ? 'Própria' : 'Delegada'}
                   </Badge>
                 ))}
               </div>
@@ -202,14 +204,14 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
             <div className="flex items-center gap-1">
               <span className="text-xs text-muted-foreground">Prioridade:</span>
               <div className="flex gap-1">
-                {(['high', 'medium', 'low'] as TaskPriority[]).map((priority) => (
+                {(['none', 'priority', 'extreme'] as TaskPriority[]).map((priority) => (
                   <Badge
                     key={priority}
                     variant={currentFilters.priority?.includes(priority) ? "default" : "outline"}
                     className="h-5 px-2 text-xs cursor-pointer"
                     onClick={() => handlePriorityFilter(priority)}
                   >
-                    {priority === 'high' ? 'Alta' : priority === 'medium' ? 'Média' : 'Baixa'}
+                    {priority === 'none' ? 'Nenhuma' : priority === 'priority' ? 'Prioridade' : 'Extrema'}
                   </Badge>
                 ))}
               </div>
@@ -235,12 +237,13 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
             {/* Pessoa */}
             <div className="flex items-center gap-1">
               <span className="text-xs text-muted-foreground">Pessoa:</span>
-              <PeopleSelect
-                value={currentFilters.assignedPersonId || ''}
-                onChange={handlePersonFilter}
-                placeholder="Todas"
-                className="h-6 text-xs"
-              />
+              <div className="w-32">
+                <PeopleSelect
+                  value={currentFilters.assignedPersonId || ''}
+                  onChange={handlePersonFilter}
+                  placeholder="Todas"
+                />
+              </div>
             </div>
           </div>
         )}
