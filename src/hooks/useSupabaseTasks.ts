@@ -131,9 +131,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       const { error } = await supabase
         .from('tasks')
         .insert({
-          id: task.id,
-          created_at: task.createdAt,
-          updated_at: task.updatedAt,
           title: task.title,
           description: task.description,
           type: task.type,
