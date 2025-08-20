@@ -101,6 +101,12 @@ export const useModalStore = create<ModalState>((set) => ({
   // Forward Task Modal
   isForwardTaskModalOpen: false,
   taskToForward: null,
-  openForwardTaskModal: (task) => set({ isForwardTaskModalOpen: true, taskToForward: task }),
-  closeForwardTaskModal: () => set({ isForwardTaskModalOpen: false, taskToForward: null }),
+  openForwardTaskModal: (task) => set({ 
+    isForwardTaskModalOpen: true, 
+    taskToForward: task 
+  }),
+  closeForwardTaskModal: () => set({ 
+    isForwardTaskModalOpen: false, 
+    taskToForward: null 
+  }),
 }));

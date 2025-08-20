@@ -2,29 +2,29 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Filter, Calendar, CheckCircle } from "lucide-react";
+import { Plus, CheckCircle } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
-import { TaskCard } from "@/components/tasks/TaskCard";
-import { TasksStats } from "@/components/tasks/TasksStats";
-import { TaskFilters } from "@/components/tasks/TaskFilters";
+import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
+import { TaskStatsImproved } from "@/components/tasks/TaskStatsImproved";
+import { TaskFiltersImproved } from "@/components/tasks/TaskFiltersImproved";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
+import { RescheduleModal } from "@/components/modals/RescheduleModal";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { searchInTask } from "@/lib/searchUtils";
+import { sortTasks, SortOption } from "@/lib/taskUtils";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
   const [taskForHistory, setTaskForHistory] = useState<Task | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('order');
   const [taskFilters, setTaskFilters] = useState<TaskFilter>({
     dateRange: {
       start: getCurrentDateInSaoPaulo(),
@@ -39,22 +39,23 @@ const TasksPage = () => {
     useSensor(KeyboardSensor)
   );
 
-  const filteredTasks = tasks.filter(task =>
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Aplicar busca e ordenação
+  const filteredTasks = tasks.filter(task => searchInTask(task, searchQuery));
+  const sortedTasks = sortTasks(filteredTasks, sortBy);
 
   // Para múltiplos dias, mostrar a ordem real sem reordenar
   const isMultipleDays = taskFilters.dateRange?.start !== taskFilters.dateRange?.end;
   const displayTasks = isMultipleDays 
     ? filteredTasks.sort((a, b) => {
-        // Primeiro por data, depois por ordem
         if (a.scheduledDate !== b.scheduledDate) {
           return a.scheduledDate.localeCompare(b.scheduledDate);
         }
         return (a.order || 0) - (b.order || 0);
       })
-    : filteredTasks;
+    : sortedTasks;
+
+  // Calcular ordem máxima para cores
+  const maxOrder = Math.max(...tasks.map(t => t.order || 0), 1);
 
   const handleTaskSelection = (task: Task, checked: boolean) => {
     if (checked) {
@@ -64,12 +65,19 @@ const TasksPage = () => {
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTasks(displayTasks);
+    } else {
+      setSelectedTasks([]);
+    }
+  };
+
   const handleStatusChange = (taskId: string, status: Task['status']) => {
     try {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
-      // Se status é pending, remover a última baixa
       if (status === 'pending') {
         const newHistory = task.completionHistory?.slice(0, -1) || [];
         updateTask(taskId, { 
@@ -80,11 +88,9 @@ const TasksPage = () => {
         return;
       }
 
-      // Verificar se já tem uma baixa
       const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
       const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
       
-      // Se já tem a mesma baixa, não fazer nada (será tratado no TaskCard)
       if (hasCompletion && lastCompletion?.status === status) {
         return;
       }
@@ -112,13 +118,6 @@ const TasksPage = () => {
   };
 
   const handleForwardTask = (task: Task) => {
-    // Perguntar se quer manter a ordenação
-    const keepOrder = window.confirm('Deseja manter a ordenação da tarefa ao reagendar?');
-    
-    // Perguntar se quer manter as baixas do checklist
-    const keepChecklistStatus = window.confirm('Deseja manter o status dos itens do checklist?');
-    
-    // Passar essas opções para o modal de reagendamento
     openForwardTaskModal(task);
   };
 
@@ -135,8 +134,7 @@ const TasksPage = () => {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    // Não permitir reordenação se está visualizando múltiplos dias
-    if (isMultipleDays) return;
+    if (isMultipleDays || sortBy !== 'order') return;
 
     const { active, over } = event;
 
@@ -147,7 +145,6 @@ const TasksPage = () => {
       const reorderedTasks = arrayMove(displayTasks, oldIndex, newIndex);
       const taskIds = reorderedTasks.map(task => task.id);
       
-      // Atualizar ordem no banco
       reorderTasks(taskIds);
     }
   };
@@ -193,21 +190,6 @@ const TasksPage = () => {
         </Button>
       </div>
 
-      {/* Busca */}
-      <Card>
-        <CardContent className="p-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Buscar tarefas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-8"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Indicador de Dia Fechado */}
       {allTasksConcluded && (
         <Card className="border-green-500 bg-green-50">
@@ -220,20 +202,18 @@ const TasksPage = () => {
         </Card>
       )}
 
-      {/* Filtros */}
-      <TaskFilters 
+      {/* Filtros Melhorados */}
+      <TaskFiltersImproved 
         currentFilters={taskFilters}
-        onFiltersChange={(filters) => {
-          setTaskFilters(filters);
-          // Se limpar filtros, limpar busca também
-          if (!filters.dateRange && !filters.status?.length && !filters.type?.length && !filters.assignedPersonId) {
-            setSearchQuery('');
-          }
-        }}
+        onFiltersChange={setTaskFilters}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
       />
 
-      {/* Resumo de Estatísticas */}
-      <TasksStats tasks={displayTasks} />
+      {/* Resumo de Estatísticas Melhorado */}
+      <TaskStatsImproved tasks={displayTasks} />
 
       {/* Lista de Tarefas com Drag & Drop */}
       <div className="grid gap-4">
@@ -259,38 +239,52 @@ const TasksPage = () => {
             </CardContent>
           </Card>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-            modifiers={[restrictToVerticalAxis]}
-          >
-            <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
-              {displayTasks.map((task, index) => (
-                <div key={task.id} className="flex items-start gap-3">
-                  <Checkbox
-                    checked={selectedTasks.some(t => t.id === task.id)}
-                    onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
-                    className="mt-4"
-                  />
-                  <div className="flex-1">
-                    <TaskCard 
-                      task={task} 
-                      taskIndex={isMultipleDays ? undefined : index} // Não mostrar índice para múltiplos dias
-                      onStatusChange={(status) => handleStatusChange(task.id, status)}
-                      onConclude={() => handleConcludeTask(task.id)}
-                      onUnconclude={() => handleUnconcludeTask(task.id)}
-                      onForward={() => handleForwardTask(task)}
-                      onEdit={() => handleEditTask(task)}
-                      onDelete={() => handleDeleteTask(task)}
-                      onHistory={() => handleTaskHistory(task)}
-                      currentViewDate={taskFilters.dateRange?.start}
+          <>
+            {/* Checkbox para selecionar todas */}
+            <div className="flex items-center gap-2 px-1">
+              <Checkbox
+                checked={selectedTasks.length === displayTasks.length}
+                onCheckedChange={handleSelectAll}
+              />
+              <label className="text-sm text-muted-foreground">
+                Selecionar todas ({displayTasks.length} tarefas)
+              </label>
+            </div>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+              modifiers={[restrictToVerticalAxis]}
+            >
+              <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+                {displayTasks.map((task, index) => (
+                  <div key={task.id} className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedTasks.some(t => t.id === task.id)}
+                      onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
+                      className="mt-4"
                     />
+                    <div className="flex-1">
+                      <TaskCardImproved 
+                        task={task} 
+                        taskIndex={isMultipleDays ? undefined : index}
+                        maxOrder={maxOrder}
+                        onStatusChange={(status) => handleStatusChange(task.id, status)}
+                        onConclude={() => handleConcludeTask(task.id)}
+                        onUnconclude={() => handleUnconcludeTask(task.id)}
+                        onForward={() => handleForwardTask(task)}
+                        onEdit={() => handleEditTask(task)}
+                        onDelete={() => handleDeleteTask(task)}
+                        onHistory={() => handleTaskHistory(task)}
+                        currentViewDate={taskFilters.dateRange?.start}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </SortableContext>
-          </DndContext>
+                ))}
+              </SortableContext>
+            </DndContext>
+          </>
         )}
         
         <BulkActionsBar 
@@ -299,12 +293,13 @@ const TasksPage = () => {
         />
       </div>
 
-      {/* Modal de Histórico */}
+      {/* Modais */}
       <TaskHistoryModal
         task={taskForHistory}
         isOpen={!!taskForHistory}
         onClose={() => setTaskForHistory(null)}
       />
+      <RescheduleModal />
     </div>
   );
 };
