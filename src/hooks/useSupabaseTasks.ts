@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats } from '@/types';
@@ -50,33 +51,47 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           query = query.lte('forward_count', filters.maxForwards);
         }
 
-        // Filtro por recorrência
+        // Filtro por recorrência (usando is_routine como proxy)
         if (filters.isRecurrent !== undefined) {
-          query = query.eq('is_recurrent', filters.isRecurrent);
+          query = query.eq('is_routine', filters.isRecurrent);
         }
       }
 
-      const { data, error } = await query.order('order', { ascending: true });
+      const { data, error } = await query.order('task_order', { ascending: true });
 
       if (error) {
         throw error;
       }
 
       // Mapear os dados para o formato esperado
-      const mappedTasks = data.map(task => ({
-        ...task,
+      const mappedTasks: Task[] = (data || []).map(task => ({
+        id: task.id,
+        title: task.title || '',
+        description: task.description || '',
+        type: task.type,
+        priority: task.priority,
+        status: task.status,
         scheduledDate: task.scheduled_date,
-        assignedPersonId: task.assigned_person_id,
-        isRecurrent: task.is_recurrent,
-        routineCycle: task.routine_cycle,
-        routineStartDate: task.routine_start_date,
-        routineEndDate: task.routine_end_date,
-        forwardCount: task.forward_count,
-        completionHistory: task.completion_history,
-        forwardHistory: task.forward_history,
+        assignedPersonId: task.assigned_person_id || undefined,
+        timeInvestment: task.time_investment || 'low',
+        category: task.category || 'personal',
+        subItems: Array.isArray(task.sub_items) ? task.sub_items : [],
+        deliveryDates: Array.isArray(task.delivery_dates) ? task.delivery_dates : [],
+        observations: task.observations || '',
+        order: task.task_order || 0,
+        isRecurrent: false, // Não existe na tabela atual
+        isRoutine: task.is_routine || false,
+        routineCycle: undefined, // Não existe na tabela atual
+        routineStartDate: undefined, // Não existe na tabela atual
+        routineEndDate: undefined, // Não existe na tabela atual
+        forwardCount: task.forward_count || 0,
+        completionHistory: Array.isArray(task.completion_history) ? task.completion_history : [],
+        forwardHistory: Array.isArray(task.forward_history) ? task.forward_history : [],
+        createdAt: task.created_at,
+        updatedAt: task.updated_at,
         isForwarded: task.is_forwarded || false,
         isConcluded: task.is_concluded || false,
-        concludedAt: task.concluded_at
+        concludedAt: task.concluded_at || undefined
       }));
 
       setTasks(mappedTasks);
@@ -90,11 +105,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Aplicar filtros (agora desativado, pois o filtro é feito no Supabase)
-  const applyFilters = (tasks: Task[], filters: TaskFilter): Task[] => {
-    return tasks;
   };
 
   // Adicionar nova tarefa
@@ -119,7 +129,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         concludedAt: null
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .insert([
           {
@@ -133,19 +143,15 @@ export function useSupabaseTasks(filters?: TaskFilter) {
             status: task.status,
             scheduled_date: task.scheduledDate,
             assigned_person_id: task.assignedPersonId,
-            order: task.order,
+            task_order: task.order,
             observations: task.observations,
-            is_recurrent: task.isRecurrent,
-            routine_cycle: task.routineCycle,
-            routine_start_date: task.routineStartDate,
-            routine_end_date: task.routineEndDate,
+            is_routine: task.isRoutine,
             forward_count: task.forwardCount,
             completion_history: task.completionHistory,
             forward_history: task.forwardHistory,
             delivery_dates: task.deliveryDates,
             time_investment: task.timeInvestment,
             category: task.category,
-            is_routine: task.isRoutine,
             sub_items: task.subItems,
             is_forwarded: task.isForwarded,
             is_concluded: task.isConcluded,
@@ -178,54 +184,31 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     try {
       const supabaseUpdates: { [key: string]: any } = {
         updated_at: new Date().toISOString(),
-        ...updates,
       };
 
       // Mapear os campos para o formato do Supabase
-      if (updates.scheduledDate !== undefined) {
-        supabaseUpdates.scheduled_date = updates.scheduledDate;
-      }
-      if (updates.assignedPersonId !== undefined) {
-        supabaseUpdates.assigned_person_id = updates.assignedPersonId;
-      }
-      if (updates.isRecurrent !== undefined) {
-        supabaseUpdates.is_recurrent = updates.isRecurrent;
-      }
-      if (updates.routineCycle !== undefined) {
-        supabaseUpdates.routine_cycle = updates.routineCycle;
-      }
-      if (updates.routineStartDate !== undefined) {
-        supabaseUpdates.routine_start_date = updates.routineStartDate;
-      }
-      if (updates.routineEndDate !== undefined) {
-        supabaseUpdates.routine_end_date = updates.routineEndDate;
-      }
-      if (updates.forwardCount !== undefined) {
-        supabaseUpdates.forward_count = updates.forwardCount;
-      }
-      if (updates.completionHistory !== undefined) {
-        supabaseUpdates.completion_history = updates.completionHistory;
-      }
-      if (updates.forwardHistory !== undefined) {
-        supabaseUpdates.forward_history = updates.forwardHistory;
-      }
-      if (updates.deliveryDates !== undefined) {
-        supabaseUpdates.delivery_dates = updates.deliveryDates;
-      }
-      if (updates.subItems !== undefined) {
-        supabaseUpdates.sub_items = updates.subItems;
-      }
-      if (updates.isForwarded !== undefined) {
-        supabaseUpdates.is_forwarded = updates.isForwarded;
-      }
-      if (updates.isConcluded !== undefined) {
-        supabaseUpdates.is_concluded = updates.isConcluded;
-      }
-      if (updates.concludedAt !== undefined) {
-        supabaseUpdates.concluded_at = updates.concludedAt;
-      }
+      if (updates.title !== undefined) supabaseUpdates.title = updates.title;
+      if (updates.description !== undefined) supabaseUpdates.description = updates.description;
+      if (updates.type !== undefined) supabaseUpdates.type = updates.type;
+      if (updates.priority !== undefined) supabaseUpdates.priority = updates.priority;
+      if (updates.status !== undefined) supabaseUpdates.status = updates.status;
+      if (updates.scheduledDate !== undefined) supabaseUpdates.scheduled_date = updates.scheduledDate;
+      if (updates.assignedPersonId !== undefined) supabaseUpdates.assigned_person_id = updates.assignedPersonId;
+      if (updates.timeInvestment !== undefined) supabaseUpdates.time_investment = updates.timeInvestment;
+      if (updates.category !== undefined) supabaseUpdates.category = updates.category;
+      if (updates.subItems !== undefined) supabaseUpdates.sub_items = updates.subItems;
+      if (updates.deliveryDates !== undefined) supabaseUpdates.delivery_dates = updates.deliveryDates;
+      if (updates.observations !== undefined) supabaseUpdates.observations = updates.observations;
+      if (updates.order !== undefined) supabaseUpdates.task_order = updates.order;
+      if (updates.isRoutine !== undefined) supabaseUpdates.is_routine = updates.isRoutine;
+      if (updates.forwardCount !== undefined) supabaseUpdates.forward_count = updates.forwardCount;
+      if (updates.completionHistory !== undefined) supabaseUpdates.completion_history = updates.completionHistory;
+      if (updates.forwardHistory !== undefined) supabaseUpdates.forward_history = updates.forwardHistory;
+      if (updates.isForwarded !== undefined) supabaseUpdates.is_forwarded = updates.isForwarded;
+      if (updates.isConcluded !== undefined) supabaseUpdates.is_concluded = updates.isConcluded;
+      if (updates.concludedAt !== undefined) supabaseUpdates.concluded_at = updates.concludedAt;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .update(supabaseUpdates)
         .eq('id', taskId);
@@ -286,7 +269,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         taskIds.map(async (taskId, index) => {
           const { error } = await supabase
             .from('tasks')
-            .update({ order: index })
+            .update({ task_order: index })
             .eq('id', taskId);
 
           if (error) {
@@ -324,8 +307,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       }
 
       // Atualizar o histórico de repasses
+      const currentForwardHistory = Array.isArray(taskData.forward_history) ? taskData.forward_history : [];
       const updatedForwardHistory = [
-        ...(taskData.forward_history || []),
+        ...currentForwardHistory,
         {
           forwardedAt: getCurrentDateInSaoPaulo(),
           fromPersonId: taskData.assigned_person_id,
@@ -383,15 +367,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         throw new Error("Tarefa não encontrada");
       }
 
-      // Verificar se já tem uma baixa
-      const hasCompletion = taskData.completion_history && taskData.completion_history.length > 0;
-      const lastCompletion = hasCompletion ? taskData.completion_history[taskData.completion_history.length - 1] : null;
-
-      // Não permitir múltiplas baixas do mesmo tipo
-      // if (hasCompletion && lastCompletion?.status === 'completed') {
-      //   return; // Já tem essa baixa
-      // }
-
+      const currentCompletionHistory = Array.isArray(taskData.completion_history) ? taskData.completion_history : [];
       const completionRecord = {
         completedAt: getCurrentDateInSaoPaulo(),
         status: 'completed',
@@ -400,7 +376,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       };
 
       const updatedCompletionHistory = [
-        ...(taskData.completion_history || []),
+        ...currentCompletionHistory,
         completionRecord
       ];
 
@@ -437,12 +413,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   // Obter tarefas por data
   const getTasksByDate = (date: string): Task[] => {
-    try {
-      return [];
-    } catch (error) {
-      console.error('Erro ao buscar tarefas por data:', error);
-      return [];
-    }
+    return tasks.filter(task => task.scheduledDate === date);
   };
 
   // Obter estatísticas
