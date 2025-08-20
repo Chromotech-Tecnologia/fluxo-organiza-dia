@@ -134,7 +134,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           size="sm"
           variant="outline"
           onClick={() => handleBulkStatusChange('completed')}
-          className="gap-1 border-green-500 text-green-700 hover:bg-green-50"
+          className="gap-1 bg-green-500 text-white border-green-500 hover:bg-green-600"
         >
           <CheckCircle className="h-4 w-4" />
           Feito
@@ -144,7 +144,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           size="sm"
           variant="outline"
           onClick={() => handleBulkStatusChange('not-done')}
-          className="gap-1 border-red-500 text-red-700 hover:bg-red-50"
+          className="gap-1 bg-red-500 text-white border-red-500 hover:bg-red-600"
         >
           <X className="h-4 w-4" />
           Não feito
@@ -154,7 +154,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           size="sm"
           variant="outline"
           onClick={handleBulkForward}
-          className="gap-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+          className="gap-1 text-orange-600 border-orange-600 hover:bg-orange-50"
         >
           <ArrowRight className="h-4 w-4" />
           Reagendar
@@ -164,7 +164,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
           size="sm"
           variant="outline"
           onClick={handleBulkConclude}
-          className="gap-1 border-blue-500 text-blue-700 hover:bg-blue-50"
+          className="gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
         >
           <Check className="h-4 w-4" />
           Concluir
@@ -179,7 +179,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
               description: "Funcionalidade de deletar em massa em desenvolvimento"
             });
           }}
-          className="gap-1 border-red-500 text-red-700 hover:bg-red-50"
+          className="gap-1 text-red-600 border-red-600 hover:bg-red-50"
         >
           <Trash2 className="h-4 w-4" />
           Deletar
@@ -194,7 +194,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
               description: "Funcionalidade de delegar em massa em desenvolvimento"
             });
           }}
-          className="gap-1 border-purple-500 text-purple-700 hover:bg-purple-50"
+          className="gap-1 text-purple-600 border-purple-600 hover:bg-purple-50"
         >
           <Users className="h-4 w-4" />
           Delegar

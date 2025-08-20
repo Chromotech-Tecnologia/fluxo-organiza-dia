@@ -1,159 +1,148 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Edit, Trash2, Mail, Phone, MapPin, Briefcase, Star } from 'lucide-react';
-import { TeamMember } from '@/types';
-import { useModalStore } from '@/stores/useModalStore';
-import { useSkills } from '@/hooks/useSkills';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { TeamMember } from "@/types";
+import { Mail, Phone, Edit, Trash2, MapPin, Users } from "lucide-react";
+import { useModalStore } from "@/stores/useModalStore";
 
 interface TeamMemberCardProps {
   teamMember: TeamMember;
+  onEdit: (teamMember: TeamMember) => void;
+  onDelete: (teamMember: TeamMember) => void;
 }
 
-export function TeamMemberCard({ teamMember }: TeamMemberCardProps) {
-  const { openTeamMemberModal, openDeleteModal } = useModalStore();
-  const { skills } = useSkills();
-  const { getProjectStats, getSkillsCount } = useTeamMembers();
+export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardProps) {
+  const { openTeamMemberModal } = useModalStore();
 
-  const projectStats = getProjectStats(teamMember);
-  const skillsCount = getSkillsCount(teamMember);
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const handleCardClick = () => {
+    openTeamMemberModal(teamMember);
   };
 
-  const getSkillNames = () => {
-    return teamMember.skillIds
-      .map(skillId => skills.find(s => s.id === skillId)?.name)
-      .filter(Boolean)
-      .slice(0, 3); // Mostrar apenas 3 skills
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit(teamMember);
   };
 
-  const formatPhone = (phone: string) => {
-    return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(teamMember);
   };
+
+  const getProjectStats = () => {
+    const stats = {
+      apresentado: 0,
+      cotado: 0,
+      iniciado: 0,
+      finalizado: 0,
+    };
+
+    teamMember.projects?.forEach(project => {
+      stats[project.status]++;
+    });
+
+    return stats;
+  };
+
+  const stats = getProjectStats();
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card 
+      className="cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleCardClick}
+    >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {getInitials(teamMember.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {teamMember.name}
-                {teamMember.isPartner && (
-                  <Badge variant="secondary" className="text-xs">Sócio</Badge>
-                )}
-              </CardTitle>
-              <CardDescription className="text-sm">
-                {teamMember.role}
-              </CardDescription>
-            </div>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-lg">{teamMember.name}</CardTitle>
+            <p className="text-sm text-muted-foreground">{teamMember.role}</p>
           </div>
-          <Badge 
-            variant={teamMember.status === 'ativo' ? 'default' : 'secondary'}
-            className={teamMember.status === 'ativo' ? 'bg-green-100 text-green-800' : ''}
-          >
-            {teamMember.status}
-          </Badge>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Contato */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Mail className="h-4 w-4" />
-            <span className="truncate">{teamMember.email}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="h-4 w-4" />
-            <span>{formatPhone(teamMember.phone)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-            <span className="truncate">
-              {teamMember.address.city}, {teamMember.address.state}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Briefcase className="h-4 w-4" />
-            <span className="truncate">{teamMember.origin}</span>
-          </div>
-        </div>
-
-        {/* Skills */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{skillsCount} habilidade{skillsCount !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {getSkillNames().map((skillName, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {skillName}
-              </Badge>
-            ))}
-            {teamMember.skillIds.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{teamMember.skillIds.length - 3}
-              </Badge>
+          <div className="flex gap-1">
+            <Badge variant={teamMember.status === 'ativo' ? 'default' : 'secondary'}>
+              {teamMember.status}
+            </Badge>
+            {teamMember.isPartner && (
+              <Badge variant="outline">Sócio</Badge>
             )}
           </div>
         </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-3">
+        {/* Contato */}
+        {(teamMember.email || teamMember.phone) && (
+          <div className="space-y-1">
+            {teamMember.email && (
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="truncate">{teamMember.email}</span>
+              </div>
+            )}
+            {teamMember.phone && (
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span>{teamMember.phone}</span>
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Projetos */}
-        <div className="space-y-2">
-          <div className="text-sm font-medium">
-            Projetos ({projectStats.total})
+        {/* Endereço */}
+        {teamMember.address && (teamMember.address.city || teamMember.address.state) && (
+          <div className="flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <span>{teamMember.address.city}{teamMember.address.city && teamMember.address.state && ', '}{teamMember.address.state}</span>
           </div>
-          <div className="grid grid-cols-2 gap-1 text-xs">
-            <div className="flex justify-between">
-              <span>Apresentado:</span>
-              <span className="font-medium">{projectStats.apresentado}</span>
+        )}
+
+        {/* Origem */}
+        {teamMember.origin && (
+          <div className="text-sm">
+            <span className="text-muted-foreground">Origem: </span>
+            <span>{teamMember.origin}</span>
+          </div>
+        )}
+
+        {/* Habilidades */}
+        {teamMember.skillIds && teamMember.skillIds.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Habilidades</span>
             </div>
-            <div className="flex justify-between">
-              <span>Cotado:</span>
-              <span className="font-medium">{projectStats.cotado}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Iniciado:</span>
-              <span className="font-medium">{projectStats.iniciado}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Finalizado:</span>
-              <span className="font-medium">{projectStats.finalizado}</span>
+            <Badge variant="secondary">
+              {teamMember.skillIds.length} habilidade{teamMember.skillIds.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+        )}
+
+        {/* Projetos Stats */}
+        {teamMember.projects && teamMember.projects.length > 0 && (
+          <div>
+            <div className="text-sm font-medium mb-1">Projetos</div>
+            <div className="flex gap-1 flex-wrap">
+              {stats.apresentado > 0 && <Badge variant="outline" className="text-xs">A: {stats.apresentado}</Badge>}
+              {stats.cotado > 0 && <Badge variant="outline" className="text-xs">C: {stats.cotado}</Badge>}
+              {stats.iniciado > 0 && <Badge variant="outline" className="text-xs">I: {stats.iniciado}</Badge>}
+              {stats.finalizado > 0 && <Badge variant="outline" className="text-xs">F: {stats.finalizado}</Badge>}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Ações */}
-        <div className="flex gap-2 pt-2 border-t">
+        <div className="flex justify-end gap-2 pt-2 border-t">
           <Button
-            size="sm"
             variant="outline"
-            onClick={() => openTeamMemberModal(teamMember)}
-            className="flex-1"
+            size="sm"
+            onClick={handleEditClick}
           >
-            <Edit className="h-4 w-4 mr-2" />
-            Editar
+            <Edit className="h-4 w-4" />
           </Button>
           <Button
-            size="sm"
             variant="outline"
-            onClick={() => openDeleteModal('teamMember', teamMember)}
+            size="sm"
+            onClick={handleDeleteClick}
+            className="text-destructive hover:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Progress } from '@/components/ui/progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getOrderNumberColor, getPriorityColor } from '@/lib/taskUtils';
+import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
 
 interface TaskCardImprovedProps {
   task: Task;
@@ -48,10 +49,17 @@ export function TaskCardImproved({
     transition,
   } = useSortable({ id: task.id });
 
+  const { teamMembers } = useSupabaseTeamMembers();
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  // Encontrar a equipe delegada
+  const assignedTeam = task.assignedPersonId 
+    ? teamMembers.find(team => team.id === task.assignedPersonId)
+    : null;
 
   // Verificar se a tarefa foi reagendada (tem histórico de reagendamentos)
   const wasRescheduled = task.forwardHistory && task.forwardHistory.length > 0;
@@ -64,10 +72,10 @@ export function TaskCardImproved({
     const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
     
     if (lastCompletion?.status === 'completed') {
-      return wasRescheduled ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-white';
+      return 'border-green-500 bg-green-50';
     }
     if (lastCompletion?.status === 'not-done') {
-      return wasRescheduled ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white';
+      return 'border-red-500 bg-red-50';
     }
     
     return 'border-border bg-background';
@@ -134,6 +142,13 @@ export function TaskCardImproved({
                   className={`text-xs px-1.5 py-0.5 min-w-[24px] text-center flex-shrink-0 ${getOrderNumberColor(task.order || (taskIndex + 1), maxOrder)}`}
                 >
                   {task.order || (taskIndex + 1)}
+                </Badge>
+              )}
+              
+              {/* Nome da equipe delegada (se houver) */}
+              {assignedTeam && (
+                <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300 flex-shrink-0">
+                  {assignedTeam.name}
                 </Badge>
               )}
               
@@ -258,7 +273,7 @@ export function TaskCardImproved({
                     }}
                     className={`h-7 px-2 text-xs min-w-[50px] ${
                       lastCompletion?.status === 'completed' 
-                        ? (wasRescheduled ? 'bg-green-100 text-green-800 border-green-500' : 'bg-gray-100 text-gray-700 border-gray-300')
+                        ? 'bg-green-500 text-white border-green-500 hover:bg-green-600'
                         : 'text-green-600 border-green-600 hover:bg-green-50'
                     }`}
                   >
@@ -272,13 +287,13 @@ export function TaskCardImproved({
                       e.stopPropagation();
                       handleStatusClick('not-done');
                     }}
-                    className={`h-7 px-2 text-xs min-w-[50px] ${
+                    className={`h-7 px-2 text-xs min-w-[70px] ${
                       lastCompletion?.status === 'not-done' 
-                        ? (wasRescheduled ? 'bg-red-100 text-red-800 border-red-500' : 'bg-gray-100 text-gray-700 border-gray-300')
+                        ? 'bg-red-500 text-white border-red-500 hover:bg-red-600'
                         : 'text-red-600 border-red-600 hover:bg-red-50'
                     }`}
                   >
-                    {lastCompletion?.status === 'not-done' ? '✓ Não' : 'Não'}
+                    {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
                   </Button>
                   
                   {canReschedule && (
@@ -289,9 +304,13 @@ export function TaskCardImproved({
                         e.stopPropagation();
                         onForward();
                       }}
-                      className="h-7 px-2 text-xs min-w-[70px] text-orange-600 border-orange-600 hover:bg-orange-50 bg-orange-100"
+                      className={`h-7 px-2 text-xs min-w-[70px] ${
+                        wasRescheduled
+                          ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
+                          : 'text-orange-600 border-orange-600 hover:bg-orange-50'
+                      }`}
                     >
-                      ✓ Reagendar
+                      {wasRescheduled ? '✓ Reagendar' : 'Reagendar'}
                     </Button>
                   )}
                   

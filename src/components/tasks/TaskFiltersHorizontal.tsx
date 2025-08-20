@@ -1,19 +1,18 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, X, Filter, Trash2 } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, X, Filter, Calendar, Tag, User, Clock, ArrowUpDown, Users } from "lucide-react";
 import { TaskFilter } from "@/types";
-import { getCurrentDateInSaoPaulo, stringToCalendarDate, calendarDateToString, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo } from "@/lib/utils";
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { SortOption, SORT_OPTIONS } from "@/lib/taskUtils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DateRangePicker } from "./DateRangePicker";
+import { SORT_OPTIONS, SortOption } from "@/lib/taskUtils";
+import { getCurrentDateInSaoPaulo } from "@/lib/utils";
+import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 
 interface TaskFiltersHorizontalProps {
   currentFilters: TaskFilter;
@@ -21,7 +20,7 @@ interface TaskFiltersHorizontalProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   sortBy: SortOption;
-  onSortChange: (sortBy: SortOption) => void;
+  onSortChange: (sort: SortOption) => void;
 }
 
 export function TaskFiltersHorizontal({
@@ -30,338 +29,366 @@ export function TaskFiltersHorizontal({
   searchQuery,
   onSearchChange,
   sortBy,
-  onSortChange
+  onSortChange,
 }: TaskFiltersHorizontalProps) {
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
-  const today = getCurrentDateInSaoPaulo();
-  const yesterday = getYesterdayInSaoPaulo();
-  const tomorrow = getTomorrowInSaoPaulo();
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const { teamMembers } = useSupabaseTeamMembers();
+  const { tasks } = useSupabaseTasks(currentFilters);
 
-  const handleQuickDateFilter = (dateString: string) => {
+  // Obter equipes que têm tarefas delegadas no período filtrado
+  const teamsWithDelegatedTasks = teamMembers.filter(team => 
+    tasks.some(task => task.type === 'delegated-task' && task.assignedPersonId === team.id)
+  );
+
+  const clearFilters = () => {
     onFiltersChange({
-      ...currentFilters,
       dateRange: {
-        start: dateString,
-        end: dateString
+        start: getCurrentDateInSaoPaulo(),
+        end: getCurrentDateInSaoPaulo()
       }
     });
+    onSearchChange("");
+    onSortChange('order');
   };
 
-  const handleDateRangeChange = (field: 'start' | 'end', date: Date | undefined) => {
-    if (!date) return;
+  const clearSpecificFilter = (filterKey: keyof TaskFilter) => {
+    const newFilters = { ...currentFilters };
+    delete newFilters[filterKey];
+    onFiltersChange(newFilters);
+  };
+
+  // Contar filtros ativos
+  const getActiveFiltersCount = () => {
+    let count = 0;
     
-    const dateString = calendarDateToString(date);
-    onFiltersChange({
-      ...currentFilters,
-      dateRange: {
-        ...currentFilters.dateRange,
-        [field]: dateString
-      }
-    });
+    // Verificar se o range de datas não é o padrão (apenas hoje)
+    const today = getCurrentDateInSaoPaulo();
+    if (currentFilters.dateRange?.start !== today || currentFilters.dateRange?.end !== today) {
+      count++;
+    }
+    
+    if (currentFilters.types && currentFilters.types.length > 0) count++;
+    if (currentFilters.priorities && currentFilters.priorities.length > 0) count++;
+    if (currentFilters.timeInvestments && currentFilters.timeInvestments.length > 0) count++;
+    if (currentFilters.statuses && currentFilters.statuses.length > 0) count++;
+    if (currentFilters.assignedPersonId) count++;
+    if (searchQuery.trim()) count++;
+    if (sortBy !== 'order') count++;
+    
+    return count;
   };
 
-  const clearAllFilters = () => {
-    onFiltersChange({
-      dateRange: {
-        start: today,
-        end: today
-      }
-    });
-    onSearchChange('');
-  };
-
-  const clearSearch = () => {
-    onSearchChange('');
-  };
-
-  const isFiltered = 
-    searchQuery !== '' ||
-    currentFilters.type?.length > 0 ||
-    currentFilters.priority?.length > 0 ||
-    currentFilters.status?.length > 0 ||
-    currentFilters.assignedPersonId ||
-    currentFilters.timeInvestment?.length > 0 ||
-    currentFilters.category?.length > 0 ||
-    currentFilters.hasChecklist !== undefined ||
-    currentFilters.isForwarded !== undefined ||
-    currentFilters.noOrder !== undefined;
+  const activeFiltersCount = getActiveFiltersCount();
 
   return (
-    <Card>
-      <CardContent className="p-4 space-y-4">
-        {/* Primeira linha: Atalhos de data, intervalo, status e tipo */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Atalhos de data */}
-          <div className="flex gap-1">
+    <div className="space-y-4">
+      {/* Linha principal: Busca, Ordenação e Filtros */}
+      <div className="flex gap-2 flex-wrap items-center">
+        {/* Busca */}
+        <div className="relative min-w-[250px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar tarefas..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10 h-8"
+          />
+          {searchQuery && (
             <Button
+              variant="ghost"
               size="sm"
-              variant={currentFilters.dateRange?.start === yesterday && currentFilters.dateRange?.end === yesterday ? "default" : "outline"}
-              onClick={() => handleQuickDateFilter(yesterday)}
-              className="h-8 px-3 text-xs"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => onSearchChange("")}
             >
-              Ontem
-            </Button>
-            <Button
-              size="sm"
-              variant={currentFilters.dateRange?.start === today && currentFilters.dateRange?.end === today ? "default" : "outline"}
-              onClick={() => handleQuickDateFilter(today)}
-              className="h-8 px-3 text-xs"
-            >
-              Hoje
-            </Button>
-            <Button
-              size="sm"
-              variant={currentFilters.dateRange?.start === tomorrow && currentFilters.dateRange?.end === tomorrow ? "default" : "outline"}
-              onClick={() => handleQuickDateFilter(tomorrow)}
-              className="h-8 px-3 text-xs"
-            >
-              Amanhã
-            </Button>
-          </div>
-
-          <div className="h-6 w-px bg-border" />
-
-          {/* Seletores de data */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">De:</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
-                  <CalendarIcon className="h-3 w-3 mr-1" />
-                  {currentFilters.dateRange?.start ? format(stringToCalendarDate(currentFilters.dateRange.start), 'dd/MM', { locale: ptBR }) : 'Data'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={currentFilters.dateRange?.start ? stringToCalendarDate(currentFilters.dateRange.start) : undefined}
-                  onSelect={(date) => handleDateRangeChange('start', date)}
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
-
-            <span className="text-sm text-muted-foreground">Até:</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 px-2 text-xs">
-                  <CalendarIcon className="h-3 w-3 mr-1" />
-                  {currentFilters.dateRange?.end ? format(stringToCalendarDate(currentFilters.dateRange.end), 'dd/MM', { locale: ptBR }) : 'Data'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={currentFilters.dateRange?.end ? stringToCalendarDate(currentFilters.dateRange.end) : undefined}
-                  onSelect={(date) => handleDateRangeChange('end', date)}
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="h-6 w-px bg-border" />
-
-          {/* Status */}
-          <Select 
-            value={currentFilters.status?.[0] || "all"} 
-            onValueChange={(value) => onFiltersChange({
-              ...currentFilters,
-              status: value === 'all' ? undefined : [value as any]
-            })}
-          >
-            <SelectTrigger className="h-8 w-[120px] text-xs">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
-              <SelectItem value="completed">Completa</SelectItem>
-              <SelectItem value="not-done">Não Feita</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Tipo */}
-          <Select 
-            value={currentFilters.type?.[0] || "all"} 
-            onValueChange={(value) => onFiltersChange({
-              ...currentFilters,
-              type: value === 'all' ? undefined : [value as any]
-            })}
-          >
-            <SelectTrigger className="h-8 w-[140px] text-xs">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="task">Tarefa</SelectItem>
-              <SelectItem value="meeting">Reunião</SelectItem>
-              <SelectItem value="delegated-task">Delegada</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Segunda linha: Busca, ordenação e controles */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Busca com botão limpar */}
-          <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-            <Input
-              placeholder="Buscar tarefas..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="h-8 pr-8 text-xs"
-            />
-            {searchQuery && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={clearSearch}
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-
-          {/* Ordenação */}
-          <Select value={sortBy} onValueChange={onSortChange}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Botão mais filtros */}
-          <Collapsible open={showMoreFilters} onOpenChange={setShowMoreFilters}>
-            <CollapsibleTrigger asChild>
-              <Button size="sm" variant="outline" className="h-8 px-3 text-xs">
-                <Filter className="h-3 w-3 mr-1" />
-                Filtros
-                {isFiltered && <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-xs">!</Badge>}
-              </Button>
-            </CollapsibleTrigger>
-          </Collapsible>
-
-          {/* Botão limpar */}
-          {isFiltered && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={clearAllFilters}
-              className="h-8 px-3 text-xs text-red-600 border-red-200 hover:bg-red-50"
-            >
-              <Trash2 className="h-3 w-3 mr-1" />
-              Limpar
+              <X className="h-3 w-3" />
             </Button>
           )}
         </div>
 
-        {/* Filtros avançados (colapsáveis) */}
-        <Collapsible open={showMoreFilters} onOpenChange={setShowMoreFilters}>
-          <CollapsibleContent className="space-y-3">
-            {/* Terceira linha: Filtros avançados */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
-              {/* Prioridade */}
-              <Select 
-                value={currentFilters.priority?.[0] || "all"} 
-                onValueChange={(value) => onFiltersChange({
-                  ...currentFilters,
-                  priority: value === 'all' ? undefined : [value as any]
-                })}
-              >
-                <SelectTrigger className="h-8 w-[120px] text-xs">
-                  <SelectValue placeholder="Prioridade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="extreme">Extrema</SelectItem>
-                  <SelectItem value="priority">Prioridade</SelectItem>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Tempo */}
-              <Select 
-                value={currentFilters.timeInvestment?.[0] || "all"} 
-                onValueChange={(value) => onFiltersChange({
-                  ...currentFilters,
-                  timeInvestment: value === 'all' ? undefined : [value as any]
-                })}
-              >
-                <SelectTrigger className="h-8 w-[120px] text-xs">
-                  <SelectValue placeholder="Tempo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="low">Baixo</SelectItem>
-                  <SelectItem value="medium">Médio</SelectItem>
-                  <SelectItem value="high">Alto</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Categoria */}
-              <Select 
-                value={currentFilters.category?.[0] || "all"} 
-                onValueChange={(value) => onFiltersChange({
-                  ...currentFilters,
-                  category: value === 'all' ? undefined : [value as any]
-                })}
-              >
-                <SelectTrigger className="h-8 w-[120px] text-xs">
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="personal">Pessoal</SelectItem>
-                  <SelectItem value="business">Negócios</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Checklist */}
-              <Select 
-                value={currentFilters.hasChecklist === undefined ? "all" : currentFilters.hasChecklist ? "yes" : "no"} 
-                onValueChange={(value) => onFiltersChange({
-                  ...currentFilters,
-                  hasChecklist: value === 'all' ? undefined : value === 'yes'
-                })}
-              >
-                <SelectTrigger className="h-8 w-[120px] text-xs">
-                  <SelectValue placeholder="Checklist" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="yes">Com Checklist</SelectItem>
-                  <SelectItem value="no">Sem Checklist</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Reagendadas */}
-              <Select 
-                value={currentFilters.isForwarded === undefined ? "all" : currentFilters.isForwarded ? "yes" : "no"} 
-                onValueChange={(value) => onFiltersChange({
-                  ...currentFilters,
-                  isForwarded: value === 'all' ? undefined : value === 'yes'
-                })}
-              >
-                <SelectTrigger className="h-8 w-[130px] text-xs">
-                  <SelectValue placeholder="Reagendadas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="yes">Reagendadas</SelectItem>
-                  <SelectItem value="no">Não Reagendadas</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Ordenação */}
+        <Select value={sortBy} onValueChange={(value: SortOption) => onSortChange(value)}>
+          <SelectTrigger className="w-40 h-8">
+            <div className="flex items-center gap-1">
+              <ArrowUpDown className="h-3 w-3" />
+              <SelectValue />
             </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </CardContent>
-    </Card>
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Período */}
+        <div className="flex items-center gap-1">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <DateRangePicker
+            startDate={currentFilters.dateRange?.start || getCurrentDateInSaoPaulo()}
+            endDate={currentFilters.dateRange?.end || getCurrentDateInSaoPaulo()}
+            onStartDateChange={(date) =>
+              onFiltersChange({
+                ...currentFilters,
+                dateRange: { ...currentFilters.dateRange!, start: date }
+              })
+            }
+            onEndDateChange={(date) =>
+              onFiltersChange({
+                ...currentFilters,
+                dateRange: { ...currentFilters.dateRange!, end: date }
+              })
+            }
+          />
+        </div>
+
+        {/* Equipe Delegada */}
+        {teamsWithDelegatedTasks.length > 0 && (
+          <Select
+            value={currentFilters.assignedPersonId || ""}
+            onValueChange={(value) =>
+              onFiltersChange({
+                ...currentFilters,
+                assignedPersonId: value || undefined
+              })
+            }
+          >
+            <SelectTrigger className="w-48 h-8">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                <SelectValue placeholder="Equipe delegada" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas as equipes</SelectItem>
+              {teamsWithDelegatedTasks.map((team) => (
+                <SelectItem key={team.id} value={team.id}>
+                  {team.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {/* Mais Filtros */}
+        <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <Filter className="h-3 w-3" />
+              Filtros
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 text-xs">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-4" align="start">
+            <div className="space-y-4">
+              {/* Tipos */}
+              <div>
+                <label className="text-sm font-medium mb-2 flex items-center gap-1">
+                  <Tag className="h-3 w-3" />
+                  Tipos
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'personal-task', label: 'Pessoal' },
+                    { value: 'meeting', label: 'Reunião' },
+                    { value: 'delegated-task', label: 'Delegada' }
+                  ].map((type) => (
+                    <div key={type.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`type-${type.value}`}
+                        checked={currentFilters.types?.includes(type.value as any) || false}
+                        onCheckedChange={(checked) => {
+                          const currentTypes = currentFilters.types || [];
+                          const newTypes = checked
+                            ? [...currentTypes, type.value as any]
+                            : currentTypes.filter(t => t !== type.value);
+                          onFiltersChange({
+                            ...currentFilters,
+                            types: newTypes.length > 0 ? newTypes : undefined
+                          });
+                        }}
+                      />
+                      <label htmlFor={`type-${type.value}`} className="text-sm">
+                        {type.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prioridades */}
+              <div>
+                <label className="text-sm font-medium mb-2 flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  Prioridades
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'extreme', label: 'Extrema' },
+                    { value: 'priority', label: 'Prioridade' },
+                    { value: 'none', label: 'Normal' }
+                  ].map((priority) => (
+                    <div key={priority.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`priority-${priority.value}`}
+                        checked={currentFilters.priorities?.includes(priority.value as any) || false}
+                        onCheckedChange={(checked) => {
+                          const currentPriorities = currentFilters.priorities || [];
+                          const newPriorities = checked
+                            ? [...currentPriorities, priority.value as any]
+                            : currentPriorities.filter(p => p !== priority.value);
+                          onFiltersChange({
+                            ...currentFilters,
+                            priorities: newPriorities.length > 0 ? newPriorities : undefined
+                          });
+                        }}
+                      />
+                      <label htmlFor={`priority-${priority.value}`} className="text-sm">
+                        {priority.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tempo de Investimento */}
+              <div>
+                <label className="text-sm font-medium mb-2 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Tempo
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'low', label: 'Baixo (5min)' },
+                    { value: 'medium', label: 'Médio (1h)' },
+                    { value: 'high', label: 'Alto (2h)' }
+                  ].map((time) => (
+                    <div key={time.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`time-${time.value}`}
+                        checked={currentFilters.timeInvestments?.includes(time.value as any) || false}
+                        onCheckedChange={(checked) => {
+                          const currentTimes = currentFilters.timeInvestments || [];
+                          const newTimes = checked
+                            ? [...currentTimes, time.value as any]
+                            : currentTimes.filter(t => t !== time.value);
+                          onFiltersChange({
+                            ...currentFilters,
+                            timeInvestments: newTimes.length > 0 ? newTimes : undefined
+                          });
+                        }}
+                      />
+                      <label htmlFor={`time-${time.value}`} className="text-sm">
+                        {time.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="text-sm font-medium mb-2">Status</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'pending', label: 'Pendente' },
+                    { value: 'completed', label: 'Feito' },
+                    { value: 'not-done', label: 'Não Feito' }
+                  ].map((status) => (
+                    <div key={status.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`status-${status.value}`}
+                        checked={currentFilters.statuses?.includes(status.value as any) || false}
+                        onCheckedChange={(checked) => {
+                          const currentStatuses = currentFilters.statuses || [];
+                          const newStatuses = checked
+                            ? [...currentStatuses, status.value as any]
+                            : currentStatuses.filter(s => s !== status.value);
+                          onFiltersChange({
+                            ...currentFilters,
+                            statuses: newStatuses.length > 0 ? newStatuses : undefined
+                          });
+                        }}
+                      />
+                      <label htmlFor={`status-${status.value}`} className="text-sm">
+                        {status.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Limpar Filtros */}
+        {activeFiltersCount > 0 && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 gap-1">
+            <X className="h-3 w-3" />
+            Limpar ({activeFiltersCount})
+          </Button>
+        )}
+      </div>
+
+      {/* Tags de filtros ativos */}
+      {activeFiltersCount > 0 && (
+        <div className="flex gap-1 flex-wrap">
+          {currentFilters.types && currentFilters.types.length > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              Tipos: {currentFilters.types.length}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => clearSpecificFilter('types')}
+              />
+            </Badge>
+          )}
+          
+          {currentFilters.priorities && currentFilters.priorities.length > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              Prioridades: {currentFilters.priorities.length}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => clearSpecificFilter('priorities')}
+              />
+            </Badge>
+          )}
+          
+          {currentFilters.timeInvestments && currentFilters.timeInvestments.length > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              Tempo: {currentFilters.timeInvestments.length}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => clearSpecificFilter('timeInvestments')}
+              />
+            </Badge>
+          )}
+          
+          {currentFilters.statuses && currentFilters.statuses.length > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              Status: {currentFilters.statuses.length}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => clearSpecificFilter('statuses')}
+              />
+            </Badge>
+          )}
+
+          {currentFilters.assignedPersonId && (
+            <Badge variant="secondary" className="gap-1">
+              Equipe: {teamsWithDelegatedTasks.find(t => t.id === currentFilters.assignedPersonId)?.name}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => clearSpecificFilter('assignedPersonId')}
+              />
+            </Badge>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

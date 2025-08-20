@@ -1,3 +1,4 @@
+
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { MaskedInput } from '@/components/ui/masked-input';
 import { TeamMember, TeamMemberFormValues, Project } from '@/types';
-import { useSkills } from '@/hooks/useSkills';
+import { useSupabaseSkills } from '@/hooks/useSupabaseSkills';
 import { cepService } from '@/lib/cep';
 import { Plus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -20,21 +21,21 @@ import { useToast } from '@/hooks/use-toast';
 const teamMemberFormSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   role: z.string().min(1, 'Cargo é obrigatório'),
-  email: z.string().email('Email inválido'),
-  phone: z.string().min(1, 'Telefone é obrigatório'),
+  email: z.string().optional(),
+  phone: z.string().optional(),
   address: z.object({
-    cep: z.string().min(1, 'CEP é obrigatório'),
-    street: z.string().min(1, 'Rua é obrigatória'),
-    number: z.string().min(1, 'Número é obrigatório'),
+    cep: z.string().optional(),
+    street: z.string().optional(),
+    number: z.string().optional(),
     complement: z.string().optional(),
-    neighborhood: z.string().min(1, 'Bairro é obrigatório'),
-    city: z.string().min(1, 'Cidade é obrigatória'),
-    state: z.string().min(1, 'Estado é obrigatório'),
-  }),
+    neighborhood: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+  }).optional(),
   status: z.enum(['ativo', 'inativo']),
   isPartner: z.boolean(),
   skillIds: z.array(z.string()),
-  origin: z.string().min(1, 'Origem é obrigatória'),
+  origin: z.string().optional(),
   projects: z.array(z.object({
     id: z.string(),
     name: z.string(),
@@ -49,7 +50,7 @@ interface TeamMemberFormProps {
 }
 
 export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFormProps) {
-  const { skills } = useSkills();
+  const { skills } = useSupabaseSkills();
   const { toast } = useToast();
   const [newProject, setNewProject] = useState({ name: '', status: 'apresentado' as const });
   const [isLoadingCep, setIsLoadingCep] = useState(false);
@@ -193,7 +194,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome</FormLabel>
+                  <FormLabel>Nome *</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -207,7 +208,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cargo</FormLabel>
+                  <FormLabel>Cargo *</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -241,7 +242,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
                   <FormControl>
                     <MaskedInput
                       mask="(99) 99999-9999"
-                      value={field.value}
+                      value={field.value || ''}
                       onChange={field.onChange}
                       placeholder="(11) 99999-9999"
                     />
@@ -323,7 +324,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
                   <FormControl>
                     <MaskedInput
                       mask="99999-999"
-                      value={field.value}
+                      value={field.value || ''}
                       onChange={field.onChange}
                       placeholder="00000-000"
                     />
