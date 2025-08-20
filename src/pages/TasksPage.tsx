@@ -12,15 +12,19 @@ import { TaskCard } from "@/components/tasks/TaskCard";
 import { TasksStats } from "@/components/tasks/TasksStats";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
+import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
+  const [taskForHistory, setTaskForHistory] = useState<Task | null>(null);
   const [taskFilters, setTaskFilters] = useState<TaskFilter>({
     dateRange: {
       start: getCurrentDateInSaoPaulo(),
@@ -39,6 +43,18 @@ const TasksPage = () => {
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Para múltiplos dias, mostrar a ordem real sem reordenar
+  const isMultipleDays = taskFilters.dateRange?.start !== taskFilters.dateRange?.end;
+  const displayTasks = isMultipleDays 
+    ? filteredTasks.sort((a, b) => {
+        // Primeiro por data, depois por ordem
+        if (a.scheduledDate !== b.scheduledDate) {
+          return a.scheduledDate.localeCompare(b.scheduledDate);
+        }
+        return (a.order || 0) - (b.order || 0);
+      })
+    : filteredTasks;
 
   const handleTaskSelection = (task: Task, checked: boolean) => {
     if (checked) {
@@ -96,7 +112,14 @@ const TasksPage = () => {
   };
 
   const handleForwardTask = (task: Task) => {
-    openForwardTaskModal(task);
+    // Perguntar se quer manter a ordenação
+    const keepOrder = window.confirm('Deseja manter a ordenação da tarefa ao reagendar?');
+    
+    // Perguntar se quer manter as baixas do checklist
+    const keepChecklistStatus = window.confirm('Deseja manter o status dos itens do checklist?');
+    
+    // Passar essas opções para o modal de reagendamento
+    openForwardTaskModal(task, { keepOrder, keepChecklistStatus });
   };
 
   const handleEditTask = (task: Task) => {
@@ -108,18 +131,20 @@ const TasksPage = () => {
   };
 
   const handleTaskHistory = (task: Task) => {
-    // TODO: Implementar modal de histórico
-    console.log('Abrir histórico da tarefa:', task);
+    setTaskForHistory(task);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    // Não permitir reordenação se está visualizando múltiplos dias
+    if (isMultipleDays) return;
+
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const oldIndex = filteredTasks.findIndex(task => task.id === active.id);
-      const newIndex = filteredTasks.findIndex(task => task.id === over?.id);
+      const oldIndex = displayTasks.findIndex(task => task.id === active.id);
+      const newIndex = displayTasks.findIndex(task => task.id === over?.id);
       
-      const reorderedTasks = arrayMove(filteredTasks, oldIndex, newIndex);
+      const reorderedTasks = arrayMove(displayTasks, oldIndex, newIndex);
       const taskIds = reorderedTasks.map(task => task.id);
       
       // Atualizar ordem no banco
@@ -208,11 +233,11 @@ const TasksPage = () => {
       />
 
       {/* Resumo de Estatísticas */}
-      <TasksStats tasks={filteredTasks} />
+      <TasksStats tasks={displayTasks} />
 
       {/* Lista de Tarefas com Drag & Drop */}
       <div className="grid gap-4">
-        {filteredTasks.length === 0 ? (
+        {displayTasks.length === 0 ? (
           <Card>
             <CardContent className="p-6">
               <div className="text-center py-12">
@@ -240,8 +265,8 @@ const TasksPage = () => {
             onDragEnd={handleDragEnd}
             modifiers={[restrictToVerticalAxis]}
           >
-            <SortableContext items={filteredTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
-              {filteredTasks.map((task, index) => (
+            <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+              {displayTasks.map((task, index) => (
                 <div key={task.id} className="flex items-start gap-3">
                   <Checkbox
                     checked={selectedTasks.some(t => t.id === task.id)}
@@ -251,7 +276,7 @@ const TasksPage = () => {
                   <div className="flex-1">
                     <TaskCard 
                       task={task} 
-                      taskIndex={index}
+                      taskIndex={isMultipleDays ? undefined : index} // Não mostrar índice para múltiplos dias
                       onStatusChange={(status) => handleStatusChange(task.id, status)}
                       onConclude={() => handleConcludeTask(task.id)}
                       onUnconclude={() => handleUnconcludeTask(task.id)}
@@ -273,6 +298,13 @@ const TasksPage = () => {
           onClearSelection={() => setSelectedTasks([])}
         />
       </div>
+
+      {/* Modal de Histórico */}
+      <TaskHistoryModal
+        task={taskForHistory}
+        isOpen={!!taskForHistory}
+        onClose={() => setTaskForHistory(null)}
+      />
     </div>
   );
 };

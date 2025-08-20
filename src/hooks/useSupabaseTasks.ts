@@ -41,6 +41,14 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         query = query.eq('assigned_person_id', filters.assignedPersonId);
       }
 
+      if (filters?.timeInvestment && filters.timeInvestment.length > 0) {
+        query = query.in('time_investment', filters.timeInvestment);
+      }
+
+      if (filters?.category && filters.category.length > 0) {
+        query = query.in('category', filters.category);
+      }
+
       const { data, error } = await query;
 
       if (error) {
@@ -51,7 +59,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       console.log('Tarefas encontradas:', data?.length || 0);
 
       // Converter dados do Supabase para o tipo Task
-      const convertedTasks: Task[] = (data || []).map(task => ({
+      let convertedTasks: Task[] = (data || []).map(task => ({
         id: task.id,
         title: task.title,
         description: task.description || '',
@@ -79,6 +87,27 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         isForwarded: task.forward_count > 0,
         isConcluded: !!task.concluded_at
       }));
+
+      // Aplicar filtros client-side que não podem ser feitos no Supabase
+      if (filters?.hasChecklist !== undefined) {
+        convertedTasks = convertedTasks.filter(task => {
+          const hasSubItems = task.subItems && task.subItems.length > 0;
+          return filters.hasChecklist ? hasSubItems : !hasSubItems;
+        });
+      }
+
+      if (filters?.isForwarded !== undefined) {
+        convertedTasks = convertedTasks.filter(task => {
+          return filters.isForwarded ? task.isForwarded : !task.isForwarded;
+        });
+      }
+
+      if (filters?.noOrder !== undefined) {
+        convertedTasks = convertedTasks.filter(task => {
+          const hasNoOrder = !task.order || task.order === 0;
+          return filters.noOrder ? hasNoOrder : !hasNoOrder;
+        });
+      }
 
       return convertedTasks;
     },
@@ -226,101 +255,11 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   return {
     tasks,
     loading: isLoading,
-    addTask: async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-      console.log('Adicionando nova tarefa:', taskData);
-      
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert({
-          title: taskData.title,
-          description: taskData.description,
-          scheduled_date: taskData.scheduledDate,
-          type: taskData.type,
-          priority: taskData.priority,
-          status: taskData.status,
-          assigned_person_id: taskData.assignedPersonId || null,
-          time_investment: taskData.timeInvestment,
-          category: taskData.category,
-          sub_items: taskData.subItems as any,
-          observations: taskData.observations || null,
-          completion_history: taskData.completionHistory as any,
-          forward_history: taskData.forwardHistory as any,
-          forward_count: taskData.forwardCount,
-          delivery_dates: taskData.deliveryDates,
-          is_routine: taskData.isRoutine,
-          routine_config: taskData.recurrence as any,
-          task_order: taskData.order,
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Erro ao adicionar tarefa:', error);
-        throw error;
-      }
-
-      console.log('Tarefa adicionada:', data);
-      refetch();
-      return data;
-    },
+    addTask,
     updateTask,
-    deleteTask: async (taskId: string) => {
-      console.log('Deletando tarefa:', taskId);
-
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
-
-      if (error) {
-        console.error('Erro ao deletar tarefa:', error);
-        throw error;
-      }
-
-      console.log('Tarefa deletada:', taskId);
-      refetch();
-    },
-    reorderTasks: async (taskIds: string[]) => {
-      console.log('Reordenando tarefas:', taskIds);
-
-      // Atualizar a ordem de cada tarefa individualmente
-      for (let i = 0; i < taskIds.length; i++) {
-        const taskId = taskIds[i];
-        const newOrder = i;
-
-        const { error } = await supabase
-          .from('tasks')
-          .update({ task_order: newOrder })
-          .eq('id', taskId);
-
-        if (error) {
-          console.error(`Erro ao atualizar a ordem da tarefa ${taskId}:`, error);
-          throw error;
-        }
-      }
-
-      console.log('Tarefas reordenadas com sucesso.');
-      refetch();
-    },
-    concludeTask: async (taskId: string) => {
-      console.log('Concluindo tarefa:', taskId);
-
-      const { error } = await supabase
-        .from('tasks')
-        .update({
-          concluded_at: new Date().toISOString(),
-          status: 'completed'
-        })
-        .eq('id', taskId);
-
-      if (error) {
-        console.error('Erro ao concluir tarefa:', error);
-        throw error;
-      }
-
-      console.log('Tarefa concluída:', taskId);
-    },
+    deleteTask,
+    reorderTasks,
+    concludeTask,
     refetch
   };
 }

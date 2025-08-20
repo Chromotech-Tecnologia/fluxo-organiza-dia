@@ -7,7 +7,7 @@ import { Calendar, X, Filter } from "lucide-react";
 import { TaskFilter, TaskType, TaskPriority, TaskStatus } from "@/types";
 import { DateRangePicker } from "./DateRangePicker";
 import { PeopleSelect } from "../people/PeopleSelect";
-import { getCurrentDateInSaoPaulo } from "@/lib/utils";
+import { getCurrentDateInSaoPaulo, getYesterdayInSaoPaulo, getTomorrowInSaoPaulo } from "@/lib/utils";
 
 interface TaskFiltersProps {
   currentFilters: TaskFilter;
@@ -16,30 +16,29 @@ interface TaskFiltersProps {
 
 export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedDateButton, setSelectedDateButton] = useState<'yesterday' | 'today' | 'tomorrow' | null>(null);
 
   const getQuickDateOption = (option: 'today' | 'yesterday' | 'tomorrow') => {
-    const today = new Date();
-    let targetDate = new Date();
-    
+    let dateStr = '';
     switch (option) {
       case 'yesterday':
-        targetDate.setDate(today.getDate() - 1);
+        dateStr = getYesterdayInSaoPaulo();
         break;
       case 'tomorrow':
-        targetDate.setDate(today.getDate() + 1);
+        dateStr = getTomorrowInSaoPaulo();
         break;
       case 'today':
       default:
-        targetDate = today;
+        dateStr = getCurrentDateInSaoPaulo();
         break;
     }
     
-    const dateStr = targetDate.toISOString().split('T')[0];
     return { start: dateStr, end: dateStr };
   };
 
   const handleQuickDateFilter = (option: 'today' | 'yesterday' | 'tomorrow') => {
     const dateRange = getQuickDateOption(option);
+    setSelectedDateButton(option);
     onFiltersChange({
       ...currentFilters,
       dateRange
@@ -47,6 +46,8 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
   };
 
   const handleDateRangeChange = (startDate: string, endDate: string) => {
+    // Limpar seleção de botão rápido se usar date picker
+    setSelectedDateButton(null);
     onFiltersChange({
       ...currentFilters,
       dateRange: { start: startDate, end: endDate }
@@ -96,7 +97,53 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
     });
   };
 
+  const handleTimeInvestmentFilter = (timeInvestment: 'low' | 'medium' | 'high') => {
+    const currentTimeInvestments = currentFilters.timeInvestment || [];
+    const newTimeInvestments = currentTimeInvestments.includes(timeInvestment)
+      ? currentTimeInvestments.filter(t => t !== timeInvestment)
+      : [...currentTimeInvestments, timeInvestment];
+    
+    onFiltersChange({
+      ...currentFilters,
+      timeInvestment: newTimeInvestments.length > 0 ? newTimeInvestments : undefined
+    });
+  };
+
+  const handleCategoryFilter = (category: 'personal' | 'business') => {
+    const currentCategories = currentFilters.category || [];
+    const newCategories = currentCategories.includes(category)
+      ? currentCategories.filter(c => c !== category)
+      : [...currentCategories, category];
+    
+    onFiltersChange({
+      ...currentFilters,
+      category: newCategories.length > 0 ? newCategories : undefined
+    });
+  };
+
+  const handleChecklistFilter = (hasChecklist: boolean) => {
+    onFiltersChange({
+      ...currentFilters,
+      hasChecklist: currentFilters.hasChecklist === hasChecklist ? undefined : hasChecklist
+    });
+  };
+
+  const handleForwardedFilter = (isForwarded: boolean) => {
+    onFiltersChange({
+      ...currentFilters,
+      isForwarded: currentFilters.isForwarded === isForwarded ? undefined : isForwarded
+    });
+  };
+
+  const handleNoOrderFilter = (noOrder: boolean) => {
+    onFiltersChange({
+      ...currentFilters,
+      noOrder: currentFilters.noOrder === noOrder ? undefined : noOrder
+    });
+  };
+
   const clearAllFilters = () => {
+    setSelectedDateButton(null);
     onFiltersChange({
       dateRange: {
         start: getCurrentDateInSaoPaulo(),
@@ -108,7 +155,12 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
   const hasActiveFilters = !!(
     currentFilters.type?.length ||
     currentFilters.priority?.length ||
-    currentFilters.assignedPersonId
+    currentFilters.assignedPersonId ||
+    currentFilters.timeInvestment?.length ||
+    currentFilters.category?.length ||
+    currentFilters.hasChecklist !== undefined ||
+    currentFilters.isForwarded !== undefined ||
+    currentFilters.noOrder !== undefined
   );
 
   return (
@@ -120,7 +172,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div className="flex gap-1">
               <Button
-                variant="outline"
+                variant={selectedDateButton === 'yesterday' ? "default" : "outline"}
                 size="sm"
                 className="h-6 px-2 py-0 text-xs"
                 onClick={() => handleQuickDateFilter('yesterday')}
@@ -128,7 +180,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
                 Ontem
               </Button>
               <Button
-                variant="outline"
+                variant={selectedDateButton === 'today' ? "default" : "outline"}
                 size="sm"
                 className="h-6 px-2 py-0 text-xs"
                 onClick={() => handleQuickDateFilter('today')}
@@ -136,7 +188,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
                 Hoje
               </Button>
               <Button
-                variant="outline"
+                variant={selectedDateButton === 'tomorrow' ? "default" : "outline"}
                 size="sm"
                 className="h-6 px-2 py-0 text-xs"
                 onClick={() => handleQuickDateFilter('tomorrow')}
@@ -197,50 +249,118 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
 
         {/* Linha 2: Filtros expandidos (quando showFilters é true) */}
         {showFilters && (
-          <div className="flex items-center gap-4 pt-1 border-t">
-            {/* Tipos */}
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-foreground">Tipo:</span>
-              <div className="flex gap-1">
-                {(['meeting', 'own-task', 'delegated-task'] as TaskType[]).map((type) => (
-                  <Badge
-                    key={type}
-                    variant={currentFilters.type?.includes(type) ? "default" : "outline"}
-                    className="h-5 px-2 text-xs cursor-pointer"
-                    onClick={() => handleTypeFilter(type)}
-                  >
-                    {type === 'meeting' ? 'Reunião' : type === 'own-task' ? 'Própria' : 'Delegada'}
-                  </Badge>
-                ))}
+          <div className="space-y-2 pt-1 border-t">
+            {/* Primeira sublinha dos filtros expandidos */}
+            <div className="flex items-center gap-4">
+              {/* Tipos */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Tipo:</span>
+                <div className="flex gap-1">
+                  {(['meeting', 'own-task', 'delegated-task'] as TaskType[]).map((type) => (
+                    <Badge
+                      key={type}
+                      variant={currentFilters.type?.includes(type) ? "default" : "outline"}
+                      className="h-5 px-2 text-xs cursor-pointer"
+                      onClick={() => handleTypeFilter(type)}
+                    >
+                      {type === 'meeting' ? 'Reunião' : type === 'own-task' ? 'Própria' : 'Delegada'}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prioridades */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Prioridade:</span>
+                <div className="flex gap-1">
+                  {(['none', 'priority', 'extreme'] as TaskPriority[]).map((priority) => (
+                    <Badge
+                      key={priority}
+                      variant={currentFilters.priority?.includes(priority) ? "default" : "outline"}
+                      className="h-5 px-2 text-xs cursor-pointer"
+                      onClick={() => handlePriorityFilter(priority)}
+                    >
+                      {priority === 'none' ? 'Nenhuma' : priority === 'priority' ? 'Prioridade' : 'Extrema'}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pessoa */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Pessoa:</span>
+                <div className="w-32">
+                  <PeopleSelect
+                    value={currentFilters.assignedPersonId || ''}
+                    onChange={handlePersonFilter}
+                    placeholder="Todas"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Prioridades */}
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-foreground">Prioridade:</span>
-              <div className="flex gap-1">
-                {(['none', 'priority', 'extreme'] as TaskPriority[]).map((priority) => (
-                  <Badge
-                    key={priority}
-                    variant={currentFilters.priority?.includes(priority) ? "default" : "outline"}
-                    className="h-5 px-2 text-xs cursor-pointer"
-                    onClick={() => handlePriorityFilter(priority)}
-                  >
-                    {priority === 'none' ? 'Nenhuma' : priority === 'priority' ? 'Prioridade' : 'Extrema'}
-                  </Badge>
-                ))}
+            {/* Segunda sublinha dos filtros expandidos */}
+            <div className="flex items-center gap-4">
+              {/* Tempo Investido */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Tempo:</span>
+                <div className="flex gap-1">
+                  {(['low', 'medium', 'high'] as const).map((time) => (
+                    <Badge
+                      key={time}
+                      variant={currentFilters.timeInvestment?.includes(time) ? "default" : "outline"}
+                      className="h-5 px-2 text-xs cursor-pointer"
+                      onClick={() => handleTimeInvestmentFilter(time)}
+                    >
+                      {time === 'low' ? 'Baixo' : time === 'medium' ? 'Médio' : 'Alto'}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Pessoa */}
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-foreground">Pessoa:</span>
-              <div className="w-32">
-                <PeopleSelect
-                  value={currentFilters.assignedPersonId || ''}
-                  onChange={handlePersonFilter}
-                  placeholder="Todas"
-                />
+              {/* Categoria */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foregreen">Categoria:</span>
+                <div className="flex gap-1">
+                  {(['personal', 'business'] as const).map((category) => (
+                    <Badge
+                      key={category}
+                      variant={currentFilters.category?.includes(category) ? "default" : "outline"}
+                      className="h-5 px-2 text-xs cursor-pointer"
+                      onClick={() => handleCategoryFilter(category)}
+                    >
+                      {category === 'personal' ? 'Pessoal' : 'Profissional'}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Filtros especiais */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Especiais:</span>
+                <div className="flex gap-1">
+                  <Badge
+                    variant={currentFilters.hasChecklist === true ? "default" : "outline"}
+                    className="h-5 px-2 text-xs cursor-pointer"
+                    onClick={() => handleChecklistFilter(true)}
+                  >
+                    Com Checklist
+                  </Badge>
+                  <Badge
+                    variant={currentFilters.isForwarded === true ? "default" : "outline"}
+                    className="h-5 px-2 text-xs cursor-pointer"
+                    onClick={() => handleForwardedFilter(true)}
+                  >
+                    Reagendadas
+                  </Badge>
+                  <Badge
+                    variant={currentFilters.noOrder === true ? "default" : "outline"}
+                    className="h-5 px-2 text-xs cursor-pointer"
+                    onClick={() => handleNoOrderFilter(true)}
+                  >
+                    Sem Ordem
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>

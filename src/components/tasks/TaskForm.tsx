@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +27,7 @@ import {
 import { taskFormSchema } from "@/lib/validations/task";
 import { cn } from "@/lib/utils";
 import { SubItemKanban } from "./SubItemKanban";
+import { PeopleSelect } from "../people/PeopleSelect";
 
 interface TaskFormProps {
   task?: Task;
@@ -56,9 +58,12 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
     },
   });
 
+  const watchedType = form.watch("type");
+
   const onFormSubmit: SubmitHandler<TaskFormValues> = (values) => {
     const taskData = {
       ...values,
+      order: Number(values.order), // Converter para número
       subItems: subItems
     };
     onSubmit(taskData);
@@ -97,6 +102,76 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             </FormItem>
           )}
         />
+
+        {/* Data e Ordem na mesma linha */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="scheduledDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Data Agendada</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(new Date(field.value), "PPP", { locale: ptBR })
+                        ) : (
+                          <span>Selecione a data</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      locale={ptBR}
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          field.onChange(format(date, "yyyy-MM-dd"));
+                        }
+                      }}
+                      disabled={(date) =>
+                        date < new Date()
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="order"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ordem</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="Ordem da tarefa" 
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -143,6 +218,28 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             )}
           />
         </div>
+
+        {/* Mostrar seleção de pessoa apenas para tarefas delegadas */}
+        {watchedType === "delegated-task" && (
+          <FormField
+            control={form.control}
+            name="assignedPersonId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Pessoa Responsável</FormLabel>
+                <FormControl>
+                  <PeopleSelect
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    placeholder="Selecione uma pessoa"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -188,65 +285,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             )}
           />
         </div>
-        <FormField
-          control={form.control}
-          name="scheduledDate"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data Agendada</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(new Date(field.value), "PPP", { locale: ptBR })
-                      ) : (
-                        <span>Selecione a data</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    locale={ptBR}
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        field.onChange(format(date, "yyyy-MM-dd"));
-                      }
-                    }}
-                    disabled={(date) =>
-                      date < new Date()
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="order"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Ordem</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="Ordem da tarefa" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
         <FormField
           control={form.control}
           name="observations"

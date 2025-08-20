@@ -151,20 +151,13 @@ export interface TaskFilter {
   };
   type?: TaskType[];
   priority?: TaskPriority[];
-  timeInvestment?: TaskTimeInvestment[];
   status?: TaskStatus[];
-  category?: TaskCategory[];
   assignedPersonId?: string;
-  maxForwards?: number;
-  isRecurrent?: boolean;
-  hasSubItems?: boolean;
-  hasForwards?: boolean;
-  isRoutine?: boolean;
-  isDefinitive?: boolean;
-  notForwarded?: boolean;
+  timeInvestment?: ('low' | 'medium' | 'high')[];
+  category?: ('personal' | 'business')[];
+  hasChecklist?: boolean;
+  isForwarded?: boolean;
   noOrder?: boolean;
-  isConcluded?: boolean;
-  notConcluded?: boolean;
 }
 
 export interface TaskStats {
