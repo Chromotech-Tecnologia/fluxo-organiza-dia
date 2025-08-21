@@ -1,4 +1,3 @@
-
 // Tipos principais do sistema de controle de tarefas
 
 export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
@@ -126,8 +125,9 @@ export interface Task {
   updatedAt: string;
   scheduledDate: string;
   isForwarded: boolean;
-  isConcluded: boolean;
+  isConcluded?: boolean;
   concludedAt?: string;
+  isProcessed?: boolean;
 }
 
 export interface DailyReport {
@@ -160,6 +160,7 @@ export interface TaskFilter {
   isForwarded?: boolean;
   noOrder?: boolean;
   isConcluded?: boolean;
+  isProcessed?: boolean;
 }
 
 export interface TaskStats {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +67,6 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
             Período
           </label>
           <DateRangePicker
-            dateRange={filters.dateRange}
             onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
           />
         </div>

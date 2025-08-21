@@ -126,7 +126,7 @@ export function useTasks(filters?: TaskFilter) {
 
       // Novo filtro por processamento
       if (filters.isProcessed !== undefined) {
-        if (filters.isProcessed !== task.isProcessed) {
+        if (filters.isProcessed !== (task.isProcessed || false)) {
           return false;
         }
       }
@@ -208,13 +208,13 @@ export function useTasks(filters?: TaskFilter) {
   const getStats = (): TaskStats => {
     const allTasks = taskStorage.getAll();
     const totalTasks = allTasks.length;
-    const processedTasks = allTasks.filter(t => t.isProcessed).length;
-    const pendingTasks = allTasks.filter(t => !t.isProcessed).length;
+    const processedTasks = allTasks.filter(t => t.isProcessed || false).length;
+    const pendingTasks = allTasks.filter(t => !(t.isProcessed || false)).length;
     
     // Tarefas em atraso
     const today = getCurrentDateInSaoPaulo();
     const overdueTasks = allTasks.filter(t => 
-      !t.isProcessed && t.scheduledDate < today
+      !(t.isProcessed || false) && t.scheduledDate < today
     ).length;
 
     const processingRate = totalTasks > 0 ? (processedTasks / totalTasks) * 100 : 0;
