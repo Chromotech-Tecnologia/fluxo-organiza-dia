@@ -1,36 +1,27 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Task } from "@/types";
 import { Clock, CheckCircle, XCircle, Hourglass, RotateCcw, User, Calendar, Timer, Hash, Building2 } from "lucide-react";
-
 interface TaskStatsCompactProps {
   tasks: Task[];
 }
-
-export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
+export function TaskStatsCompact({
+  tasks
+}: TaskStatsCompactProps) {
   const totalTasks = tasks.length;
 
   // Status das Tarefas
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
-  
+
   // Tarefas não concluídas = total - concluídas
   const notCompletedTasks = totalTasks - completedTasks;
 
   // Reagendamentos
-  const rescheduledTasks = tasks.filter(task => 
-    task.forwardHistory && task.forwardHistory.length > 0
-  ).length;
-  const notRescheduledTasks = tasks.filter(task => 
-    !task.forwardHistory || task.forwardHistory.length === 0
-  ).length;
-  const rescheduledCompletedTasks = tasks.filter(task => 
-    task.forwardHistory && task.forwardHistory.length > 0 && task.status === 'completed'
-  ).length;
-  const rescheduledNotCompletedTasks = tasks.filter(task => 
-    task.forwardHistory && task.forwardHistory.length > 0 && task.status !== 'completed'
-  ).length;
+  const rescheduledTasks = tasks.filter(task => task.forwardHistory && task.forwardHistory.length > 0).length;
+  const notRescheduledTasks = tasks.filter(task => !task.forwardHistory || task.forwardHistory.length === 0).length;
+  const rescheduledCompletedTasks = tasks.filter(task => task.forwardHistory && task.forwardHistory.length > 0 && task.status === 'completed').length;
+  const rescheduledNotCompletedTasks = tasks.filter(task => task.forwardHistory && task.forwardHistory.length > 0 && task.status !== 'completed').length;
 
   // Tipos de Tarefas
   const personalTasks = tasks.filter(task => task.type === 'own-task').length;
@@ -41,29 +32,22 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   // Tempo Estimado
   const getTimeInMinutes = (timeInvestment: string) => {
     switch (timeInvestment) {
-      case 'low': return 5;
-      case 'medium': return 60;
-      case 'high': return 120;
-      default: return 0;
+      case 'low':
+        return 5;
+      case 'medium':
+        return 60;
+      case 'high':
+        return 120;
+      default:
+        return 0;
     }
   };
-
   const totalEstimatedMinutes = tasks.reduce((total, task) => {
     return total + getTimeInMinutes(task.timeInvestment);
   }, 0);
-
-  const completedEstimatedMinutes = tasks
-    .filter(task => task.status === 'completed')
-    .reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
-
-  const notDoneEstimatedMinutes = tasks
-    .filter(task => task.status === 'not-done')
-    .reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
-
-  const pendingEstimatedMinutes = tasks
-    .filter(task => task.status === 'pending')
-    .reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
-
+  const completedEstimatedMinutes = tasks.filter(task => task.status === 'completed').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
+  const notDoneEstimatedMinutes = tasks.filter(task => task.status === 'not-done').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
+  const pendingEstimatedMinutes = tasks.filter(task => task.status === 'pending').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
   const formatTime = (minutes: number) => {
     if (minutes < 60) {
       return `${minutes}min`;
@@ -72,13 +56,10 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
   };
-
   const calculatePercentage = (value: number) => {
-    return totalTasks > 0 ? Math.round((value / totalTasks) * 100) : 0;
+    return totalTasks > 0 ? Math.round(value / totalTasks * 100) : 0;
   };
-
-  return (
-    <div className="grid grid-cols-4 gap-4">
+  return <div className="grid grid-cols-4 gap-4">
       {/* Status das Tarefas */}
       <Card className="border-l-4 border-l-blue-500">
         <CardHeader className="pb-2">
@@ -101,7 +82,7 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-xs text-red-600">Não Concluídas</span>
+            <span className="text-xs text-red-600">Não Feitas</span>
             <span className="text-sm font-medium text-red-600">
               {notCompletedTasks} ({calculatePercentage(notCompletedTasks)}%)
             </span>
@@ -222,6 +203,5 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
