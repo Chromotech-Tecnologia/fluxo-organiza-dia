@@ -382,6 +382,17 @@ export function TaskFiltersHorizontal({
                 >
                   Reagendadas
                 </Button>
+                <Button
+                  size="sm"
+                  variant={currentFilters.isForwarded === false ? "default" : "outline"}
+                  onClick={() => {
+                    const newValue = currentFilters.isForwarded === false ? undefined : false;
+                    handleAdvancedFilterChange('isForwarded', newValue);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Não reagendadas
+                </Button>
               </div>
             </div>
           </div>
