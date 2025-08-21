@@ -142,6 +142,13 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
     });
   };
 
+  const handleConclusionFilter = (isConcluded: boolean) => {
+    onFiltersChange({
+      ...currentFilters,
+      isConcluded: currentFilters.isConcluded === isConcluded ? undefined : isConcluded
+    });
+  };
+
   const clearAllFilters = () => {
     setSelectedDateButton(null);
     onFiltersChange({
@@ -160,7 +167,8 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
     currentFilters.category?.length ||
     currentFilters.hasChecklist !== undefined ||
     currentFilters.isForwarded !== undefined ||
-    currentFilters.noOrder !== undefined
+    currentFilters.noOrder !== undefined ||
+    currentFilters.isConcluded !== undefined
   );
 
   return (
@@ -218,6 +226,27 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
                     {status === 'pending' ? 'Pendente' : status === 'completed' ? 'Feito' : 'Não Feito'}
                   </Badge>
                 ))}
+              </div>
+            </div>
+
+            {/* Filtros de Conclusão na primeira linha */}
+            <div className="flex items-center gap-1 ml-4">
+              <span className="text-xs text-muted-foreground">Conclusão:</span>
+              <div className="flex gap-1">
+                <Badge
+                  variant={currentFilters.isConcluded === true ? "default" : "outline"}
+                  className="h-5 px-2 text-xs cursor-pointer"
+                  onClick={() => handleConclusionFilter(true)}
+                >
+                  Concluído
+                </Badge>
+                <Badge
+                  variant={currentFilters.isConcluded === false ? "default" : "outline"}
+                  className="h-5 px-2 text-xs cursor-pointer"
+                  onClick={() => handleConclusionFilter(false)}
+                >
+                  Não Concluído
+                </Badge>
               </div>
             </div>
           </div>
@@ -320,7 +349,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
 
               {/* Categoria */}
               <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foregreen">Categoria:</span>
+                <span className="text-xs text-muted-foreground">Categoria:</span>
                 <div className="flex gap-1">
                   {(['personal', 'business'] as const).map((category) => (
                     <Badge

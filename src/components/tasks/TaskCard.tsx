@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Task } from '@/types';
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,9 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
 
   // Contar reagendamentos totais para mostrar número
   const totalReschedules = task.forwardHistory?.length || 0;
+
+  // Verificar se a tarefa tem baixa como "não feito"
+  const hasNotDoneCompletion = task.completionHistory?.some(completion => completion.status === 'not-done');
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -86,8 +90,24 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
     }
   };
 
+  // Determinar a cor do card baseado no status
+  const getCardClassName = () => {
+    let baseClass = "hover:shadow-md transition-shadow";
+    
+    // Se a tarefa foi concluída, usar verde
+    if (task.isConcluded) {
+      baseClass += " border-green-500 bg-green-50";
+    }
+    // Se tem baixa como "não feito", manter vermelho mesmo se concluída depois
+    else if (hasNotDoneCompletion) {
+      baseClass += " border-red-500 bg-red-50";
+    }
+    
+    return cn(baseClass, className);
+  };
+
   return (
-    <Card className={cn("hover:shadow-md transition-shadow", className)}>
+    <Card className={getCardClassName()}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">

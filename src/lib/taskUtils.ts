@@ -1,3 +1,4 @@
+
 import { Task } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 
@@ -38,7 +39,8 @@ export function isTaskRescheduledToday(task: Task): boolean {
     const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
     
     // Verificar se é um reagendamento de saída (não de recebimento)
-    const isOutgoingReschedule = forward.reason === 'Reagendada';
+    // A ação deve ter sido "Reagendada" e deve ter sido hoje
+    const isOutgoingReschedule = forward.reason && forward.reason.includes('Reagendada') && !forward.reason.includes('Recebido');
     
     return forwardDate === today && isOutgoingReschedule;
   });
