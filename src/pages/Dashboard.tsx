@@ -5,32 +5,42 @@ import { Plus, Calendar, CheckCircle, Clock, Users, TrendingUp, Target } from "l
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
-import { TaskCard } from "@/components/tasks/TaskCard";
+import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
+import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
+import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-import { Link } from "react-router-dom";
-import { TaskFilter } from "@/types";
+import { TaskFilter, Task } from "@/types";
+import { useState } from "react";
+import { searchInTask } from "@/lib/searchUtils";
+import { sortTasks, SortOption } from "@/lib/taskUtils";
 
 const Dashboard = () => {
-  const { openTaskModal } = useModalStore();
-  const today = getCurrentDateInSaoPaulo();
-  
-  const todayFilter: TaskFilter = {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>('order');
+  const [taskFilters, setTaskFilters] = useState<TaskFilter>({
     dateRange: {
-      start: today,
-      end: today
+      start: getCurrentDateInSaoPaulo(),
+      end: getCurrentDateInSaoPaulo()
     }
-  };
-  
-  const { tasks: todayTasks, concludeTask, updateTask, refetch } = useSupabaseTasks(todayFilter);
-  const { people } = useSupabasePeople();
+  });
 
-  const totalTasks = todayTasks.length;
-  const completedTasks = todayTasks.filter(task => task.isConcluded).length;
-  const pendingTasks = todayTasks.filter(task => task.status === 'pending').length;
-  const forwardedTasks = todayTasks.filter(task => task.isForwarded).length;
+  const { openTaskModal, openPersonModal, openTeamMemberModal, openDailyCloseModal } = useModalStore();
+  const { tasks, updateTask, deleteTask, concludeTask, refetch } = useSupabaseTasks(taskFilters);
+  const { people } = useSupabasePeople();
+  const { teamMembers } = useSupabaseTeamMembers();
+
+  // Aplicar busca e ordenação para as tarefas da lista
+  const filteredTasks = tasks.filter(task => searchInTask(task, searchQuery));
+  const sortedTasks = sortTasks(filteredTasks, sortBy);
+
+  // Estatísticas para os cards (usar todas as tarefas do período)
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(task => task.isConcluded).length;
+  const pendingTasks = tasks.filter(task => task.status === 'pending').length;
+  const forwardedTasks = tasks.filter(task => task.isForwarded).length;
   
   // Tarefas definitivas: concluídas e que nunca foram reagendadas
-  const definitiveTasks = todayTasks.filter(task => 
+  const definitiveTasks = tasks.filter(task => 
     task.isConcluded && 
     (!task.forwardHistory || task.forwardHistory.length === 0) &&
     task.forwardCount === 0
@@ -38,30 +48,80 @@ const Dashboard = () => {
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  const handleStatusChange = (taskId: string, status: Task['status']) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      if (status === 'pending') {
+        const newHistory = task.completionHistory?.slice(0, -1) || [];
+        updateTask(taskId, { 
+          status: 'pending',
+          completionHistory: newHistory,
+          updatedAt: new Date().toISOString()
+        });
+        return;
+      }
+
+      const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
+      const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
+      
+      if (hasCompletion && lastCompletion?.status === status) {
+        return;
+      }
+
+      const completionRecord = {
+        completedAt: getCurrentDateInSaoPaulo(),
+        status: status as 'completed' | 'not-done',
+        date: task.scheduledDate,
+        wasForwarded: task.forwardHistory && task.forwardHistory.length > 0
+      };
+
+      const updatedCompletionHistory = [
+        ...(task.completionHistory || []),
+        completionRecord
+      ];
+
+      updateTask(taskId, { 
+        status,
+        completionHistory: updatedCompletionHistory,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar status da tarefa:', error);
+    }
+  };
+
   const handleConcludeTask = async (taskId: string) => {
     await concludeTask(taskId);
     refetch();
   };
 
   const handleUnconcludeTask = async (taskId: string) => {
-    const task = todayTasks.find(t => t.id === taskId);
-    if (task) {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
       await updateTask(taskId, {
+        ...task,
         isConcluded: false,
-        concludedAt: undefined,
-        status: 'pending'
+        status: 'pending',
+        updatedAt: new Date().toISOString()
       });
       refetch();
+    } catch (error) {
+      console.error('Erro ao desfazer conclusão da tarefa:', error);
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">
-            Visão geral das suas atividades de hoje
+            Visão geral da sua produtividade
           </p>
         </div>
         <Button className="gap-2" onClick={() => openTaskModal()}>
@@ -70,6 +130,7 @@ const Dashboard = () => {
         </Button>
       </div>
 
+      {/* Cards de estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -77,9 +138,22 @@ const Dashboard = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalTasks}</div>
+            <div className="text-2xl font-bold text-primary">{totalTasks}</div>
             <p className="text-xs text-muted-foreground">
-              para hoje
+              para o período selecionado
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{pendingTasks}</div>
+            <p className="text-xs text-muted-foreground">
+              aguardando execução
             </p>
           </CardContent>
         </Card>
@@ -112,175 +186,136 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{pendingTasks}</div>
-            <p className="text-xs text-muted-foreground">
-              aguardando execução
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Repassadas</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{forwardedTasks}</div>
             <p className="text-xs text-muted-foreground">
-              delegadas ou adiadas
+              reagendadas ou delegadas
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Tarefas de Hoje</CardTitle>
-              <Link to="/tasks">
-                <Button variant="outline" size="sm">
-                  Ver Todas
+      {/* Filtros */}
+      <TaskFiltersHorizontal 
+        currentFilters={taskFilters}
+        onFiltersChange={setTaskFilters}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
+
+      {/* Tarefas de Hoje */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Tarefas do Período
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {sortedTasks.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">Nenhuma tarefa encontrada</p>
+                <Button className="mt-4" onClick={() => openTaskModal()}>
+                  Criar Primeira Tarefa
                 </Button>
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {todayTasks.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">
-                    Nenhuma tarefa para hoje
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Comece criando uma nova tarefa
-                  </p>
-                  <Button onClick={() => openTaskModal()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Tarefa
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {todayTasks.slice(0, 5).map((task) => (
-                    <TaskCard 
-                      key={task.id}
-                      task={task} 
-                      onComplete={() => handleConcludeTask(task.id)}
-                    />
-                  ))}
-                  {todayTasks.length > 5 && (
-                    <div className="text-center pt-4">
-                      <Link to="/tasks">
-                        <Button variant="outline" size="sm">
-                          Ver mais {todayTasks.length - 5} tarefas
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Resumo do Dia</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Taxa de Conclusão</span>
-                <span className="font-medium">{completionRate}%</span>
               </div>
-              
-              <div className="w-full bg-secondary rounded-full h-2">
-                <div 
-                  className="bg-green-600 h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${completionRate}%` }}
-                ></div>
-              </div>
-
-              {totalTasks > 0 && completionRate === 100 && (
-                <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <CheckCircle className="h-6 w-6 mx-auto text-green-600 mb-2" />
-                  <p className="text-sm font-medium text-green-800">
-                    🎉 Dia completo!
-                  </p>
-                  <p className="text-xs text-green-600">
-                    Todas as tarefas foram concluídas
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Pessoas ({people.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {people.slice(0, 5).map((person) => (
-                  <div key={person.id} className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                    <span>{person.name}</span>
-                  </div>
+            ) : (
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {sortedTasks.slice(0, 5).map((task, index) => (
+                  <TaskCardImproved
+                    key={task.id}
+                    task={task}
+                    taskIndex={index}
+                    maxOrder={Math.max(...tasks.map(t => t.order || 0), 1)}
+                    onStatusChange={(status) => handleStatusChange(task.id, status)}
+                    onConclude={() => handleConcludeTask(task.id)}
+                    onUnconclude={() => handleUnconcludeTask(task.id)}
+                    onForward={() => {}}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                    onHistory={() => {}}
+                    currentViewDate={taskFilters.dateRange?.start}
+                  />
                 ))}
-                {people.length > 5 && (
-                  <Link to="/people">
-                    <Button variant="ghost" size="sm" className="w-full mt-2">
-                      Ver todas ({people.length})
-                    </Button>
-                  </Link>
-                )}
-                {people.length === 0 && (
-                  <p className="text-muted-foreground text-sm">
-                    Nenhuma pessoa cadastrada
+                {sortedTasks.length > 5 && (
+                  <p className="text-center text-sm text-muted-foreground py-2">
+                    ... e mais {sortedTasks.length - 5} tarefas
                   </p>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Ações Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-2"
-                onClick={() => openTaskModal()}
-              >
-                <Plus className="h-4 w-4" />
-                Nova Tarefa
-              </Button>
+        {/* Resumo da Equipe */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Resumo da Equipe
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Pessoas cadastradas</span>
+                <span className="font-semibold">{people.length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Membros da equipe</span>
+                <span className="font-semibold">{teamMembers.length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Total de colaboradores</span>
+                <span className="font-semibold">{people.length + teamMembers.length}</span>
+              </div>
               
-              <Link to="/calendar" className="block">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Ver Calendário
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" size="sm" onClick={() => openPersonModal()}>
+                  Nova Pessoa
                 </Button>
-              </Link>
-              
-              <Link to="/reports" className="block">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  Relatórios
+                <Button variant="outline" size="sm" onClick={() => openTeamMemberModal()}>
+                  Novo Membro
                 </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Ações rápidas */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Ações Rápidas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col gap-2"
+              onClick={() => openDailyCloseModal(getCurrentDateInSaoPaulo())}
+            >
+              <CheckCircle className="h-6 w-6" />
+              <span>Fechamento Diário</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2">
+              <TrendingUp className="h-6 w-6" />
+              <span>Ver Estatísticas</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2">
+              <Calendar className="h-6 w-6" />
+              <span>Ir para Calendário</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
