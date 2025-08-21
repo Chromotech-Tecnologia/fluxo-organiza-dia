@@ -7,17 +7,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Dashboard } from "@/pages/Dashboard";
-import { TasksPage } from "@/pages/TasksPage";
-import { CalendarPage } from "@/pages/CalendarPage";
-import { PeoplePage } from "@/pages/PeoplePage";
+import TasksPage from "@/pages/TasksPage";
+import CalendarPage from "@/pages/CalendarPage";
+import PeoplePage from "@/pages/PeoplePage";
 import { SkillsPage } from "@/pages/SkillsPage";
-import { ReportsPage } from "@/pages/ReportsPage";
-import { DailyClosePage } from "@/pages/DailyClosePage";
-import { StatsPage } from "@/pages/StatsPage";
-import { SettingsPage } from "@/pages/SettingsPage";
-import { BackupPage } from "@/pages/BackupPage";
-import { MigrationPage } from "@/pages/MigrationPage";
-import { NotFound } from "@/pages/NotFound";
+import ReportsPage from "@/pages/ReportsPage";
+import DailyClosePage from "@/pages/DailyClosePage";
+import StatsPage from "@/pages/StatsPage";
+import SettingsPage from "@/pages/SettingsPage";
+import BackupPage from "@/pages/BackupPage";
+import MigrationPage from "@/pages/MigrationPage";
+import NotFound from "@/pages/NotFound";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -32,14 +32,14 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<SignInPage />} />
-          <Route
-            path="/*"
-            element={
-              <AuthGuard>
-                <SidebarProvider>
+      <SidebarProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<SignInPage />} />
+            <Route
+              path="/*"
+              element={
+                <AuthGuard>
                   <AppLayout>
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
@@ -56,13 +56,13 @@ function App() {
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>
-                </SidebarProvider>
-              </AuthGuard>
-            }
-          />
-        </Routes>
-        <Toaster />
-      </Router>
+                </AuthGuard>
+              }
+            />
+          </Routes>
+          <Toaster />
+        </Router>
+      </SidebarProvider>
     </QueryClientProvider>
   );
 }

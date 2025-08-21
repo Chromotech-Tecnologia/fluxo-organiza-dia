@@ -39,14 +39,8 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
   }).length;
 
   // Handlers para o DateRangePicker
-  const handleStartDateChange = (startDate: string) => {
-    const currentRange = filters.dateRange || { start: '', end: '' };
-    handleFilterChange('dateRange', { ...currentRange, start: startDate });
-  };
-
-  const handleEndDateChange = (endDate: string) => {
-    const currentRange = filters.dateRange || { start: '', end: '' };
-    handleFilterChange('dateRange', { ...currentRange, end: endDate });
+  const handleDateRangeChange = (dateRange: { start: string; end: string }) => {
+    handleFilterChange('dateRange', dateRange);
   };
 
   return (
@@ -79,15 +73,11 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
             Período
           </label>
           <DateRangePicker
-            startDate={filters.dateRange?.start || ''}
-            endDate={filters.dateRange?.end || ''}
-            onStartDateChange={handleStartDateChange}
-            onEndDateChange={handleEndDateChange}
+            dateRange={filters.dateRange || { start: '', end: '' }}
+            onDateRangeChange={handleDateRangeChange}
           />
         </div>
 
-        
-        
         {/* Filtros em Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Tipo */}
