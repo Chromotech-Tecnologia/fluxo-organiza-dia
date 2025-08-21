@@ -52,12 +52,14 @@ export function RescheduleModal() {
         newDate: calendarDateToString(selectedDate),
         originalDate: taskToForward.scheduledDate,
         statusAtForward: taskToForward.status,
-        reason: 'Reagendada'
+        reason: 'Reagendada pelo usuário'
       };
 
-      // Atualizar a tarefa original com histórico de repasse
+      // Atualizar a tarefa original com histórico de repasse e auto-conclusão
       await updateTask(taskToForward.id, {
         forwardHistory: [...(taskToForward.forwardHistory || []), forwardRecord],
+        isConcluded: true,
+        concludedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
 
@@ -81,6 +83,8 @@ export function RescheduleModal() {
           }
         ],
         completionHistory: [],
+        isConcluded: false,
+        concludedAt: undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -88,16 +92,9 @@ export function RescheduleModal() {
       // Adicionar a nova tarefa
       await addTask(newTask);
 
-      // Auto-conclusão da tarefa original
-      await updateTask(taskToForward.id, {
-        isConcluded: true,
-        concludedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-
       toast({
         title: "Tarefa reagendada",
-        description: `Nova tarefa criada para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })} e tarefa original concluída.`,
+        description: `Nova tarefa criada para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })} e tarefa original concluída automaticamente.`,
       });
 
       closeForwardTaskModal();

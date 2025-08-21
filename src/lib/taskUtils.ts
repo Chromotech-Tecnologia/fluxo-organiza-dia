@@ -1,4 +1,3 @@
-
 import { Task } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 
@@ -28,7 +27,7 @@ export const SORT_OPTIONS = [
   { value: 'name-desc', label: 'Por Nome (Z-A)' }
 ];
 
-// Função para verificar se a tarefa foi reagendada hoje
+// Função para verificar se a tarefa foi reagendada hoje pelo usuário
 export function isTaskRescheduledToday(task: Task): boolean {
   if (!task.forwardHistory || task.forwardHistory.length === 0) return false;
   
@@ -38,13 +37,13 @@ export function isTaskRescheduledToday(task: Task): boolean {
     // Verificar se o reagendamento foi hoje
     const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
     
-    // A ação deve ser explícita de reagendamento (não recebimento)
-    // Verificar se existe uma razão que indica ação do usuário de reagendar
-    const isUserRescheduleAction = forward.reason && 
-      (forward.reason.includes('Reagendada pelo usuário') || 
-       forward.reason.includes('Tarefa reagendada') ||
-       forward.reason.includes('Reagendamento manual') ||
-       (forward.reason.includes('Reagendada') && !forward.reason.includes('Recebido')));
+    // A ação deve ser explícita de reagendamento pelo usuário (não recebimento)
+    const isUserRescheduleAction = forward.reason && (
+      forward.reason.includes('Reagendada pelo usuário') || 
+      forward.reason.includes('Tarefa reagendada') ||
+      forward.reason.includes('Reagendamento manual') ||
+      (forward.reason === 'Reagendada')
+    );
     
     return forwardDate === today && isUserRescheduleAction;
   });

@@ -63,9 +63,8 @@ export function useTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por status - ajustado para "não feito"
+      // Filtro por status - separando "não feito" dos outros status
       if (filters.status && filters.status.length > 0) {
-        // Se filtrar por "not-done", mostrar tarefas que têm esse status no histórico
         if (filters.status.includes('not-done')) {
           const hasNotDoneStatus = task.completionHistory?.some(completion => 
             completion.status === 'not-done'
@@ -125,7 +124,7 @@ export function useTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por conclusão - ajustado
+      // Filtro por conclusão - novo filtro separado
       if (filters.isConcluded !== undefined) {
         if (filters.isConcluded !== task.isConcluded) {
           return false;

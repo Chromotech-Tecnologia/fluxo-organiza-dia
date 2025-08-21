@@ -44,6 +44,16 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
   // Verificar se a tarefa tem baixa como "não feito"
   const hasNotDoneCompletion = task.completionHistory?.some(completion => completion.status === 'not-done');
 
+  // Verificar se a tarefa foi reagendada (tem histórico de reagendamento pelo usuário)
+  const wasUserRescheduled = task.forwardHistory?.some(forward => 
+    forward.reason && (
+      forward.reason.includes('Reagendada pelo usuário') || 
+      forward.reason.includes('Tarefa reagendada') ||
+      forward.reason.includes('Reagendamento manual') ||
+      (forward.reason.includes('Reagendada') && !forward.reason.includes('Recebido'))
+    )
+  );
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'extreme':
@@ -94,12 +104,12 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
   const getCardClassName = () => {
     let baseClass = "hover:shadow-md transition-shadow";
     
-    // Se a tarefa foi concluída, usar verde
-    if (task.isConcluded) {
+    // Se a tarefa foi concluída e não foi reagendada, usar verde
+    if (task.isConcluded && !wasUserRescheduled) {
       baseClass += " border-green-500 bg-green-50";
     }
-    // Se tem baixa como "não feito", manter vermelho mesmo se concluída depois
-    else if (hasNotDoneCompletion) {
+    // Se tem baixa como "não feito" ou foi reagendada pelo usuário, manter vermelho
+    else if (hasNotDoneCompletion || wasUserRescheduled) {
       baseClass += " border-red-500 bg-red-50";
     }
     

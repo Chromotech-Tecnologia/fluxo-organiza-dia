@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
     handleFilterChange('priority', newPriorities.length > 0 ? newPriorities : undefined);
   };
 
-  const handleConclusionChange = (value: string) => {
+  const handleStatusChange = (value: string) => {
     if (value === 'all') {
       handleFilterChange('isConcluded', undefined);
       handleFilterChange('status', undefined);
@@ -172,7 +173,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
           </div>
         </div>
 
-        {/* Status Filter */}
+        {/* Status Filter - Atualizado com novos filtros */}
         <div className="space-y-3">
           <Label>Status</Label>
           <RadioGroup
@@ -182,7 +183,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
               currentFilters.isConcluded === false ? 'not-concluded' : 
               'all'
             }
-            onValueChange={handleConclusionChange}
+            onValueChange={handleStatusChange}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="all" id="status-all" />

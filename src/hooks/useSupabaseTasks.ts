@@ -35,7 +35,11 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       }
 
       if (filters?.status && filters.status.length > 0) {
-        query = query.in('status', filters.status);
+        // Não aplicar filtro "not-done" no Supabase, será tratado no client-side
+        const supabaseStatuses = filters.status.filter(s => s !== 'not-done');
+        if (supabaseStatuses.length > 0) {
+          query = query.in('status', supabaseStatuses);
+        }
       }
 
       if (filters?.assignedPersonId) {
@@ -133,7 +137,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     },
   });
 
-  // Função para aplicar ajustes de ordem em lote
   const applyOrderAdjustments = async (adjustments: OrderAdjustment[]) => {
     if (adjustments.length === 0) return;
 
