@@ -1,3 +1,4 @@
+
 // src/components/tasks/TaskCardImproved.tsx
 
 import React from 'react';
@@ -9,6 +10,7 @@ import {
   CardDescription
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -290,10 +292,10 @@ export function TaskCardImproved({ task, onEdit, onDelete, onToggleComplete, onR
 
         {/* Ações */}
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" size="xs" onClick={() => onEdit(task.id)}>
+          <Button variant="outline" size="sm" onClick={() => onEdit(task.id)}>
             Editar
           </Button>
-          <Button variant="destructive" size="xs" onClick={() => onDelete(task.id)}>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(task.id)}>
             Excluir
           </Button>
         </div>
