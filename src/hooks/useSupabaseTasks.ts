@@ -155,7 +155,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     console.log('Tarefa adicionada:', data);
-    refetch();
+    await refetch();
     return data;
   };
 
@@ -196,7 +196,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     console.log('Tarefa atualizada:', data);
-    refetch();
+    await refetch();
     return data;
   };
 
@@ -214,7 +214,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     console.log('Tarefa deletada:', taskId);
-    refetch();
+    await refetch();
   };
 
   const reorderTasks = async (taskIds: string[]) => {
@@ -237,7 +237,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     console.log('Tarefas reordenadas com sucesso.');
-    refetch();
+    await refetch();
   };
 
   const concludeTask = async (taskId: string) => {
@@ -257,6 +257,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     console.log('Tarefa concluída:', taskId);
+    await refetch();
   };
 
   return {

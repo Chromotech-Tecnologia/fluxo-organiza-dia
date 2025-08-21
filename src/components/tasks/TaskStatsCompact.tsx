@@ -14,6 +14,9 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
+  
+  // Tarefas não concluídas = total - concluídas
+  const notCompletedTasks = totalTasks - completedTasks;
 
   // Reagendamentos
   const rescheduledTasks = tasks.filter(task => 
@@ -77,7 +80,7 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   return (
     <div className="grid grid-cols-4 gap-4">
       {/* Status das Tarefas */}
-      <Card>
+      <Card className="border-l-4 border-l-blue-500">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-1">
             <CheckCircle className="h-4 w-4" />
@@ -98,9 +101,9 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-xs text-red-600">Não Feitas</span>
+            <span className="text-xs text-red-600">Não Concluídas</span>
             <span className="text-sm font-medium text-red-600">
-              {notDoneTasks} ({calculatePercentage(notDoneTasks)}%)
+              {notCompletedTasks} ({calculatePercentage(notCompletedTasks)}%)
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -113,7 +116,7 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
       </Card>
 
       {/* Reagendamentos */}
-      <Card>
+      <Card className="border-l-4 border-l-orange-500">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-1">
             <RotateCcw className="h-4 w-4" />
@@ -149,7 +152,7 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
       </Card>
 
       {/* Tipos de Tarefas */}
-      <Card>
+      <Card className="border-l-4 border-l-purple-500">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-1">
             <User className="h-4 w-4" />
@@ -185,7 +188,7 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
       </Card>
 
       {/* Tempo Estimado */}
-      <Card>
+      <Card className="border-l-4 border-l-indigo-500">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-1">
             <Timer className="h-4 w-4" />

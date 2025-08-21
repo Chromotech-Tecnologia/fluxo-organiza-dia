@@ -54,8 +54,9 @@ export function TaskModal() {
       }
       closeTaskModal();
       // Forçar atualização da lista
-      setTimeout(() => refetch(), 200);
+      setTimeout(() => refetch(), 100);
     } catch (error) {
+      console.error('Erro ao salvar tarefa:', error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao salvar a tarefa.",
@@ -66,7 +67,7 @@ export function TaskModal() {
 
   return (
     <Dialog open={isTaskModalOpen} onOpenChange={(open) => !open && closeTaskModal()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {taskToEdit ? "Editar Tarefa" : "Nova Tarefa"}
