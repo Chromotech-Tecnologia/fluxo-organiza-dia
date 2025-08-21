@@ -95,7 +95,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           updatedAt: task.updated_at,
           isRecurrent: false,
           isForwarded: task.forward_count > 0 || hasForwardHistory,
-          isConcluded: !!task.concluded_at
+          isProcessed: task.is_processed || false
         };
       });
 
@@ -120,9 +120,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         });
       }
 
-      if (filters?.isConcluded !== undefined) {
+      if (filters?.isProcessed !== undefined) {
         convertedTasks = convertedTasks.filter(task => {
-          return filters.isConcluded ? task.isConcluded : !task.isConcluded;
+          return filters.isProcessed ? task.isProcessed : !task.isProcessed;
         });
       }
 
@@ -191,6 +191,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           is_routine: taskData.isRoutine,
           routine_config: taskData.recurrence as any,
           task_order: taskData.order,
+          is_processed: taskData.isProcessed || false,
           user_id: (await supabase.auth.getUser()).data.user?.id
         })
         .select()
@@ -265,7 +266,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           is_routine: updates.isRoutine,
           routine_config: updates.recurrence as any,
           task_order: updates.order,
-          concluded_at: updates.isConcluded ? new Date().toISOString() : null,
+          is_processed: updates.isProcessed,
           updated_at: new Date().toISOString()
         })
         .eq('id', taskId)

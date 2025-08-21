@@ -124,9 +124,9 @@ export function useTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por conclusão - novo filtro separado
-      if (filters.isConcluded !== undefined) {
-        if (filters.isConcluded !== task.isConcluded) {
+      // Novo filtro por processamento
+      if (filters.isProcessed !== undefined) {
+        if (filters.isProcessed !== task.isProcessed) {
           return false;
         }
       }
@@ -208,26 +208,26 @@ export function useTasks(filters?: TaskFilter) {
   const getStats = (): TaskStats => {
     const allTasks = taskStorage.getAll();
     const totalTasks = allTasks.length;
-    const completedTasks = allTasks.filter(t => t.status === 'completed').length;
-    const pendingTasks = allTasks.filter(t => t.status === 'pending').length;
+    const processedTasks = allTasks.filter(t => t.isProcessed).length;
+    const pendingTasks = allTasks.filter(t => !t.isProcessed).length;
     
     // Tarefas em atraso
     const today = getCurrentDateInSaoPaulo();
     const overdueTasks = allTasks.filter(t => 
-      t.status === 'pending' && t.scheduledDate < today
+      !t.isProcessed && t.scheduledDate < today
     ).length;
 
-    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+    const processingRate = totalTasks > 0 ? (processedTasks / totalTasks) * 100 : 0;
     const averageForwards = totalTasks > 0 
       ? allTasks.reduce((acc, task) => acc + task.forwardCount, 0) / totalTasks 
       : 0;
 
     return {
       totalTasks,
-      completedTasks,
+      completedTasks: processedTasks,
       pendingTasks,
       overdueTasks,
-      completionRate,
+      completionRate: processingRate,
       averageForwards
     };
   };

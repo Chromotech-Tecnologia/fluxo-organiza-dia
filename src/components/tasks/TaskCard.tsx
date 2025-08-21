@@ -54,6 +54,9 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
     )
   );
 
+  // Verificar se a tarefa está processada (foi decidido reagendar ou não)
+  const isProcessed = task.isProcessed || false;
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'extreme':
@@ -104,8 +107,8 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
   const getCardClassName = () => {
     let baseClass = "hover:shadow-md transition-shadow";
     
-    // Se a tarefa foi concluída e não foi reagendada, usar verde
-    if (task.isConcluded && !wasUserRescheduled) {
+    // Se a tarefa foi processada (decidiu reagendar ou não), usar verde
+    if (isProcessed) {
       baseClass += " border-green-500 bg-green-50";
     }
     // Se tem baixa como "não feito" ou foi reagendada pelo usuário, manter vermelho
@@ -186,6 +189,13 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
           
           {/* Tags especiais */}
           <div className="flex gap-1">
+            {/* Mostrar se foi processada */}
+            {isProcessed && (
+              <Badge variant="secondary" className="text-xs h-4 px-1">
+                Processada
+              </Badge>
+            )}
+            
             {/* Mostrar "Reagendada" apenas se foi clicado reagendar hoje */}
             {wasRescheduledToday && (
               <Badge variant="secondary" className="text-xs h-4 px-1">
