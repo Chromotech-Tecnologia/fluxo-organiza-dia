@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,14 +42,13 @@ export function TaskFiltersHorizontal({
   const typeOptions = [
     { value: 'own-task', label: 'Própria' },
     { value: 'meeting', label: 'Reunião' },
-    { value: 'forwarded-task', label: 'Repassada' }
+    { value: 'delegated-task', label: 'Delegada' }
   ];
 
   const priorityOptions = [
     { value: 'extreme', label: 'Extrema' },
     { value: 'priority', label: 'Alta' },
-    { value: 'medium', label: 'Média' },
-    { value: 'no-priority', label: 'Baixa' }
+    { value: 'none', label: 'Baixa' }
   ];
 
   const statusOptions = [
@@ -89,7 +87,7 @@ export function TaskFiltersHorizontal({
       ? currentArray.filter(item => item !== value)
       : [...currentArray, value];
     
-    updateFilter(filterKey, newArray.length > 0 ? newArray : undefined);
+    updateFilter(filterKey, newArray.length > 0 ? newArray as any : undefined);
   };
 
   const clearAllFilters = () => {

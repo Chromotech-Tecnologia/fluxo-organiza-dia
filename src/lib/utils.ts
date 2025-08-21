@@ -64,11 +64,30 @@ export function calendarDateToString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-// Função para converter string YYYY-MM-DD para Date do calendário - CORRIGIDA
+// Função para converter string YYYY-MM-DD para Date do calendário - CORRIGIDA COM VALIDAÇÃO
 export function stringToCalendarDate(dateString: string): Date {
   console.log('stringToCalendarDate - Input:', dateString);
   
-  const [year, month, day] = dateString.split('-').map(Number);
+  // Validação para evitar erro de split em undefined
+  if (!dateString || typeof dateString !== 'string') {
+    console.warn('stringToCalendarDate - Invalid dateString, using current date');
+    return new Date();
+  }
+  
+  const parts = dateString.split('-');
+  if (parts.length !== 3) {
+    console.warn('stringToCalendarDate - Invalid date format, using current date');
+    return new Date();
+  }
+  
+  const [year, month, day] = parts.map(Number);
+  
+  // Validação adicional dos valores
+  if (isNaN(year) || isNaN(month) || isNaN(day)) {
+    console.warn('stringToCalendarDate - Invalid date values, using current date');
+    return new Date();
+  }
+  
   // Criar Date object local sem conversão de timezone
   // Usar meio-dia para evitar problemas de DST
   const date = new Date(year, month - 1, day, 12, 0, 0, 0);

@@ -5,35 +5,44 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn, stringToCalendarDate, calendarDateToString } from "@/lib/utils";
+import { cn, stringToCalendarDate, calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 interface DateRangePickerProps {
-  startDate: string;
-  endDate: string;
-  onStartDateChange: (date: string) => void;
-  onEndDateChange: (date: string) => void;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  onDateRangeChange: (range: { start: string; end: string }) => void;
 }
 
 export function DateRangePicker({
-  startDate,
-  endDate,
-  onStartDateChange,
-  onEndDateChange
+  dateRange,
+  onDateRangeChange
 }: DateRangePickerProps) {
+  const currentDate = getCurrentDateInSaoPaulo();
+  const startDate = dateRange?.start || currentDate;
+  const endDate = dateRange?.end || currentDate;
+  
   const startDateObj = stringToCalendarDate(startDate);
   const endDateObj = stringToCalendarDate(endDate);
 
   const handleStartDateSelect = (date: Date | undefined) => {
     if (date) {
       const dateStr = calendarDateToString(date);
-      onStartDateChange(dateStr);
+      onDateRangeChange({
+        start: dateStr,
+        end: endDate
+      });
     }
   };
 
   const handleEndDateSelect = (date: Date | undefined) => {
     if (date) {
       const dateStr = calendarDateToString(date);
-      onEndDateChange(dateStr);
+      onDateRangeChange({
+        start: startDate,
+        end: dateStr
+      });
     }
   };
 
