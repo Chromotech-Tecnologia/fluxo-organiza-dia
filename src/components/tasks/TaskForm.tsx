@@ -309,14 +309,17 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Equipe Delegada</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value === 'no-team' ? '' : value)} 
+                        defaultValue={field.value || 'no-team'}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecionar equipe" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Nenhuma equipe</SelectItem>
+                          <SelectItem value="no-team">Nenhuma equipe</SelectItem>
                           {teamMembers.map((member) => (
                             <SelectItem key={member.id} value={member.id}>
                               {member.name}

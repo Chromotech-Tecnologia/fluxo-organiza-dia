@@ -70,7 +70,7 @@ export function PersonTeamSelect({ value, onValueChange, placeholder = "Selecion
         
         {teamMembers.length > 0 && (
           <>
-            {people.length > 0 && <SelectItem disabled value="separator" className="border-t">---</SelectItem>}
+            {people.length > 0 && <SelectItem disabled value="separator-line" className="border-t">---</SelectItem>}
             <SelectItem disabled value="team-header" className="font-semibold text-xs">
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
@@ -90,7 +90,7 @@ export function PersonTeamSelect({ value, onValueChange, placeholder = "Selecion
         )}
         
         {people.length === 0 && teamMembers.length === 0 && (
-          <SelectItem disabled value="empty">
+          <SelectItem disabled value="empty-state">
             Nenhuma pessoa ou membro da equipe ativo encontrado
           </SelectItem>
         )}

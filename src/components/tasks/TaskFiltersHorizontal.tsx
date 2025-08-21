@@ -287,14 +287,14 @@ export function TaskFiltersHorizontal({
             <div className="space-y-2">
               <label className="text-sm font-medium">Equipe Delegada</label>
               <Select
-                value={currentFilters.assignedPersonId || ''}
-                onValueChange={(value) => handleAdvancedFilterChange('assignedPersonId', value || undefined)}
+                value={currentFilters.assignedPersonId || 'all-teams'}
+                onValueChange={(value) => handleAdvancedFilterChange('assignedPersonId', value === 'all-teams' ? undefined : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar equipe" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as equipes</SelectItem>
+                  <SelectItem value="all-teams">Todas as equipes</SelectItem>
                   {teamMembers.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.name}
