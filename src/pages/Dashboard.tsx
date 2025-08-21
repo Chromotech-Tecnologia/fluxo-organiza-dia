@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
@@ -39,7 +40,10 @@ export function Dashboard() {
 
   const handleToggleComplete = async (id: string, completed: boolean) => {
     try {
-      await taskService.updateTask(id, { completed: completed });
+      await taskService.updateTask(id, { 
+        status: completed ? 'completed' : 'pending',
+        completedAt: completed ? new Date().toISOString() : undefined
+      });
       loadTasks(); // Refresh tasks after toggle
     } catch (error) {
       console.error("Error updating task:", error);
