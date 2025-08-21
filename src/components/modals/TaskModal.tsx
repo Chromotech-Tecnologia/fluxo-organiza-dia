@@ -52,9 +52,14 @@ export function TaskModal() {
           description: "A nova tarefa foi criada com sucesso. Outras tarefas foram reordenadas automaticamente se necessário.",
         });
       }
+      
       closeTaskModal();
-      // Forçar atualização da lista após um pequeno delay
-      setTimeout(() => refetch(), 200);
+      
+      // Forçar atualização completa da página
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
     } catch (error) {
       console.error('Erro ao salvar tarefa:', error);
       toast({
