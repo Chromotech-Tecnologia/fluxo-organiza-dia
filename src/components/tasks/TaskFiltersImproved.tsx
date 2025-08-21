@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,17 +37,6 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
     if (typeof value === 'object' && value !== null) return true;
     return value !== undefined && value !== '';
   }).length;
-
-  // Handlers para o DateRangePicker
-  const handleStartDateChange = (startDate: string) => {
-    const currentRange = filters.dateRange || { start: '', end: '' };
-    handleFilterChange('dateRange', { ...currentRange, start: startDate });
-  };
-
-  const handleEndDateChange = (endDate: string) => {
-    const currentRange = filters.dateRange || { start: '', end: '' };
-    handleFilterChange('dateRange', { ...currentRange, end: endDate });
-  };
 
   return (
     <Card>
@@ -188,16 +178,16 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
           <div className="space-y-2">
             <label className="text-sm font-medium">Tempo</label>
             <Select
-              value={filters.timeInvestment?.[0] || ""}
+              value={filters.timeInvestment?.[0] || "all"}
               onValueChange={(value) => 
-                handleFilterChange('timeInvestment', value ? [value] : undefined)
+                handleFilterChange('timeInvestment', value === "all" ? undefined : [value])
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="low">5min</SelectItem>
                 <SelectItem value="medium">1h</SelectItem>
                 <SelectItem value="high">2h</SelectItem>
@@ -209,16 +199,16 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
           <div className="space-y-2">
             <label className="text-sm font-medium">Categoria</label>
             <Select
-              value={filters.category?.[0] || ""}
+              value={filters.category?.[0] || "all"}
               onValueChange={(value) => 
-                handleFilterChange('category', value ? [value] : undefined)
+                handleFilterChange('category', value === "all" ? undefined : [value])
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="personal">Pessoal</SelectItem>
                 <SelectItem value="business">Negócios</SelectItem>
               </SelectContent>
@@ -229,7 +219,7 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
           <div className="space-y-2">
             <label className="text-sm font-medium">Reagendamento</label>
             <Select
-              value={filters.isForwarded === true ? "yes" : filters.isForwarded === false ? "no" : ""}
+              value={filters.isForwarded === true ? "yes" : filters.isForwarded === false ? "no" : "all"}
               onValueChange={(value) => 
                 handleFilterChange('isForwarded', value === "yes" ? true : value === "no" ? false : undefined)
               }
@@ -238,7 +228,7 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="yes">Reagendada</SelectItem>
                 <SelectItem value="no">Não reagendada</SelectItem>
               </SelectContent>
