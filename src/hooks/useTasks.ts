@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Task, TaskFilter, TaskStats } from '@/types';
 import { taskStorage } from '@/lib/storage';
@@ -110,6 +111,13 @@ export function useTasks(filters?: TaskFilter) {
       if (filters.noOrder !== undefined) {
         const hasNoOrder = !task.order || task.order === 0;
         if (filters.noOrder !== hasNoOrder) {
+          return false;
+        }
+      }
+
+      // Filtro por conclusão
+      if (filters.isConcluded !== undefined) {
+        if (filters.isConcluded !== task.isConcluded) {
           return false;
         }
       }
