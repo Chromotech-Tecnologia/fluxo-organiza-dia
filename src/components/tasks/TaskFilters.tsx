@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,17 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
     return value !== undefined && value !== '';
   }).length;
 
+  // Handlers para o DateRangePicker
+  const handleStartDateChange = (startDate: string) => {
+    const currentRange = filters.dateRange || { start: '', end: '' };
+    handleFilterChange('dateRange', { ...currentRange, start: startDate });
+  };
+
+  const handleEndDateChange = (endDate: string) => {
+    const currentRange = filters.dateRange || { start: '', end: '' };
+    handleFilterChange('dateRange', { ...currentRange, end: endDate });
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -67,7 +79,10 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
             Período
           </label>
           <DateRangePicker
-            onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
+            startDate={filters.dateRange?.start || ''}
+            endDate={filters.dateRange?.end || ''}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
           />
         </div>
 
@@ -142,7 +157,7 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
             </div>
           </div>
 
-          {/* Processamento (novo filtro simples) */}
+          {/* Processamento */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Processamento</label>
             <div className="space-y-2">
