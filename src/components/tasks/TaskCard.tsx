@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Task } from '@/types';
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +35,7 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
 
   // Verificar se a tarefa foi reagendada especificamente no dia atual
   const wasRescheduledToday = task.forwardHistory?.some(forward => {
-    const forwardDate = new Date(forward.date).toISOString().split('T')[0];
+    const forwardDate = new Date(forward.newDate).toISOString().split('T')[0];
     return forwardDate === task.scheduledDate;
   }) || false;
 

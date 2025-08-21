@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, CheckCircle, Clock, Users, TrendingUp } from "lucide-react";
@@ -24,23 +23,12 @@ const Dashboard = () => {
   const { tasks: todayTasks, concludeTask, updateTask, refetch } = useSupabaseTasks(todayFilter);
   const { people } = useSupabasePeople();
 
-  // Estatísticas de hoje
   const totalTasks = todayTasks.length;
   const completedTasks = todayTasks.filter(task => task.isConcluded).length;
   const pendingTasks = todayTasks.filter(task => task.status === 'pending').length;
   const forwardedTasks = todayTasks.filter(task => task.isForwarded).length;
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  const handleStatusChange = (taskId: string, status: 'completed' | 'not-done') => {
-    // Esta função será implementada quando necessário
-    console.log('Status change:', taskId, status);
-  };
-
-  const handleForwardTask = (taskId: string) => {
-    // Esta função será implementada quando necessário
-    console.log('Forward task:', taskId);
-  };
 
   const handleConcludeTask = async (taskId: string) => {
     await concludeTask(taskId);
@@ -61,7 +49,6 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
@@ -75,7 +62,6 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Cards de Estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -130,9 +116,7 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Grid Principal */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Tarefas de Hoje */}
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -164,15 +148,7 @@ const Dashboard = () => {
                     <TaskCard 
                       key={task.id}
                       task={task} 
-                      onStatusChange={(status) => {
-                        if (status === 'completed' || status === 'not-done') {
-                          handleStatusChange(task.id, status);
-                        }
-                      }}
-                      onConclude={() => handleConcludeTask(task.id)}
-                      onUnconclude={() => handleUnconcludeTask(task.id)}
-                      onForward={() => handleForwardTask(task.id)}
-                      currentViewDate={today}
+                      onComplete={() => handleConcludeTask(task.id)}
                     />
                   ))}
                   {todayTasks.length > 5 && (
@@ -190,9 +166,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Painel Lateral */}
         <div className="space-y-6">
-          {/* Resumo Rápido */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Resumo do Dia</CardTitle>
@@ -224,7 +198,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Pessoas Ativas */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -256,7 +229,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Ações Rápidas */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Ações Rápidas</CardTitle>
