@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, CheckCircle, Clock, Users, TrendingUp, Target } from "lucide-react";
@@ -232,16 +231,10 @@ const Dashboard = () => {
                   <TaskCardImproved
                     key={task.id}
                     task={task}
-                    taskIndex={index}
-                    maxOrder={Math.max(...tasks.map(t => t.order || 0), 1)}
+                    people={people}
                     onStatusChange={(status) => handleStatusChange(task.id, status)}
                     onConclude={() => handleConcludeTask(task.id)}
                     onUnconclude={() => handleUnconcludeTask(task.id)}
-                    onForward={() => {}}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                    onHistory={() => {}}
-                    currentViewDate={taskFilters.dateRange?.start}
                   />
                 ))}
                 {sortedTasks.length > 5 && (
