@@ -1,4 +1,5 @@
 import { Task } from "@/types";
+import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 // Tipos de ordenação disponíveis
 export type SortOption = 
@@ -25,6 +26,23 @@ export const SORT_OPTIONS = [
   { value: 'name-asc', label: 'Por Nome (A-Z)' },
   { value: 'name-desc', label: 'Por Nome (Z-A)' }
 ];
+
+// Função para verificar se a tarefa foi reagendada hoje
+export function isTaskRescheduledToday(task: Task): boolean {
+  if (!task.forwardHistory || task.forwardHistory.length === 0) return false;
+  
+  const today = getCurrentDateInSaoPaulo();
+  
+  return task.forwardHistory.some(forward => {
+    // Verificar se o reagendamento foi hoje
+    const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
+    
+    // Verificar se é um reagendamento de saída (não de recebimento)
+    const isOutgoingReschedule = forward.reason === 'Reagendada';
+    
+    return forwardDate === today && isOutgoingReschedule;
+  });
+}
 
 // Função para ordenar tarefas
 export function sortTasks(tasks: Task[], sortBy: SortOption): Task[] {

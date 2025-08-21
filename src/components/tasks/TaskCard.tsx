@@ -18,6 +18,7 @@ import {
   Hash
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isTaskRescheduledToday } from "@/lib/taskUtils";
 
 interface TaskCardProps {
   task: Task;
@@ -33,11 +34,8 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
   const totalSubItems = task.subItems?.length || 0;
   const progress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
 
-  // Verificar se a tarefa foi reagendada especificamente no dia atual
-  const wasRescheduledToday = task.forwardHistory?.some(forward => {
-    const forwardDate = new Date(forward.newDate).toISOString().split('T')[0];
-    return forwardDate === task.scheduledDate;
-  }) || false;
+  // Verificar se a tarefa foi reagendada hoje (clicou reagendar hoje)
+  const wasRescheduledToday = isTaskRescheduledToday(task);
 
   // Contar reagendamentos totais para mostrar número
   const totalReschedules = task.forwardHistory?.length || 0;
@@ -158,7 +156,7 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
           
           {/* Tags especiais */}
           <div className="flex gap-1">
-            {/* Mostrar reagendamento apenas se foi reagendada para o dia atual */}
+            {/* Mostrar "Reagendada" apenas se foi clicado reagendar hoje */}
             {wasRescheduledToday && (
               <Badge variant="secondary" className="text-xs h-4 px-1">
                 <RotateCcw className="h-2 w-2 mr-0.5" />
