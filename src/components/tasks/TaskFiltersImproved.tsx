@@ -1,265 +1,354 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DateRangePicker } from "./DateRangePicker";
-import { TaskFilter, TaskType, TaskPriority, TaskStatus } from "@/types";
-import { X, Filter, Calendar } from "lucide-react";
+import { PeopleSelect } from "../people/PeopleSelect";
+import { X, Search, Filter } from "lucide-react";
+import { TaskFilter } from "@/types";
+import { SORT_OPTIONS, SortOption } from "@/lib/taskUtils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface TaskFiltersProps {
-  filters: TaskFilter;
+interface TaskFiltersImprovedProps {
+  currentFilters: TaskFilter;
   onFiltersChange: (filters: TaskFilter) => void;
-  onClearFilters: () => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  sortBy: SortOption;
+  onSortChange: (sort: SortOption) => void;
 }
 
-export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFiltersProps) {
+export function TaskFiltersImproved({ 
+  currentFilters, 
+  onFiltersChange, 
+  searchQuery, 
+  onSearchChange,
+  sortBy,
+  onSortChange 
+}: TaskFiltersImprovedProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleFilterChange = (key: keyof TaskFilter, value: any) => {
     onFiltersChange({
-      ...filters,
+      ...currentFilters,
       [key]: value
     });
   };
 
-  const handleMultiSelectChange = (key: keyof TaskFilter, value: string, checked: boolean) => {
-    const currentValues = (filters[key] as string[]) || [];
-    const newValues = checked
-      ? [...currentValues, value]
-      : currentValues.filter(v => v !== value);
-    
-    handleFilterChange(key, newValues.length > 0 ? newValues : undefined);
+  const clearFilters = () => {
+    onFiltersChange({});
+    onSearchChange('');
+    onSortChange('order');
   };
 
-  const activeFiltersCount = Object.values(filters).filter(value => {
-    if (Array.isArray(value)) return value.length > 0;
-    if (typeof value === 'object' && value !== null) return true;
-    return value !== undefined && value !== '';
-  }).length;
+  const hasActiveFilters = Object.keys(currentFilters).length > 0 || searchQuery;
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filtros
-            {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {activeFiltersCount}
-              </Badge>
-            )}
-          </CardTitle>
-          {activeFiltersCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={onClearFilters}>
+      <CardContent className="p-4 space-y-4">
+        {/* Busca */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar tarefas..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+              onClick={() => onSearchChange('')}
+            >
               <X className="h-4 w-4" />
-              Limpar
             </Button>
           )}
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Filtro de Data */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            Período
-          </label>
+        {/* Filtros Primeira Linha */}
+        <div className="flex flex-wrap gap-2">
           <DateRangePicker
-            dateRange={filters.dateRange || { start: '', end: '' }}
-            onDateRangeChange={(dateRange) => handleFilterChange('dateRange', dateRange)}
+            startDate={currentFilters.dateRange?.start || new Date().toISOString().split('T')[0]}
+            endDate={currentFilters.dateRange?.end || new Date().toISOString().split('T')[0]}
+            onStartDateChange={(date) => handleFilterChange('dateRange', { 
+              start: date, 
+              end: currentFilters.dateRange?.end || date 
+            })}
+            onEndDateChange={(date) => handleFilterChange('dateRange', { 
+              start: currentFilters.dateRange?.start || date, 
+              end: date 
+            })}
           />
+          
+          <Button 
+            variant={currentFilters.status?.includes('pending') ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              const current = currentFilters.status || [];
+              const newStatus = current.includes('pending') 
+                ? current.filter(s => s !== 'pending')
+                : [...current, 'pending'];
+              handleFilterChange('status', newStatus.length ? newStatus : undefined);
+            }}
+          >
+            Pendente
+          </Button>
+
+          <Button 
+            variant={currentFilters.status?.includes('completed') ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              const current = currentFilters.status || [];
+              const newStatus = current.includes('completed') 
+                ? current.filter(s => s !== 'completed')
+                : [...current, 'completed'];
+              handleFilterChange('status', newStatus.length ? newStatus : undefined);
+            }}
+          >
+            Definitivo
+          </Button>
+
+          <Button 
+            variant={currentFilters.type?.includes('meeting') ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              const current = currentFilters.type || [];
+              const newType = current.includes('meeting') 
+                ? current.filter(t => t !== 'meeting')
+                : [...current, 'meeting'];
+              handleFilterChange('type', newType.length ? newType : undefined);
+            }}
+          >
+            Reunião
+          </Button>
+
+          <Button 
+            variant={currentFilters.type?.includes('delegated-task') ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              const current = currentFilters.type || [];
+              const newType = current.includes('delegated-task') 
+                ? current.filter(t => t !== 'delegated-task')
+                : [...current, 'delegated-task'];
+              handleFilterChange('type', newType.length ? newType : undefined);
+            }}
+          >
+            Equipe
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <Filter className="h-4 w-4 mr-1" />
+            Mais Filtros
+          </Button>
         </div>
 
-        {/* Filtros em Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Tipo */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tipo</label>
-            <div className="space-y-2">
-              {[
-                { value: 'meeting', label: 'Reunião' },
-                { value: 'own-task', label: 'Própria' },
-                { value: 'delegated-task', label: 'Delegada' }
-              ].map(({ value, label }) => (
-                <div key={value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`type-${value}`}
-                    checked={(filters.type || []).includes(value as TaskType)}
-                    onCheckedChange={(checked) => 
-                      handleMultiSelectChange('type', value, checked as boolean)
-                    }
-                  />
-                  <label htmlFor={`type-${value}`} className="text-sm">{label}</label>
+        {/* Filtros Expandidos */}
+        {isExpanded && (
+          <div className="space-y-3 pt-2 border-t">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div>
+                <label className="text-xs font-medium mb-1 block">Prioridade</label>
+                <div className="flex gap-1">
+                  <Button 
+                    variant={currentFilters.priority?.includes('priority') ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = currentFilters.priority || [];
+                      const newPriority = current.includes('priority') 
+                        ? current.filter(p => p !== 'priority')
+                        : [...current, 'priority'];
+                      handleFilterChange('priority', newPriority.length ? newPriority : undefined);
+                    }}
+                  >
+                    Prioridade
+                  </Button>
+                  <Button 
+                    variant={currentFilters.priority?.includes('extreme') ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = currentFilters.priority || [];
+                      const newPriority = current.includes('extreme') 
+                        ? current.filter(p => p !== 'extreme')
+                        : [...current, 'extreme'];
+                      handleFilterChange('priority', newPriority.length ? newPriority : undefined);
+                    }}
+                  >
+                    Extrema
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Prioridade */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Prioridade</label>
-            <div className="space-y-2">
-              {[
-                { value: 'extreme', label: 'Extrema' },
-                { value: 'priority', label: 'Prioridade' },
-                { value: 'none', label: 'Sem Prioridade' }
-              ].map(({ value, label }) => (
-                <div key={value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`priority-${value}`}
-                    checked={(filters.priority || []).includes(value as TaskPriority)}
-                    onCheckedChange={(checked) => 
-                      handleMultiSelectChange('priority', value, checked as boolean)
-                    }
-                  />
-                  <label htmlFor={`priority-${value}`} className="text-sm">{label}</label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Status */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Status</label>
-            <div className="space-y-2">
-              {[
-                { value: 'pending', label: 'Pendente' },
-                { value: 'completed', label: 'Feito' },
-                { value: 'not-done', label: 'Não feito' }
-              ].map(({ value, label }) => (
-                <div key={value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`status-${value}`}
-                    checked={(filters.status || []).includes(value as TaskStatus)}
-                    onCheckedChange={(checked) => 
-                      handleMultiSelectChange('status', value, checked as boolean)
-                    }
-                  />
-                  <label htmlFor={`status-${value}`} className="text-sm">{label}</label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Processamento */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Processamento</label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="processed-yes"
-                  checked={filters.isProcessed === true}
-                  onCheckedChange={(checked) => 
-                    handleFilterChange('isProcessed', checked ? true : undefined)
-                  }
-                />
-                <label htmlFor="processed-yes" className="text-sm">Processada</label>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="processed-no"
-                  checked={filters.isProcessed === false}
-                  onCheckedChange={(checked) => 
-                    handleFilterChange('isProcessed', checked ? false : undefined)
-                  }
+
+              <div>
+                <label className="text-xs font-medium mb-1 block">Categoria</label>
+                <div className="flex gap-1">
+                  <Button 
+                    variant={currentFilters.category?.includes('personal') ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = currentFilters.category || [];
+                      const newCategory = current.includes('personal') 
+                        ? current.filter(c => c !== 'personal')
+                        : [...current, 'personal'];
+                      handleFilterChange('category', newCategory.length ? newCategory : undefined);
+                    }}
+                  >
+                    Pessoal
+                  </Button>
+                  <Button 
+                    variant={currentFilters.category?.includes('business') ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = currentFilters.category || [];
+                      const newCategory = current.includes('business') 
+                        ? current.filter(c => c !== 'business')
+                        : [...current, 'business'];
+                      handleFilterChange('category', newCategory.length ? newCategory : undefined);
+                    }}
+                  >
+                    Profissional
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium mb-1 block">Tempo</label>
+                <div className="flex gap-1">
+                  <Button 
+                    variant={currentFilters.timeInvestment?.includes('low') ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = currentFilters.timeInvestment || [];
+                      const newTime = current.includes('low') 
+                        ? current.filter(t => t !== 'low')
+                        : [...current, 'low'];
+                      handleFilterChange('timeInvestment', newTime.length ? newTime : undefined);
+                    }}
+                  >
+                    Baixo
+                  </Button>
+                  <Button 
+                    variant={currentFilters.timeInvestment?.includes('medium') ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = currentFilters.timeInvestment || [];
+                      const newTime = current.includes('medium') 
+                        ? current.filter(t => t !== 'medium')
+                        : [...current, 'medium'];
+                      handleFilterChange('timeInvestment', newTime.length ? newTime : undefined);
+                    }}
+                  >
+                    Médio
+                  </Button>
+                  <Button 
+                    variant={currentFilters.timeInvestment?.includes('high') ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = currentFilters.timeInvestment || [];
+                      const newTime = current.includes('high') 
+                        ? current.filter(t => t !== 'high')
+                        : [...current, 'high'];
+                      handleFilterChange('timeInvestment', newTime.length ? newTime : undefined);
+                    }}
+                  >
+                    Alto
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium mb-1 block">Equipe Responsável</label>
+                <PeopleSelect
+                  value={currentFilters.assignedPersonId || undefined}
+                  onChange={(value) => handleFilterChange('assignedPersonId', value || undefined)}
+                  placeholder="Selecionar..."
                 />
-                <label htmlFor="processed-no" className="text-sm">Não processada</label>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Filtros Adicionais */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Tempo de Investimento */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tempo</label>
-            <Select
-              value={filters.timeInvestment?.[0] || "all"}
-              onValueChange={(value) => 
-                handleFilterChange('timeInvestment', value === "all" ? undefined : [value])
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos" />
+            <div className="flex gap-2">
+              <Button 
+                variant={currentFilters.hasChecklist === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterChange('hasChecklist', currentFilters.hasChecklist === true ? undefined : true)}
+              >
+                Com Checklist
+              </Button>
+
+              <Button 
+                variant={currentFilters.isForwarded === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterChange('isForwarded', currentFilters.isForwarded === true ? undefined : true)}
+              >
+                Reagendadas
+              </Button>
+
+              <Button 
+                variant={currentFilters.noOrder === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterChange('noOrder', currentFilters.noOrder === true ? undefined : true)}
+              >
+                Sem Ordem
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Segunda Linha - Ordenação e Ações */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Ordenar por:</label>
+            <Select value={sortBy} onValueChange={onSortChange}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="low">5min</SelectItem>
-                <SelectItem value="medium">1h</SelectItem>
-                <SelectItem value="high">2h</SelectItem>
+                {SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Categoria */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Categoria</label>
-            <Select
-              value={filters.category?.[0] || "all"}
-              onValueChange={(value) => 
-                handleFilterChange('category', value === "all" ? undefined : [value])
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="personal">Pessoal</SelectItem>
-                <SelectItem value="business">Negócios</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Reagendamento */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Reagendamento</label>
-            <Select
-              value={filters.isForwarded === true ? "yes" : filters.isForwarded === false ? "no" : "all"}
-              onValueChange={(value) => 
-                handleFilterChange('isForwarded', value === "yes" ? true : value === "no" ? false : undefined)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="yes">Reagendada</SelectItem>
-                <SelectItem value="no">Não reagendada</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex gap-2">
+            <Button onClick={clearFilters} variant="outline" size="sm">
+              Limpar
+            </Button>
+            <Button onClick={() => setIsExpanded(false)} size="sm">
+              Aplicar
+            </Button>
           </div>
         </div>
 
-        {/* Filtros Especiais */}
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="has-checklist"
-              checked={filters.hasChecklist === true}
-              onCheckedChange={(checked) => 
-                handleFilterChange('hasChecklist', checked ? true : undefined)
-              }
-            />
-            <label htmlFor="has-checklist" className="text-sm">Com checklist</label>
+        {/* Filtros Ativos */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap gap-1">
+            {searchQuery && (
+              <Badge variant="secondary" className="gap-1">
+                Busca: {searchQuery}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => onSearchChange('')} />
+              </Badge>
+            )}
+            {currentFilters.status?.map(status => (
+              <Badge key={status} variant="secondary" className="gap-1">
+                {status === 'pending' ? 'Pendente' : status === 'completed' ? 'Definitivo' : 'Não Feito'}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                  const newStatus = currentFilters.status?.filter(s => s !== status);
+                  handleFilterChange('status', newStatus?.length ? newStatus : undefined);
+                }} />
+              </Badge>
+            ))}
           </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="no-order"
-              checked={filters.noOrder === true}
-              onCheckedChange={(checked) => 
-                handleFilterChange('noOrder', checked ? true : undefined)
-              }
-            />
-            <label htmlFor="no-order" className="text-sm">Sem ordem</label>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

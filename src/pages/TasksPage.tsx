@@ -1,3 +1,5 @@
+
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -300,7 +302,7 @@ const TasksPage = () => {
               modifiers={[restrictToVerticalAxis]}
             >
               <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
-                {displayTasks.map((task) => (
+                {displayTasks.map((task, index) => (
                   <div key={task.id} className="flex items-start gap-3">
                     <Checkbox
                       checked={selectedTasks.some(t => t.id === task.id)}
@@ -310,12 +312,16 @@ const TasksPage = () => {
                     <div className="flex-1">
                       <TaskCardImproved 
                         task={task} 
+                        taskIndex={isMultipleDays ? undefined : index}
+                        maxOrder={maxOrder}
+                        onStatusChange={(status) => handleStatusChange(task.id, status)}
+                        onConclude={() => handleConcludeTask(task.id)}
+                        onUnconclude={() => handleUnconcludeTask(task.id)}
+                        onForward={() => handleForwardTask(task)}
                         onEdit={() => handleEditTask(task)}
                         onDelete={() => handleDeleteTask(task)}
-                        onToggleComplete={(taskId, completed) => handleStatusChange(taskId, completed ? 'completed' : 'pending')}
-                        onReorder={(taskId, direction) => {
-                          console.log('Reorder task:', taskId, direction);
-                        }}
+                        onHistory={() => handleTaskHistory(task)}
+                        currentViewDate={taskFilters.dateRange?.start}
                       />
                     </div>
                   </div>

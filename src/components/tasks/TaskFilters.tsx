@@ -16,7 +16,6 @@ interface TaskFiltersProps {
 }
 
 export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFiltersProps) {
-  
   const handleFilterChange = (key: keyof TaskFilter, value: any) => {
     onFiltersChange({
       ...filters,
@@ -40,8 +39,14 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
   }).length;
 
   // Handlers para o DateRangePicker
-  const handleDateRangeChange = (dateRange: { start: string; end: string }) => {
-    handleFilterChange('dateRange', dateRange);
+  const handleStartDateChange = (startDate: string) => {
+    const currentRange = filters.dateRange || { start: '', end: '' };
+    handleFilterChange('dateRange', { ...currentRange, start: startDate });
+  };
+
+  const handleEndDateChange = (endDate: string) => {
+    const currentRange = filters.dateRange || { start: '', end: '' };
+    handleFilterChange('dateRange', { ...currentRange, end: endDate });
   };
 
   return (
@@ -74,8 +79,10 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
             Período
           </label>
           <DateRangePicker
-            dateRange={filters.dateRange || { start: '', end: '' }}
-            onDateRangeChange={handleDateRangeChange}
+            startDate={filters.dateRange?.start || ''}
+            endDate={filters.dateRange?.end || ''}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
           />
         </div>
 
@@ -184,16 +191,16 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
           <div className="space-y-2">
             <label className="text-sm font-medium">Tempo</label>
             <Select
-              value={filters.timeInvestment?.[0] || "all"}
+              value={filters.timeInvestment?.[0] || ""}
               onValueChange={(value) => 
-                handleFilterChange('timeInvestment', value === "all" ? undefined : [value])
+                handleFilterChange('timeInvestment', value ? [value] : undefined)
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="">Todos</SelectItem>
                 <SelectItem value="low">5min</SelectItem>
                 <SelectItem value="medium">1h</SelectItem>
                 <SelectItem value="high">2h</SelectItem>
@@ -205,16 +212,16 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
           <div className="space-y-2">
             <label className="text-sm font-medium">Categoria</label>
             <Select
-              value={filters.category?.[0] || "all"}
+              value={filters.category?.[0] || ""}
               onValueChange={(value) => 
-                handleFilterChange('category', value === "all" ? undefined : [value])
+                handleFilterChange('category', value ? [value] : undefined)
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="">Todas</SelectItem>
                 <SelectItem value="personal">Pessoal</SelectItem>
                 <SelectItem value="business">Negócios</SelectItem>
               </SelectContent>
@@ -225,7 +232,7 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
           <div className="space-y-2">
             <label className="text-sm font-medium">Reagendamento</label>
             <Select
-              value={filters.isForwarded === true ? "yes" : filters.isForwarded === false ? "no" : "all"}
+              value={filters.isForwarded === true ? "yes" : filters.isForwarded === false ? "no" : ""}
               onValueChange={(value) => 
                 handleFilterChange('isForwarded', value === "yes" ? true : value === "no" ? false : undefined)
               }
@@ -234,7 +241,7 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="">Todos</SelectItem>
                 <SelectItem value="yes">Reagendada</SelectItem>
                 <SelectItem value="no">Não reagendada</SelectItem>
               </SelectContent>
