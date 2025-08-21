@@ -1,3 +1,5 @@
+
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -310,7 +312,8 @@ const TasksPage = () => {
                     <div className="flex-1">
                       <TaskCardImproved 
                         task={task} 
-                        people={[]}
+                        taskIndex={isMultipleDays ? undefined : index}
+                        maxOrder={maxOrder}
                         onStatusChange={(status) => handleStatusChange(task.id, status)}
                         onConclude={() => handleConcludeTask(task.id)}
                         onUnconclude={() => handleUnconcludeTask(task.id)}
@@ -318,6 +321,7 @@ const TasksPage = () => {
                         onEdit={() => handleEditTask(task)}
                         onDelete={() => handleDeleteTask(task)}
                         onHistory={() => handleTaskHistory(task)}
+                        currentViewDate={taskFilters.dateRange?.start}
                       />
                     </div>
                   </div>
