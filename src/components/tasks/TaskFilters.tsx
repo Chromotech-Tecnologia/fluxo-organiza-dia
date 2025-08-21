@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Filter, X } from "lucide-react";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRangePicker } from "./DateRangePicker";
 import { TaskFilter, TaskPriority, TaskType } from "@/types";
 
 interface TaskFiltersProps {
@@ -37,7 +37,7 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
         (Array.isArray(value) && value.length === 0)) {
       delete newFilters[key];
     } else {
-      newFilters[key] = value;
+      (newFilters as any)[key] = value;
     }
     
     onFiltersChange(newFilters);
@@ -124,10 +124,14 @@ export function TaskFilters({ currentFilters, onFiltersChange }: TaskFiltersProp
         {/* Date Range Filter */}
         <div className="space-y-2">
           <Label>Período</Label>
-          <DateRangePicker
-            dateRange={currentFilters.dateRange}
-            onDateRangeChange={(dateRange) => handleFilterChange('dateRange', dateRange)}
-          />
+          {currentFilters.dateRange && (
+            <DateRangePicker
+              startDate={currentFilters.dateRange.start}
+              endDate={currentFilters.dateRange.end}
+              onStartDateChange={(date) => handleFilterChange('dateRange', { ...currentFilters.dateRange, start: date })}
+              onEndDateChange={(date) => handleFilterChange('dateRange', { ...currentFilters.dateRange, end: date })}
+            />
+          )}
         </div>
 
         {/* Type Filter */}
