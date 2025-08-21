@@ -94,6 +94,8 @@ export function TaskCardImproved({
       case 'extreme': return 'bg-red-500 text-white';
       case 'priority': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
+      case 'no-priority':
+      case 'none': return 'bg-gray-500 text-white';
       default: return 'bg-gray-500 text-white';
     }
   };

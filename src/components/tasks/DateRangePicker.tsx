@@ -5,7 +5,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn, stringToCalendarDate, calendarDateToString } from "@/lib/utils";
+import { cn, stringToCalendarDate, calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 interface DateRangePickerProps {
   startDate: string;
@@ -20,8 +20,13 @@ export function DateRangePicker({
   onStartDateChange,
   onEndDateChange
 }: DateRangePickerProps) {
-  const startDateObj = stringToCalendarDate(startDate);
-  const endDateObj = stringToCalendarDate(endDate);
+  // Provide fallback values if dates are empty
+  const currentDate = getCurrentDateInSaoPaulo();
+  const safeStartDate = startDate || currentDate;
+  const safeEndDate = endDate || currentDate;
+
+  const startDateObj = stringToCalendarDate(safeStartDate);
+  const endDateObj = stringToCalendarDate(safeEndDate);
 
   const handleStartDateSelect = (date: Date | undefined) => {
     if (date) {

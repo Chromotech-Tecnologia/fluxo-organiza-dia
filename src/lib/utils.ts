@@ -68,6 +68,14 @@ export function calendarDateToString(date: Date): string {
 export function stringToCalendarDate(dateString: string): Date {
   console.log('stringToCalendarDate - Input:', dateString);
   
+  // Handle undefined, null, or empty string
+  if (!dateString || dateString.trim() === '') {
+    // Return current date as fallback
+    const today = new Date();
+    console.log('stringToCalendarDate - Using current date as fallback:', today);
+    return today;
+  }
+  
   const [year, month, day] = dateString.split('-').map(Number);
   // Criar Date object local sem conversão de timezone
   // Usar meio-dia para evitar problemas de DST

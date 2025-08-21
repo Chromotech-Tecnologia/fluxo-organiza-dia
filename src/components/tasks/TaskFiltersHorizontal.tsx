@@ -83,13 +83,13 @@ export function TaskFiltersHorizontal({
     onFiltersChange({ ...currentFilters, [key]: value });
   };
 
-  const toggleArrayFilter = (filterKey: keyof TaskFilter, value: string) => {
+  const toggleArrayFilter = <K extends keyof TaskFilter>(filterKey: K, value: string) => {
     const currentArray = (currentFilters[filterKey] as string[]) || [];
     const newArray = currentArray.includes(value)
       ? currentArray.filter(item => item !== value)
       : [...currentArray, value];
     
-    updateFilter(filterKey, newArray.length > 0 ? newArray : undefined);
+    updateFilter(filterKey, newArray.length > 0 ? newArray as any : undefined);
   };
 
   const clearAllFilters = () => {
@@ -129,8 +129,16 @@ export function TaskFiltersHorizontal({
         </div>
 
         <DateRangePicker
-          dateRange={currentFilters.dateRange}
-          onDateRangeChange={(range) => updateFilter('dateRange', range)}
+          startDate={currentFilters.dateRange?.start || ''}
+          endDate={currentFilters.dateRange?.end || ''}
+          onStartDateChange={(start) => updateFilter('dateRange', { 
+            start, 
+            end: currentFilters.dateRange?.end || '' 
+          })}
+          onEndDateChange={(end) => updateFilter('dateRange', { 
+            start: currentFilters.dateRange?.start || '', 
+            end 
+          })}
         />
 
         <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
