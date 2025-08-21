@@ -116,6 +116,19 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         });
       }
 
+      if (filters?.isConcluded !== undefined) {
+        convertedTasks = convertedTasks.filter(task => {
+          return filters.isConcluded ? task.isConcluded : !task.isConcluded;
+        });
+      }
+
+      // Filtro especial para "não feito" - tarefas que têm histórico de not-done
+      if (filters?.status && filters.status.includes('not-done')) {
+        convertedTasks = convertedTasks.filter(task => {
+          return task.completionHistory?.some(completion => completion.status === 'not-done');
+        });
+      }
+
       return convertedTasks;
     },
   });

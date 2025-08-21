@@ -38,11 +38,15 @@ export function isTaskRescheduledToday(task: Task): boolean {
     // Verificar se o reagendamento foi hoje
     const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
     
-    // Verificar se é um reagendamento de saída (não de recebimento)
-    // A ação deve ter sido "Reagendada" e deve ter sido hoje
-    const isOutgoingReschedule = forward.reason && forward.reason.includes('Reagendada') && !forward.reason.includes('Recebido');
+    // A ação deve ser explícita de reagendamento (não recebimento)
+    // Verificar se existe uma razão que indica ação do usuário de reagendar
+    const isUserRescheduleAction = forward.reason && 
+      (forward.reason.includes('Reagendada pelo usuário') || 
+       forward.reason.includes('Tarefa reagendada') ||
+       forward.reason.includes('Reagendamento manual') ||
+       (forward.reason.includes('Reagendada') && !forward.reason.includes('Recebido')));
     
-    return forwardDate === today && isOutgoingReschedule;
+    return forwardDate === today && isUserRescheduleAction;
   });
 }
 

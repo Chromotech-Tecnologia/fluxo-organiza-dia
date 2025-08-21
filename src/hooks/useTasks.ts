@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Task, TaskFilter, TaskStats } from '@/types';
 import { taskStorage } from '@/lib/storage';
@@ -64,10 +63,21 @@ export function useTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por status
+      // Filtro por status - ajustado para "não feito"
       if (filters.status && filters.status.length > 0) {
-        if (!filters.status.includes(task.status)) {
-          return false;
+        // Se filtrar por "not-done", mostrar tarefas que têm esse status no histórico
+        if (filters.status.includes('not-done')) {
+          const hasNotDoneStatus = task.completionHistory?.some(completion => 
+            completion.status === 'not-done'
+          );
+          if (!hasNotDoneStatus) {
+            return false;
+          }
+        } else {
+          // Para outros status, usar o status atual
+          if (!filters.status.includes(task.status)) {
+            return false;
+          }
         }
       }
 
@@ -115,7 +125,7 @@ export function useTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por conclusão
+      // Filtro por conclusão - ajustado
       if (filters.isConcluded !== undefined) {
         if (filters.isConcluded !== task.isConcluded) {
           return false;
