@@ -1,4 +1,5 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { ThemeProvider } from "next-themes";
 
@@ -13,7 +14,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar />
           
-          <main className="flex-1 flex flex-col">
+          <SidebarInset>
             {/* Header */}
             <header className="h-14 border-b border-border flex items-center px-4 bg-card">
               <SidebarTrigger className="mr-4" />
@@ -38,7 +39,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex-1 p-6 overflow-auto">
               {children}
             </div>
-          </main>
+          </SidebarInset>
         </div>
       </SidebarProvider>
     </ThemeProvider>
