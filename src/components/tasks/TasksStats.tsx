@@ -22,17 +22,14 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   // Calcular estatísticas
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
-  
-  // Não feitas = tarefas que foram marcadas como "not-done"
   const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
-  
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
   
-  // Reagendadas = tarefas que têm histórico de reagendamento (forwardHistory) ou forwardCount > 0
+  // Corrigir a detecção de tarefas reagendadas
   const forwardedTasks = tasks.filter(task => 
-    (task.forwardHistory && task.forwardHistory.length > 0) || 
-    task.forwardCount > 0 ||
-    task.isForwarded
+    task.isForwarded || 
+    task.forwardCount > 0 || 
+    (task.forwardHistory && task.forwardHistory.length > 0)
   ).length;
   
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
@@ -41,15 +38,12 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   const concludedTasks = tasks.filter(task => task.isConcluded).length;
   const notConcludedTasks = tasks.filter(task => !task.isConcluded).length;
   
-  // Tarefas definitivas: completadas E não reagendadas
+  // Tarefas definitivas: completadas E não repassadas
   const definitiveTasks = tasks.filter(task => 
-    task.status === 'completed' && 
-    !task.isForwarded && 
-    task.forwardCount === 0 && 
-    (!task.forwardHistory || task.forwardHistory.length === 0)
+    task.status === 'completed' && !task.isForwarded && task.forwardCount === 0
   ).length;
   
-  // Não reagendadas = tarefas que NÃO têm histórico de reagendamento
+  // Tarefas não repassadas
   const notForwardedTasks = tasks.filter(task => 
     !task.isForwarded && 
     task.forwardCount === 0 && 

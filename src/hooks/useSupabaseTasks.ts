@@ -25,7 +25,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
-      // Aplicar outros filtros que podem ser feitos no Supabase
+      // Aplicar outros filtros
       if (filters?.type && filters.type.length > 0) {
         query = query.in('type', filters.type);
       }
@@ -35,7 +35,11 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       }
 
       if (filters?.status && filters.status.length > 0) {
-        query = query.in('status', filters.status);
+        // Não aplicar filtro "not-done" no Supabase, será tratado no client-side
+        const supabaseStatuses = filters.status.filter(s => s !== 'not-done');
+        if (supabaseStatuses.length > 0) {
+          query = query.in('status', supabaseStatuses);
+        }
       }
 
       if (filters?.assignedPersonId) {
@@ -90,9 +94,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           createdAt: task.created_at,
           updatedAt: task.updated_at,
           isRecurrent: false,
-          isForwarded: task.forward_count > 0 || hasForwardHistory || task.is_forwarded,
+          isForwarded: task.forward_count > 0 || hasForwardHistory,
           isConcluded: task.concluded_at ? true : false,
-          isProcessed: (task as any).is_processed || false
+          isProcessed: (task as any).is_processed || false // Usar any para evitar erro de tipo
         };
       });
 
@@ -104,13 +108,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         });
       }
 
-      // Filtro de reagendadas/não reagendadas
       if (filters?.isForwarded !== undefined) {
         convertedTasks = convertedTasks.filter(task => {
-          const isForwarded = task.isForwarded || 
-                            task.forwardCount > 0 || 
-                            (task.forwardHistory && task.forwardHistory.length > 0);
-          return filters.isForwarded ? isForwarded : !isForwarded;
+          return filters.isForwarded ? task.isForwarded : !task.isForwarded;
         });
       }
 
@@ -124,6 +124,13 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (filters?.isProcessed !== undefined) {
         convertedTasks = convertedTasks.filter(task => {
           return filters.isProcessed ? task.isProcessed : !task.isProcessed;
+        });
+      }
+
+      // Filtro especial para "não feito" - tarefas que têm histórico de not-done
+      if (filters?.status && filters.status.includes('not-done')) {
+        convertedTasks = convertedTasks.filter(task => {
+          return task.completionHistory?.some(completion => completion.status === 'not-done');
         });
       }
 
