@@ -83,6 +83,16 @@ export function TaskFiltersHorizontal({
     }
   };
 
+  const handleDateRangeChange = (field: 'start' | 'end', value: string) => {
+    onFiltersChange({
+      ...currentFilters,
+      dateRange: {
+        start: field === 'start' ? value : currentFilters.dateRange?.start || today,
+        end: field === 'end' ? value : currentFilters.dateRange?.end || today
+      }
+    });
+  };
+
   const handleStatusFilter = (status: TaskStatus) => {
     const currentStatus = currentFilters.status || [];
     const newStatus = currentStatus.includes(status)
@@ -155,6 +165,24 @@ export function TaskFiltersHorizontal({
         >
           Amanhã
         </Button>
+      </div>
+
+      {/* Período personalizado */}
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-muted-foreground">De:</span>
+        <Input
+          type="date"
+          value={currentFilters.dateRange?.start || today}
+          onChange={(e) => handleDateRangeChange('start', e.target.value)}
+          className="h-8 w-32 text-xs"
+        />
+        <span className="text-xs text-muted-foreground">Até:</span>
+        <Input
+          type="date"
+          value={currentFilters.dateRange?.end || today}
+          onChange={(e) => handleDateRangeChange('end', e.target.value)}
+          className="h-8 w-32 text-xs"
+        />
       </div>
 
       {/* Separador visual */}
@@ -278,6 +306,30 @@ export function TaskFiltersHorizontal({
                     className="h-7 px-2 text-xs"
                   >
                     {priority === 'none' ? 'Normal' : priority === 'priority' ? 'Prioridade' : 'Extrema'}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tempo de Investimento */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tempo de Investimento</label>
+              <div className="flex flex-wrap gap-1">
+                {(['low', 'medium', 'high'] as const).map((time) => (
+                  <Button
+                    key={time}
+                    size="sm"
+                    variant={currentFilters.timeInvestment?.includes(time) ? "default" : "outline"}
+                    onClick={() => {
+                      const current = currentFilters.timeInvestment || [];
+                      const newTimeInvestment = current.includes(time)
+                        ? current.filter(t => t !== time)
+                        : [...current, time];
+                      handleAdvancedFilterChange('timeInvestment', newTimeInvestment.length > 0 ? newTimeInvestment : undefined);
+                    }}
+                    className="h-7 px-2 text-xs"
+                  >
+                    {time === 'low' ? 'Baixo (5min)' : time === 'medium' ? 'Médio (1h)' : 'Alto (2h)'}
                   </Button>
                 ))}
               </div>

@@ -1,336 +1,204 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Task } from '@/types';
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical, Undo } from "lucide-react";
-import { Task } from "@/types";
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Progress } from '@/components/ui/progress';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Calendar, 
+  Clock, 
+  Users, 
+  CheckCircle2, 
+  Circle, 
+  XCircle, 
+  AlertCircle,
+  RotateCcw,
+  User,
+  Building2,
+  Hash
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TaskCardProps {
   task: Task;
-  onStatusChange: (status: Task['status']) => void;
-  onConclude: () => void;
-  onUnconclude: () => void;
-  onForward: () => void;
   onEdit?: () => void;
+  onComplete?: () => void;
   onDelete?: () => void;
-  onHistory?: () => void;
-  currentViewDate?: string;
-  taskIndex?: number;
+  className?: string;
 }
 
-export function TaskCard({ 
-  task, 
-  onStatusChange, 
-  onConclude, 
-  onUnconclude,
-  onForward, 
-  onEdit,
-  onDelete,
-  onHistory,
-  currentViewDate,
-  taskIndex 
-}: TaskCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: task.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  // Determinar se a tarefa está reagendada (cor amarelada)
-  const isTaskForwarded = task.isForwarded || task.forwardCount > 0;
-
-  // Corrigir a data para formato brasileiro
-  const taskDate = new Date(task.scheduledDate + 'T00:00:00');
-
-  // Calcular progresso do checklist
+export function TaskCard({ task, onEdit, onComplete, onDelete, className }: TaskCardProps) {
+  // Calcular progresso dos subitens
   const completedSubItems = task.subItems?.filter(item => item.completed).length || 0;
   const totalSubItems = task.subItems?.length || 0;
-  const checklistProgress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
+  const progress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
 
-  // Verificar se tem baixa (feito ou não feito)
-  const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
-  const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
-  const canReschedule = hasCompletion && (lastCompletion?.status === 'completed' || lastCompletion?.status === 'not-done');
+  // Verificar se a tarefa foi reagendada especificamente no dia atual
+  const wasRescheduledToday = task.forwardHistory?.some(forward => {
+    const forwardDate = new Date(forward.date).toISOString().split('T')[0];
+    return forwardDate === task.scheduledDate;
+  }) || false;
 
-  // Função para lidar com clique no card
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Evitar trigger se clicar nos botões ou no drag handle
-    if (
-      e.target instanceof HTMLElement && (
-        e.target.closest('button') || 
-        e.target.closest('[data-dropdown-trigger]') ||
-        e.target.closest('.cursor-grab')
-      )
-    ) {
-      return;
+  // Contar reagendamentos totais para mostrar número
+  const totalReschedules = task.forwardHistory?.length || 0;
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'extreme':
+        return 'bg-black text-white border-black';
+      case 'priority':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
     }
-
-    // Se é tarefa reagendada, perguntar se quer deletar
-    if (isTaskForwarded) {
-      const confirmDelete = window.confirm(
-        `Deseja deletar a tarefa "${task.title}" do dia ${format(taskDate, 'dd/MM/yyyy', { locale: ptBR })} que está reagendada?`
-      );
-      if (confirmDelete && onDelete) {
-        onDelete();
-      }
-      return;
-    }
-
-    onEdit?.();
   };
 
-  const handleStatusClick = (status: 'completed' | 'not-done') => {
-    // Se já tem essa baixa, remover
-    if (lastCompletion?.status === status) {
-      onStatusChange('pending');
-      return;
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case 'not-done':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <Circle className="h-4 w-4 text-yellow-600" />;
     }
-    
-    onStatusChange(status);
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'meeting':
+        return <Users className="h-3 w-3" />;
+      case 'delegated-task':
+        return <User className="h-3 w-3" />;
+      default:
+        return <Building2 className="h-3 w-3" />;
+    }
+  };
+
+  const getTimeInvestmentLabel = (timeInvestment: string) => {
+    switch (timeInvestment) {
+      case 'low':
+        return '5min';
+      case 'medium':
+        return '1h';
+      case 'high':
+        return '2h';
+      default:
+        return '5min';
+    }
   };
 
   return (
-    <Card 
-      ref={setNodeRef}
-      style={style}
-      className={`cursor-pointer hover:shadow-md transition-shadow ${
-        task.isConcluded ? 'border-green-500 bg-green-50' : 
-        isTaskForwarded ? 'border-yellow-500 bg-yellow-50' : ''
-      }`}
-      onClick={handleCardClick}
-    >
-      <CardContent className="p-4">
-        <div className="space-y-3">
-          {/* Header com número da tarefa, título e ações */}
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-2 flex-1">
-              <div
-                {...attributes}
-                {...listeners}
-                className="cursor-grab hover:cursor-grabbing"
-              >
-                <GripVertical className="h-4 w-4 text-muted-foreground" />
-              </div>
-              
-              {/* Número da tarefa */}
-              {taskIndex !== undefined && (
-                <Badge variant="outline" className="text-xs px-1.5 py-0.5 min-w-[24px] text-center">
-                  {taskIndex + 1}
-                </Badge>
-              )}
-              
-              <div className="text-lg font-semibold flex-1">{task.title}</div>
-            </div>
-
-            {/* Menu de ações */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild data-dropdown-trigger>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                {onEdit && (
-                  <DropdownMenuItem onClick={onEdit}>
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Editar
-                  </DropdownMenuItem>
-                )}
-                {onHistory && (
-                  <DropdownMenuItem onClick={onHistory}>
-                    <History className="h-4 w-4 mr-2" />
-                    Histórico
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <DropdownMenuItem onClick={onDelete} className="text-red-600">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+    <Card className={cn("hover:shadow-md transition-shadow", className)}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            {/* Número da ordem */}
+            {task.order && (
+              <Badge variant="outline" className="h-6 w-6 p-0 flex items-center justify-center text-xs font-mono">
+                <Hash className="h-2 w-2 mr-0.5" />
+                {task.order}
+              </Badge>
+            )}
+            
+            {/* Status Icon */}
+            {getStatusIcon(task.status)}
+            
+            {/* Título */}
+            <h3 className="font-semibold text-sm truncate flex-1">{task.title}</h3>
           </div>
-
-          <div className="text-sm text-muted-foreground">
-            {task.description}
-          </div>
-
-          {/* Barra de progresso do checklist */}
-          {totalSubItems > 0 && (
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Checklist</span>
-                <span>{completedSubItems}/{totalSubItems}</span>
-              </div>
-              <Progress value={checklistProgress} className="h-2" />
-            </div>
-          )}
-
-          {/* Indicadores de Status - Data como primeira tag */}
-          <div className="flex gap-2 flex-wrap">
-            {/* Data como primeira tag */}
-            <Badge variant="secondary">
-              {format(taskDate, 'dd/MM/yyyy', { locale: ptBR })}
+          
+          {/* Badges de Prioridade e Tipo */}
+          <div className="flex gap-1">
+            {task.priority !== 'none' && (
+              <Badge className={cn("text-xs h-5", getPriorityColor(task.priority))}>
+                {task.priority === 'extreme' ? 'Extrema' : 'Prioridade'}
+              </Badge>
+            )}
+            
+            <Badge variant="outline" className="text-xs h-5 gap-1">
+              {getTypeIcon(task.type)}
+              {task.type === 'meeting' ? 'Reunião' : 
+               task.type === 'delegated-task' ? 'Delegada' : 'Própria'}
             </Badge>
-
-            {task.type === 'meeting' && (
-              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
-                <Calendar className="h-3 w-3 mr-1" />
-                Reunião
-              </Badge>
-            )}
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-3">
+        {/* Descrição */}
+        {task.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2">{task.description}</p>
+        )}
+        
+        {/* Progresso dos Subitens */}
+        {totalSubItems > 0 && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span>Progresso</span>
+              <span>{completedSubItems}/{totalSubItems}</span>
+            </div>
+            <Progress value={progress} className="h-1.5" />
+          </div>
+        )}
+        
+        {/* Informações adicionais */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {getTimeInvestmentLabel(task.timeInvestment)}
+            </div>
             
-            {task.type === 'delegated-task' && (
-              <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
-                <User className="h-3 w-3 mr-1" />
-                Delegada
-              </Badge>
-            )}
-
-            {task.type === 'own-task' && (
-              <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
-                Própria
-              </Badge>
-            )}
-
-            {task.priority === 'priority' && (
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                Prioridade
-              </Badge>
-            )}
-
-            {task.priority === 'extreme' && (
-              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
-                Extrema
-              </Badge>
-            )}
-
-            {task.timeInvestment && (
-              <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">
-                {task.timeInvestment === 'low' ? 'Baixo' : task.timeInvestment === 'medium' ? 'Médio' : 'Alto'}
-              </Badge>
-            )}
-
-            {task.category && (
-              <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-300">
-                {task.category === 'personal' ? 'Pessoal' : 'Profissional'}
-              </Badge>
-            )}
-            
-            {task.forwardCount > 0 && (
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                <ArrowRight className="h-3 w-3 mr-1" />
-                {task.forwardCount} Reagendamentos
-              </Badge>
-            )}
-            
-            {task.isForwarded && (
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(task.scheduledDate).toLocaleDateString('pt-BR')}
+            </div>
+          </div>
+          
+          {/* Tags especiais */}
+          <div className="flex gap-1">
+            {/* Mostrar reagendamento apenas se foi reagendada para o dia atual */}
+            {wasRescheduledToday && (
+              <Badge variant="secondary" className="text-xs h-4 px-1">
+                <RotateCcw className="h-2 w-2 mr-0.5" />
                 Reagendada
               </Badge>
             )}
             
-            {task.isConcluded && (
-              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                ✓ Concluída
+            {/* Mostrar contador de reagendamentos se não foi reagendada hoje mas tem histórico */}
+            {!wasRescheduledToday && totalReschedules > 0 && (
+              <Badge variant="outline" className="text-xs h-4 px-1">
+                {totalReschedules}x
+              </Badge>
+            )}
+            
+            {task.isRoutine && (
+              <Badge variant="secondary" className="text-xs h-4 px-1">
+                Rotina
               </Badge>
             )}
           </div>
-
-          <div className="flex gap-2 pt-2">
-            {!task.isConcluded && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStatusClick('completed');
-                  }}
-                  className={`${
-                    lastCompletion?.status === 'completed' 
-                      ? 'bg-green-100 text-green-800 border-green-500' 
-                      : 'text-green-600 border-green-600 hover:bg-green-50'
-                  }`}
-                >
-                  {lastCompletion?.status === 'completed' ? '✓ Feito' : 'Feito'}
-                </Button>
-                
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStatusClick('not-done');
-                  }}
-                  className={`${
-                    lastCompletion?.status === 'not-done' 
-                      ? 'bg-red-100 text-red-800 border-red-500' 
-                      : 'text-red-600 border-red-600 hover:bg-red-50'
-                  }`}
-                >
-                  {lastCompletion?.status === 'not-done' ? '✓ Não Feito' : 'Não Feito'}
-                </Button>
-                
-                {canReschedule && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onForward();
-                    }}
-                    className="text-orange-600 border-orange-600 hover:bg-orange-50"
-                  >
-                    <Forward className="h-3 w-3 mr-1" />
-                    Reagendar
-                  </Button>
-                )}
-                
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onConclude();
-                  }}
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                >
-                  Concluir
-                </Button>
-              </>
-            )}
-
-            {task.isConcluded && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUnconclude();
-                }}
-                className="text-orange-600 border-orange-600 hover:bg-orange-50"
-              >
-                <Undo className="h-3 w-3 mr-1" />
-                Desfazer Conclusão
-              </Button>
-            )}
-          </div>
+        </div>
+        
+        {/* Ações */}
+        <div className="flex gap-2 pt-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={onEdit} className="flex-1">
+              Editar
+            </Button>
+          )}
+          {onComplete && task.status === 'pending' && (
+            <Button variant="default" size="sm" onClick={onComplete} className="flex-1">
+              Concluir
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="destructive" size="sm" onClick={onDelete}>
+              <XCircle className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
