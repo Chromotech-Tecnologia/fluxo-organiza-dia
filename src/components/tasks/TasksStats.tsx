@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -22,14 +21,26 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   // Calcular estatísticas
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
-  const notDoneTasks = tasks.filter(task => task.status === 'not-done').length;
+  
+  // Tarefas "não feitas" = tarefas que foram clicadas como "não feitas" (têm histórico de not-done)
+  const notDoneTasks = tasks.filter(task => 
+    task.completionHistory?.some(completion => completion.status === 'not-done')
+  ).length;
+  
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
   
-  // Corrigir a detecção de tarefas reagendadas
+  // Tarefas reagendadas = todas que foram clicadas em reagendar (isForwarded = true ou forwardCount > 0 ou forwardHistory > 0)
   const forwardedTasks = tasks.filter(task => 
     task.isForwarded || 
     task.forwardCount > 0 || 
     (task.forwardHistory && task.forwardHistory.length > 0)
+  ).length;
+  
+  // Tarefas não reagendadas = o contrário das reagendadas
+  const notForwardedTasks = tasks.filter(task => 
+    !task.isForwarded && 
+    task.forwardCount === 0 && 
+    (!task.forwardHistory || task.forwardHistory.length === 0)
   ).length;
   
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
@@ -40,13 +51,9 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   
   // Tarefas definitivas: completadas E não repassadas
   const definitiveTasks = tasks.filter(task => 
-    task.status === 'completed' && !task.isForwarded && task.forwardCount === 0
-  ).length;
-  
-  // Tarefas não repassadas
-  const notForwardedTasks = tasks.filter(task => 
+    task.status === 'completed' && 
     !task.isForwarded && 
-    task.forwardCount === 0 && 
+    task.forwardCount === 0 &&
     (!task.forwardHistory || task.forwardHistory.length === 0)
   ).length;
 

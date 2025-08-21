@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -222,6 +221,36 @@ export function TaskFiltersHorizontal({
       {/* Separador visual */}
       <div className="h-6 w-px bg-border" />
 
+      {/* Reagendamento buttons */}
+      <span className="text-sm font-medium text-muted-foreground">Reagendar:</span>
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant={currentFilters.isForwarded === true ? "default" : "outline"}
+          onClick={() => {
+            const newValue = currentFilters.isForwarded === true ? undefined : true;
+            handleAdvancedFilterChange('isForwarded', newValue);
+          }}
+          className="h-8 px-3 text-xs"
+        >
+          Reagendadas
+        </Button>
+        <Button
+          size="sm"
+          variant={currentFilters.isForwarded === false ? "default" : "outline"}
+          onClick={() => {
+            const newValue = currentFilters.isForwarded === false ? undefined : false;
+            handleAdvancedFilterChange('isForwarded', newValue);
+          }}
+          className="h-8 px-3 text-xs"
+        >
+          Não reagendadas
+        </Button>
+      </div>
+
+      {/* Separador visual */}
+      <div className="h-6 w-px bg-border" />
+
       {/* Ordenação */}
       <Select value={sortBy} onValueChange={(value: SortOption) => onSortChange(value)}>
         <SelectTrigger className="w-[140px] h-8 text-xs">
@@ -370,28 +399,6 @@ export function TaskFiltersHorizontal({
                   className="h-7 px-2 text-xs"
                 >
                   Com Checklist
-                </Button>
-                <Button
-                  size="sm"
-                  variant={currentFilters.isForwarded === true ? "default" : "outline"}
-                  onClick={() => {
-                    const newValue = currentFilters.isForwarded === true ? undefined : true;
-                    handleAdvancedFilterChange('isForwarded', newValue);
-                  }}
-                  className="h-7 px-2 text-xs"
-                >
-                  Reagendadas
-                </Button>
-                <Button
-                  size="sm"
-                  variant={currentFilters.isForwarded === false ? "default" : "outline"}
-                  onClick={() => {
-                    const newValue = currentFilters.isForwarded === false ? undefined : false;
-                    handleAdvancedFilterChange('isForwarded', newValue);
-                  }}
-                  className="h-7 px-2 text-xs"
-                >
-                  Não reagendadas
                 </Button>
               </div>
             </div>

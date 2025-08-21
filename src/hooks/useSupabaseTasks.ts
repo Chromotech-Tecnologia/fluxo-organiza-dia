@@ -108,9 +108,14 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         });
       }
 
+      // Filtro para reagendadas/não reagendadas
       if (filters?.isForwarded !== undefined) {
         convertedTasks = convertedTasks.filter(task => {
-          return filters.isForwarded ? task.isForwarded : !task.isForwarded;
+          const isTaskForwarded = task.isForwarded || 
+            task.forwardCount > 0 || 
+            (task.forwardHistory && task.forwardHistory.length > 0);
+          
+          return filters.isForwarded ? isTaskForwarded : !isTaskForwarded;
         });
       }
 
