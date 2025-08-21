@@ -32,7 +32,7 @@ export function TaskModal() {
         });
         toast({
           title: "Tarefa atualizada",
-          description: "A tarefa foi atualizada com sucesso.",
+          description: "A tarefa foi atualizada com sucesso. Outras tarefas foram reordenadas automaticamente se necessário.",
         });
       } else {
         await addTask({
@@ -49,17 +49,17 @@ export function TaskModal() {
         });
         toast({
           title: "Tarefa criada",
-          description: "A nova tarefa foi criada com sucesso.",
+          description: "A nova tarefa foi criada com sucesso. Outras tarefas foram reordenadas automaticamente se necessário.",
         });
       }
       closeTaskModal();
-      // Forçar atualização da lista
-      setTimeout(() => refetch(), 100);
+      // Forçar atualização da lista após um pequeno delay
+      setTimeout(() => refetch(), 200);
     } catch (error) {
       console.error('Erro ao salvar tarefa:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao salvar a tarefa.",
+        description: "Ocorreu um erro ao salvar a tarefa. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -67,7 +67,7 @@ export function TaskModal() {
 
   return (
     <Dialog open={isTaskModalOpen} onOpenChange={(open) => !open && closeTaskModal()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             {taskToEdit ? "Editar Tarefa" : "Nova Tarefa"}

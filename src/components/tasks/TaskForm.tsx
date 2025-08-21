@@ -1,4 +1,3 @@
-
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Task, TaskFormValues } from '@/types';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
-import { Trash2, Plus, GripVertical } from 'lucide-react';
+import { Trash2, Plus, GripVertical, Info } from 'lucide-react';
 import { useSupabaseTasks } from '@/hooks/useSupabaseTasks';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
+import { calculateInsertReordering, calculateMoveReordering, getNextAvailableOrder } from '@/lib/taskOrderUtils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const taskFormSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -68,7 +69,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       assignedPersonId: task?.assignedPersonId || '',
       observations: task?.observations || '',
-      order: task?.order || Math.max(...tasks.map(t => t.order || 0), 0) + 1,
+      order: task?.order || getNextAvailableOrder(tasks, task?.scheduledDate || getCurrentDateInSaoPaulo()),
       isRoutine: task?.isRoutine || false,
       routineCycle: task?.routineCycle,
       routineStartDate: task?.routineStartDate,
@@ -81,11 +82,39 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const watchedOrder = useWatch({ control: form.control, name: 'order' });
   const watchedType = useWatch({ control: form.control, name: 'type' });
 
-  // Obter tarefas do dia selecionado para validação de ordem
-  const tasksForDate = tasks.filter(t => 
-    t.scheduledDate === watchedScheduledDate && (!task || t.id !== task.id)
-  );
-  const maxOrderForDate = Math.max(...tasksForDate.map(t => t.order || 0), 0);
+  // Calcular previsão de reordenamento
+  const getReorderPreview = () => {
+    if (!watchedOrder || !watchedScheduledDate) return null;
+
+    const tasksForDate = tasks.filter(t => 
+      t.scheduledDate === watchedScheduledDate && (!task || t.id !== task.id)
+    );
+
+    if (task && task.scheduledDate === watchedScheduledDate && task.order === watchedOrder) {
+      return null; // Sem mudança
+    }
+
+    if (task) {
+      // Editando tarefa existente
+      const reorderResult = calculateMoveReordering(
+        tasks,
+        watchedScheduledDate,
+        task.id,
+        watchedOrder
+      );
+      return reorderResult.adjustments.length > 0 ? reorderResult.message : null;
+    } else {
+      // Nova tarefa
+      const reorderResult = calculateInsertReordering(
+        tasks,
+        watchedScheduledDate,
+        watchedOrder
+      );
+      return reorderResult.adjustments.length > 0 ? reorderResult.message : null;
+    }
+  };
+
+  const reorderPreview = getReorderPreview();
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -102,19 +131,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   };
 
   const handleSubmit = (data: TaskFormValues) => {
-    // Se a ordem foi alterada e é diferente da original, aplicar reordenamento
-    if (task && task.order !== data.order) {
-      console.log('Ordem alterada de', task.order, 'para', data.order);
-      
-      // Validar se a nova ordem está dentro do limite
-      if (data.order < 1 || data.order > maxOrderForDate + 1) {
-        form.setError('order', {
-          message: `Ordem deve estar entre 1 e ${maxOrderForDate + 1}`
-        });
-        return;
-      }
-    }
-
     onSubmit(data);
   };
 
@@ -249,45 +265,42 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="scheduledDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="scheduledDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="order"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ordem (1 a {maxOrderForDate + 1})</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min={1} 
-                        max={maxOrderForDate + 1}
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    {watchedOrder && (watchedOrder < 1 || watchedOrder > maxOrderForDate + 1) && (
-                      <p className="text-xs text-yellow-600">
-                        Ao salvar, as outras tarefas serão reordenadas automaticamente.
-                      </p>
-                    )}
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="order"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Posição</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min={1}
+                          placeholder="Ex: 3"
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               {watchedType === 'delegated-task' && (
                 <FormField
@@ -317,6 +330,16 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 />
               )}
             </div>
+
+            {/* Preview de reordenamento */}
+            {reorderPreview && (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Reordenamento automático:</strong> {reorderPreview}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Checklist */}

@@ -1,7 +1,7 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFilter, TaskPriority, TaskStatus, TaskType, SubItem } from "@/types";
+import { calculateInsertReordering, calculateMoveReordering, OrderAdjustment } from "@/lib/taskOrderUtils";
 
 export function useSupabaseTasks(filters?: TaskFilter) {
   const queryKey = ['tasks', filters];
@@ -120,84 +120,159 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     },
   });
 
+  // Função para aplicar ajustes de ordem em lote
+  const applyOrderAdjustments = async (adjustments: OrderAdjustment[]) => {
+    if (adjustments.length === 0) return;
+
+    console.log('Aplicando ajustes de ordem:', adjustments);
+
+    for (const adjustment of adjustments) {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ task_order: adjustment.newOrder })
+        .eq('id', adjustment.taskId);
+
+      if (error) {
+        console.error(`Erro ao atualizar ordem da tarefa ${adjustment.taskId}:`, error);
+        throw error;
+      }
+    }
+  };
+
   const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     console.log('Adicionando nova tarefa:', taskData);
     
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert({
-        title: taskData.title,
-        description: taskData.description,
-        scheduled_date: taskData.scheduledDate,
-        type: taskData.type,
-        priority: taskData.priority,
-        status: taskData.status,
-        assigned_person_id: taskData.assignedPersonId || null,
-        time_investment: taskData.timeInvestment,
-        category: taskData.category,
-        sub_items: taskData.subItems as any,
-        observations: taskData.observations || null,
-        completion_history: taskData.completionHistory as any,
-        forward_history: taskData.forwardHistory as any,
-        forward_count: taskData.forwardCount,
-        delivery_dates: taskData.deliveryDates,
-        is_routine: taskData.isRoutine,
-        routine_config: taskData.recurrence as any,
-        task_order: taskData.order,
-        user_id: (await supabase.auth.getUser()).data.user?.id
-      })
-      .select()
-      .single();
+    // Calcular reordenamento necessário
+    const reorderResult = calculateInsertReordering(
+      tasks,
+      taskData.scheduledDate,
+      taskData.order || 1
+    );
 
-    if (error) {
-      console.error('Erro ao adicionar tarefa:', error);
+    try {
+      // Aplicar reordenamento das tarefas existentes
+      await applyOrderAdjustments(reorderResult.adjustments);
+
+      // Inserir nova tarefa
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          title: taskData.title,
+          description: taskData.description,
+          scheduled_date: taskData.scheduledDate,
+          type: taskData.type,
+          priority: taskData.priority,
+          status: taskData.status,
+          assigned_person_id: taskData.assignedPersonId || null,
+          time_investment: taskData.timeInvestment,
+          category: taskData.category,
+          sub_items: taskData.subItems as any,
+          observations: taskData.observations || null,
+          completion_history: taskData.completionHistory as any,
+          forward_history: taskData.forwardHistory as any,
+          forward_count: taskData.forwardCount,
+          delivery_dates: taskData.deliveryDates,
+          is_routine: taskData.isRoutine,
+          routine_config: taskData.recurrence as any,
+          task_order: taskData.order,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao adicionar tarefa:', error);
+        throw error;
+      }
+
+      console.log('Tarefa adicionada com reordenamento:', data);
+      console.log('Reordenamento aplicado:', reorderResult.message);
+      
+      await refetch();
+      return data;
+    } catch (error) {
+      console.error('Erro durante inserção com reordenamento:', error);
+      await refetch(); // Recarregar para garantir consistência
       throw error;
     }
-
-    console.log('Tarefa adicionada:', data);
-    await refetch();
-    return data;
   };
 
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
     console.log('Atualizando tarefa:', taskId, updates);
 
-    const { data, error } = await supabase
-      .from('tasks')
-      .update({
-        title: updates.title,
-        description: updates.description,
-        scheduled_date: updates.scheduledDate,
-        type: updates.type,
-        priority: updates.priority,
-        status: updates.status,
-        assigned_person_id: updates.assignedPersonId || null,
-        time_investment: updates.timeInvestment,
-        category: updates.category,
-        sub_items: updates.subItems as any,
-        observations: updates.observations,
-        completion_history: updates.completionHistory as any,
-        forward_history: updates.forwardHistory as any,
-        forward_count: updates.forwardCount,
-        delivery_dates: updates.deliveryDates,
-        is_routine: updates.isRoutine,
-        routine_config: updates.recurrence as any,
-        task_order: updates.order,
-        concluded_at: updates.isConcluded ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', taskId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Erro ao atualizar tarefa:', error);
-      throw error;
+    const currentTask = tasks.find(t => t.id === taskId);
+    if (!currentTask) {
+      throw new Error('Tarefa não encontrada');
     }
 
-    console.log('Tarefa atualizada:', data);
-    await refetch();
-    return data;
+    try {
+      // Se a ordem ou data foi alterada, calcular reordenamento
+      let reorderResult = { adjustments: [], message: '' };
+      
+      if (updates.order && updates.order !== currentTask.order) {
+        const targetDate = updates.scheduledDate || currentTask.scheduledDate;
+        reorderResult = calculateMoveReordering(
+          tasks,
+          targetDate,
+          taskId,
+          updates.order
+        );
+        
+        // Aplicar reordenamento das outras tarefas
+        await applyOrderAdjustments(reorderResult.adjustments);
+      } else if (updates.scheduledDate && updates.scheduledDate !== currentTask.scheduledDate) {
+        // Se mudou apenas a data, colocar no final da nova data
+        const tasksForNewDate = tasks.filter(t => t.scheduledDate === updates.scheduledDate);
+        const maxOrder = Math.max(...tasksForNewDate.map(t => t.order || 0), 0);
+        updates.order = maxOrder + 1;
+      }
+
+      // Atualizar a tarefa principal
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          title: updates.title,
+          description: updates.description,
+          scheduled_date: updates.scheduledDate,
+          type: updates.type,
+          priority: updates.priority,
+          status: updates.status,
+          assigned_person_id: updates.assignedPersonId || null,
+          time_investment: updates.timeInvestment,
+          category: updates.category,
+          sub_items: updates.subItems as any,
+          observations: updates.observations,
+          completion_history: updates.completionHistory as any,
+          forward_history: updates.forwardHistory as any,
+          forward_count: updates.forwardCount,
+          delivery_dates: updates.deliveryDates,
+          is_routine: updates.isRoutine,
+          routine_config: updates.recurrence as any,
+          task_order: updates.order,
+          concluded_at: updates.isConcluded ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao atualizar tarefa:', error);
+        throw error;
+      }
+
+      console.log('Tarefa atualizada com reordenamento:', data);
+      if (reorderResult.adjustments.length > 0) {
+        console.log('Reordenamento aplicado:', reorderResult.message);
+      }
+      
+      await refetch();
+      return data;
+    } catch (error) {
+      console.error('Erro durante atualização com reordenamento:', error);
+      await refetch(); // Recarregar para garantir consistência
+      throw error;
+    }
   };
 
   const deleteTask = async (taskId: string) => {
@@ -220,24 +295,30 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   const reorderTasks = async (taskIds: string[]) => {
     console.log('Reordenando tarefas:', taskIds);
 
-    // Atualizar a ordem de cada tarefa individualmente com ordem 1-based
-    for (let i = 0; i < taskIds.length; i++) {
-      const taskId = taskIds[i];
-      const newOrder = i + 1; // Ordem 1-based
+    try {
+      // Atualizar a ordem de cada tarefa individualmente com ordem 1-based
+      for (let i = 0; i < taskIds.length; i++) {
+        const taskId = taskIds[i];
+        const newOrder = i + 1; // Ordem 1-based
 
-      const { error } = await supabase
-        .from('tasks')
-        .update({ task_order: newOrder })
-        .eq('id', taskId);
+        const { error } = await supabase
+          .from('tasks')
+          .update({ task_order: newOrder })
+          .eq('id', taskId);
 
-      if (error) {
-        console.error(`Erro ao atualizar a ordem da tarefa ${taskId}:`, error);
-        throw error;
+        if (error) {
+          console.error(`Erro ao atualizar a ordem da tarefa ${taskId}:`, error);
+          throw error;
+        }
       }
-    }
 
-    console.log('Tarefas reordenadas com sucesso.');
-    await refetch();
+      console.log('Tarefas reordenadas com sucesso via drag & drop.');
+      await refetch();
+    } catch (error) {
+      console.error('Erro durante reordenamento por drag & drop:', error);
+      await refetch();
+      throw error;
+    }
   };
 
   const concludeTask = async (taskId: string) => {
