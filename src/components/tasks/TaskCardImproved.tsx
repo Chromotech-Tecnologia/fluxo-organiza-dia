@@ -92,13 +92,21 @@ export function TaskCardImproved({
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
   const canReschedule = hasCompletion && (lastCompletion?.status === 'completed' || lastCompletion?.status === 'not-done');
 
-  // LÓGICA MUITO MAIS RIGOROSA: só mostrar laranja se a tarefa foi processada HOJE
-  // E se tem completion_history com data de HOJE
+  // LÓGICA CORRIGIDA: só mostrar laranja se a tarefa foi processada E reagendada DA sua data agendada
   const today = getCurrentDateInSaoPaulo();
+  
+  // Verificar se a tarefa foi efetivamente reagendada DA sua data agendada para outra data
+  const wasForwardedFromScheduledDate = task.forwardHistory?.some(forward => 
+    forward.originalDate === task.scheduledDate
+  ) || false;
+
+  // O botão só deve ficar laranja se:
+  // 1. A tarefa foi marcada como completed/not-done na sua data agendada
+  // 2. E a tarefa foi reagendada DA sua data agendada para outra data
   const wasRescheduledToday = canReschedule && lastCompletion && 
-    lastCompletion.date === today && 
-    task.scheduledDate === today && // Tarefa deve estar agendada para hoje
-    (lastCompletion.status === 'completed' || lastCompletion.status === 'not-done');
+    lastCompletion.date === task.scheduledDate && // Completion na data agendada
+    (lastCompletion.status === 'completed' || lastCompletion.status === 'not-done') &&
+    wasForwardedFromScheduledDate; // Foi reagendada DA data agendada
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
