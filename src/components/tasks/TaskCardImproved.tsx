@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getOrderNumberColor, getPriorityColor } from '@/lib/taskUtils';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
+import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 
 interface TaskCardImprovedProps {
   task: Task;
@@ -91,10 +92,11 @@ export function TaskCardImproved({
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
   const canReschedule = hasCompletion && (lastCompletion?.status === 'completed' || lastCompletion?.status === 'not-done');
 
-  // Verificar se o botão reagendar deve estar ativo (tarefa foi marcada para reagendar)
-  const isRescheduleActive = canReschedule && lastCompletion && (
+  // Verificar se o botão reagendar deve estar ativo (tarefa foi marcada para reagendar HOJE)
+  const today = getCurrentDateInSaoPaulo();
+  const wasRescheduledToday = canReschedule && lastCompletion && (
     lastCompletion.status === 'completed' || lastCompletion.status === 'not-done'
-  );
+  ) && lastCompletion.date === today;
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
@@ -310,12 +312,12 @@ export function TaskCardImproved({
                         onForward();
                       }}
                       className={`h-7 px-2 text-xs min-w-[80px] ${
-                        isRescheduleActive
+                        wasRescheduledToday
                           ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
                           : 'text-orange-600 border-orange-600 hover:bg-orange-50'
                       }`}
                     >
-                      {isRescheduleActive ? '✓ Reagendar' : 'Reagendar'}
+                      {wasRescheduledToday ? '✓ Reagendar' : 'Reagendar'}
                     </Button>
                   )}
                   
