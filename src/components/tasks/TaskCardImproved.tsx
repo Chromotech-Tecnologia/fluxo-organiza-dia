@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -92,11 +91,13 @@ export function TaskCardImproved({
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
   const canReschedule = hasCompletion && (lastCompletion?.status === 'completed' || lastCompletion?.status === 'not-done');
 
-  // Verificar se o botão reagendar deve estar ativo (tarefa foi marcada para reagendar HOJE)
+  // Verificar se o botão reagendar deve estar ativo - MUITO mais rigoroso
   const today = getCurrentDateInSaoPaulo();
   const wasRescheduledToday = canReschedule && lastCompletion && (
     lastCompletion.status === 'completed' || lastCompletion.status === 'not-done'
-  ) && lastCompletion.date === today;
+  ) && lastCompletion.date === today && 
+  // Adicionar verificação extra: a tarefa deve estar agendada para hoje ou antes de hoje
+  task.scheduledDate <= today;
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
