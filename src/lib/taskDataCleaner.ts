@@ -1,4 +1,5 @@
 
+
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 import { CompletionRecord } from '@/types';
@@ -19,7 +20,7 @@ export async function cleanInconsistentTaskData() {
     for (const task of tasks || []) {
       let needsUpdate = false;
       // Properly type cast the completion_history from Json to CompletionRecord array
-      let completionHistory = (task.completion_history as CompletionRecord[]) || [];
+      let completionHistory = (task.completion_history as unknown as CompletionRecord[]) || [];
 
       // Filtrar completion_history para remover entradas inconsistentes
       const filteredHistory = completionHistory.filter((completion: CompletionRecord) => {
@@ -57,3 +58,4 @@ export async function cleanInconsistentTaskData() {
     throw error;
   }
 }
+
