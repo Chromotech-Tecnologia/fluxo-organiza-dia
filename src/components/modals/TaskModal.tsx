@@ -55,10 +55,8 @@ export function TaskModal() {
       
       closeTaskModal();
       
-      // Forçar atualização completa da página
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      // Atualizar dados sem recarregar a página, mantendo os filtros
+      await refetch();
       
     } catch (error) {
       console.error('Erro ao salvar tarefa:', error);
