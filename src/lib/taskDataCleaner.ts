@@ -22,15 +22,24 @@ export async function cleanInconsistentTaskData() {
       // Properly type cast the completion_history from Json to CompletionRecord array
       let completionHistory = (task.completion_history as unknown as CompletionRecord[]) || [];
 
-      // Filtrar completion_history para remover entradas inconsistentes
+      // LÓGICA MAIS RIGOROSA: filtrar completion_history para manter apenas entradas válidas
+      // Uma entrada é válida se:
+      // 1. A data da completion é igual à data agendada da tarefa, OU
+      // 2. A data da completion é hoje E a tarefa está agendada para hoje
       const filteredHistory = completionHistory.filter((completion: CompletionRecord) => {
-        // Manter apenas se a data da completion for igual à data agendada da tarefa
-        // ou se for hoje e a tarefa está agendada para hoje ou antes
-        return completion.date === task.scheduled_date || 
-               (completion.date === today && task.scheduled_date <= today);
+        // Manter apenas se a data da completion corresponde exatamente à data agendada
+        // ou se é uma completion de hoje para uma tarefa de hoje
+        const isValidCompletion = 
+          completion.date === task.scheduled_date || 
+          (completion.date === today && task.scheduled_date === today);
+        
+        console.log(`Tarefa ${task.title}: completion ${completion.date} vs scheduled ${task.scheduled_date} - válida: ${isValidCompletion}`);
+        
+        return isValidCompletion;
       });
 
       if (filteredHistory.length !== completionHistory.length) {
+        console.log(`Limpando tarefa ${task.title}: ${completionHistory.length} -> ${filteredHistory.length} entradas`);
         needsUpdate = true;
         completionHistory = filteredHistory;
       }
