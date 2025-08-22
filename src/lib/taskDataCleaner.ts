@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
+import { CompletionRecord } from '@/types';
 
 export async function cleanInconsistentTaskData() {
   try {
@@ -17,10 +18,11 @@ export async function cleanInconsistentTaskData() {
 
     for (const task of tasks || []) {
       let needsUpdate = false;
-      let completionHistory = task.completion_history || [];
+      // Properly type cast the completion_history from Json to CompletionRecord array
+      let completionHistory = (task.completion_history as CompletionRecord[]) || [];
 
       // Filtrar completion_history para remover entradas inconsistentes
-      const filteredHistory = completionHistory.filter((completion: any) => {
+      const filteredHistory = completionHistory.filter((completion: CompletionRecord) => {
         // Manter apenas se a data da completion for igual à data agendada da tarefa
         // ou se for hoje e a tarefa está agendada para hoje ou antes
         return completion.date === task.scheduled_date || 
