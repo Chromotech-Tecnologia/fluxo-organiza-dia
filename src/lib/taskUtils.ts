@@ -111,15 +111,17 @@ export function getTimeInMinutes(timeInvestment: string, customTimeMinutes?: num
   const timeValues: Record<string, number> = {
     'custom-5': 5,
     'custom-30': 30,
-    'low': 60,      // 1 hora (mantendo compatibilidade)
-    'medium': 120,  // 2 horas (mantendo compatibilidade)
-    'high': 240,    // 4 horas (mantendo compatibilidade)
+    'low': 60,      // 1 hora 
+    'medium': 120,  // 2 horas
+    'high': 240,    // 4 horas
     'custom-4h': 240,
     'custom-8h': 480,
     'custom': customTimeMinutes || 0
   };
   
-  return timeValues[timeInvestment] || 0;
+  console.log(`Calculando tempo para ${timeInvestment}, customTimeMinutes: ${customTimeMinutes}, resultado: ${timeValues[timeInvestment] || customTimeMinutes || 0}`);
+  
+  return timeValues[timeInvestment] || customTimeMinutes || 0;
 }
 
 // Função para obter cor do número da ordem (termômetro invertido: vermelho -> verde)

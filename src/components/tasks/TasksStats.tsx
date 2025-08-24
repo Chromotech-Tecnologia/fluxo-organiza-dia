@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -12,6 +13,7 @@ import {
   Shield
 } from "lucide-react";
 import { Task } from "@/types";
+import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 
 interface TasksStatsProps {
   tasks: Task[];
@@ -57,10 +59,30 @@ export function TasksStats({ tasks }: TasksStatsProps) {
     (!task.forwardHistory || task.forwardHistory.length === 0)
   ).length;
 
+  // Calcular tempos totais
+  const totalEstimatedTime = tasks.reduce((total, task) => {
+    return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+  }, 0);
+
+  const completedTime = tasks
+    .filter(task => task.status === 'completed')
+    .reduce((total, task) => {
+      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    }, 0);
+
+  const notDoneTime = tasks
+    .filter(task => task.completionHistory?.some(completion => completion.status === 'not-done'))
+    .reduce((total, task) => {
+      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    }, 0);
+
+  const pendingTime = totalEstimatedTime - completedTime - notDoneTime;
+
   const stats = [
     {
       label: "Total",
       value: totalTasks,
+      time: formatTime(totalEstimatedTime),
       percentage: 100,
       icon: Briefcase,
       color: "text-blue-600",
@@ -70,6 +92,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
     {
       label: "Feitas",
       value: completedTasks,
+      time: formatTime(completedTime),
       percentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       icon: CheckCircle,
       color: "text-green-600",
@@ -79,6 +102,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
     {
       label: "Não Feitas",
       value: notDoneTasks,
+      time: formatTime(notDoneTime),
       percentage: totalTasks > 0 ? Math.round((notDoneTasks / totalTasks) * 100) : 0,
       icon: AlertCircle,
       color: "text-red-600",
@@ -88,6 +112,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
     {
       label: "Pendentes",
       value: pendingTasks,
+      time: formatTime(pendingTime),
       percentage: totalTasks > 0 ? Math.round((pendingTasks / totalTasks) * 100) : 0,
       icon: Clock,
       color: "text-slate-600",
@@ -178,6 +203,11 @@ export function TasksStats({ tasks }: TasksStatsProps) {
                 <div className={`text-2xl font-bold ${stat.isAlert ? 'text-red-600' : 'text-foreground'}`}>
                   {stat.value}
                 </div>
+                {stat.time && (
+                  <div className="text-xs text-muted-foreground opacity-70">
+                    {stat.time}
+                  </div>
+                )}
                 <div className="text-xs text-muted-foreground opacity-70">
                   {stat.percentage}%
                 </div>

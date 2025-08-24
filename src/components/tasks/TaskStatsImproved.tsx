@@ -12,6 +12,7 @@ import {
   RotateCcw,
   XCircle
 } from "lucide-react";
+import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 
 interface TaskStatsImprovedProps {
   tasks: Task[];
@@ -47,17 +48,46 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
   // Taxa de processamento
   const processingRate = totalTasks > 0 ? Math.round((processedTasks / totalTasks) * 100) : 0;
 
-  // Estatísticas de tempo
+  // Calcular tempos totais usando a função getTimeInMinutes
+  const totalEstimatedTime = tasks.reduce((total, task) => {
+    return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+  }, 0);
+
+  const completedTime = tasks
+    .filter(task => task.status === 'completed')
+    .reduce((total, task) => {
+      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    }, 0);
+
+  const notDoneTime = tasks
+    .filter(task => task.completionHistory?.some(completion => completion.status === 'not-done'))
+    .reduce((total, task) => {
+      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    }, 0);
+
+  const pendingTime = tasks
+    .filter(task => !task.isProcessed)
+    .reduce((total, task) => {
+      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    }, 0);
+
+  // Estatísticas de tempo por categoria
   const timeStats = {
+    custom5: tasks.filter(t => t.timeInvestment === 'custom-5').length,
+    custom30: tasks.filter(t => t.timeInvestment === 'custom-30').length,
     low: tasks.filter(t => t.timeInvestment === 'low').length,
     medium: tasks.filter(t => t.timeInvestment === 'medium').length,
-    high: tasks.filter(t => t.timeInvestment === 'high').length
+    high: tasks.filter(t => t.timeInvestment === 'high').length,
+    custom4h: tasks.filter(t => t.timeInvestment === 'custom-4h').length,
+    custom8h: tasks.filter(t => t.timeInvestment === 'custom-8h').length,
+    custom: tasks.filter(t => t.timeInvestment === 'custom').length
   };
 
   const stats = [
     {
       title: "Total",
       value: totalTasks,
+      time: formatTime(totalEstimatedTime),
       icon: Target,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
@@ -66,6 +96,7 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
     {
       title: "Processadas",
       value: processedTasks,
+      time: formatTime(completedTime + notDoneTime),
       icon: CheckCircle,
       color: "text-green-600",
       bgColor: "bg-green-50",
@@ -74,6 +105,7 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
     {
       title: "Não processadas",
       value: unprocessedTasks,
+      time: formatTime(pendingTime),
       icon: Clock,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
@@ -82,6 +114,7 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
     {
       title: "Feitas",
       value: completedTasks,
+      time: formatTime(completedTime),
       icon: CheckCircle,
       color: "text-green-600",
       bgColor: "bg-green-50",
@@ -90,6 +123,7 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
     {
       title: "Não feito",
       value: notDoneTasks,
+      time: formatTime(notDoneTime),
       icon: XCircle,
       color: "text-red-600",
       bgColor: "bg-red-50",
@@ -127,6 +161,9 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
                 </div>
                 <div className="text-2xl font-bold text-foreground">{stat.value}</div>
                 <div className="text-sm font-medium text-foreground">{stat.title}</div>
+                {stat.time && (
+                  <div className="text-xs text-muted-foreground mt-1">{stat.time}</div>
+                )}
                 <div className="text-xs text-muted-foreground mt-1">{stat.description}</div>
               </CardContent>
             </Card>
@@ -134,7 +171,7 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
         })}
       </div>
 
-      {/* Progresso de processamento */}
+      {/* Progresso de processamento e distribuição por tempo */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -167,27 +204,72 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
+              {timeStats.custom5 > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">5min</Badge>
+                    <span className="text-sm">Rápidas</span>
+                  </div>
+                  <span className="font-semibold">{timeStats.custom5}</span>
+                </div>
+              )}
+              {timeStats.custom30 > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">30min</Badge>
+                    <span className="text-sm">Curtas</span>
+                  </div>
+                  <span className="font-semibold">{timeStats.custom30}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">5min</Badge>
-                  <span className="text-sm">Rápidas</span>
+                  <Badge variant="outline" className="text-xs">1h</Badge>
+                  <span className="text-sm">Baixas</span>
                 </div>
                 <span className="font-semibold">{timeStats.low}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">1h</Badge>
+                  <Badge variant="outline" className="text-xs">2h</Badge>
                   <span className="text-sm">Médias</span>
                 </div>
                 <span className="font-semibold">{timeStats.medium}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">2h</Badge>
-                  <span className="text-sm">Longas</span>
+                  <Badge variant="outline" className="text-xs">4h</Badge>
+                  <span className="text-sm">Altas</span>
                 </div>
                 <span className="font-semibold">{timeStats.high}</span>
               </div>
+              {timeStats.custom4h > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">4h</Badge>
+                    <span className="text-sm">4 Horas</span>
+                  </div>
+                  <span className="font-semibold">{timeStats.custom4h}</span>
+                </div>
+              )}
+              {timeStats.custom8h > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">8h</Badge>
+                    <span className="text-sm">8 Horas</span>
+                  </div>
+                  <span className="font-semibold">{timeStats.custom8h}</span>
+                </div>
+              )}
+              {timeStats.custom > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">Custom</Badge>
+                    <span className="text-sm">Personalizado</span>
+                  </div>
+                  <span className="font-semibold">{timeStats.custom}</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
