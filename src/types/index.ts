@@ -2,7 +2,7 @@
 
 export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
 export type TaskPriority = 'none' | 'priority' | 'extreme';
-export type TaskTimeInvestment = 'low' | 'medium' | 'high';
+export type TaskTimeInvestment = 'custom-5' | 'custom-30' | 'low' | 'medium' | 'high' | 'custom-4h' | 'custom-8h' | 'custom';
 export type TaskCategory = 'personal' | 'business';
 export type TaskStatus = 'pending' | 'completed' | 'not-done' | 'forwarded-date' | 'forwarded-person';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -104,6 +104,7 @@ export interface Task {
   type: TaskType;
   priority: TaskPriority;
   timeInvestment: TaskTimeInvestment;
+  customTimeMinutes?: number; // Novo campo para tempo personalizado
   category: TaskCategory;
   status: TaskStatus;
   assignedPersonId?: string;
@@ -181,6 +182,7 @@ export interface TaskFormValues {
   type: TaskType;
   priority: TaskPriority;
   timeInvestment: TaskTimeInvestment;
+  customTimeMinutes?: number; // Novo campo para tempo personalizado
   category: TaskCategory;
   assignedPersonId?: string;
   scheduledDate: string;

@@ -20,7 +20,8 @@ const taskFormSchema = z.object({
   description: z.string().optional(),
   type: z.enum(['own-task', 'meeting', 'delegated-task']),
   priority: z.enum(['none', 'priority', 'extreme']),
-  timeInvestment: z.enum(['low', 'medium', 'high']),
+  timeInvestment: z.enum(['custom-5', 'custom-30', 'low', 'medium', 'high', 'custom-4h', 'custom-8h', 'custom']),
+  customTimeMinutes: z.number().min(1, "Tempo personalizado deve ser maior que 0").optional(),
   category: z.enum(['personal', 'business']),
   scheduledDate: z.string(),
   assignedPersonId: z.string().optional(),
@@ -36,6 +37,14 @@ const taskFormSchema = z.object({
     completed: z.boolean(),
     order: z.number()
   })),
+}).refine((data) => {
+  if (data.timeInvestment === 'custom' && !data.customTimeMinutes) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Tempo personalizado é obrigatório quando selecionado",
+  path: ["customTimeMinutes"],
 });
 
 interface TaskFormProps {
@@ -65,6 +74,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       type: task?.type || 'own-task',
       priority: task?.priority || 'none',
       timeInvestment: task?.timeInvestment || 'low',
+      customTimeMinutes: task?.customTimeMinutes,
       category: task?.category || 'personal',
       scheduledDate: task?.scheduledDate || getCurrentDateInSaoPaulo(),
       assignedPersonId: task?.assignedPersonId || '',
@@ -81,6 +91,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const watchedScheduledDate = useWatch({ control: form.control, name: 'scheduledDate' });
   const watchedOrder = useWatch({ control: form.control, name: 'order' });
   const watchedType = useWatch({ control: form.control, name: 'type' });
+  const watchedTimeInvestment = useWatch({ control: form.control, name: 'timeInvestment' });
 
   // Calcular previsão de reordenamento
   const getReorderPreview = () => {
@@ -224,7 +235,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 name="timeInvestment"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tempo</FormLabel>
+                    <FormLabel>Tempo Estimado</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -232,9 +243,13 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">Baixo (5min)</SelectItem>
-                        <SelectItem value="medium">Médio (1h)</SelectItem>
-                        <SelectItem value="high">Alto (2h)</SelectItem>
+                        <SelectItem value="custom-5">5 minutos</SelectItem>
+                        <SelectItem value="custom-30">30 minutos</SelectItem>
+                        <SelectItem value="low">1 hora</SelectItem>
+                        <SelectItem value="medium">2 horas</SelectItem>
+                        <SelectItem value="high">4 horas</SelectItem>
+                        <SelectItem value="custom-8h">8 horas</SelectItem>
+                        <SelectItem value="custom">Personalizado</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -264,6 +279,29 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 )}
               />
             </div>
+
+            {/* Campo de tempo personalizado */}
+            {watchedTimeInvestment === 'custom' && (
+              <FormField
+                control={form.control}
+                name="customTimeMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tempo Personalizado (minutos) *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min={1}
+                        placeholder="Ex: 90"
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid grid-cols-2 gap-4">

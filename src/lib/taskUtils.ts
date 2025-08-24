@@ -106,6 +106,22 @@ export function sortTasks(tasks: Task[], sortBy: SortOption): Task[] {
   }
 }
 
+// Função para obter o valor em minutos baseado no timeInvestment
+export function getTimeInMinutes(timeInvestment: string, customTimeMinutes?: number): number {
+  const timeValues: Record<string, number> = {
+    'custom-5': 5,
+    'custom-30': 30,
+    'low': 60,      // 1 hora (mantendo compatibilidade)
+    'medium': 120,  // 2 horas (mantendo compatibilidade)
+    'high': 240,    // 4 horas (mantendo compatibilidade)
+    'custom-4h': 240,
+    'custom-8h': 480,
+    'custom': customTimeMinutes || 0
+  };
+  
+  return timeValues[timeInvestment] || 0;
+}
+
 // Função para obter cor do número da ordem (termômetro invertido: vermelho -> verde)
 export function getOrderNumberColor(order: number, maxOrder: number): string {
   if (!order || order === 0) return 'text-gray-400';
@@ -134,9 +150,8 @@ export function getPriorityColor(priority: string): string {
 
 // Função para calcular tempo estimado total
 export function calculateTotalEstimatedTime(tasks: Task[]): number {
-  const timeValues = { 'low': 5, 'medium': 60, 'high': 120 };
   return tasks.reduce((total, task) => {
-    return total + (timeValues[task.timeInvestment] || 0);
+    return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
   }, 0);
 }
 

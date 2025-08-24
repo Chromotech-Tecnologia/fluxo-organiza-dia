@@ -78,7 +78,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           status: task.status as TaskStatus,
           scheduledDate: task.scheduled_date,
           assignedPersonId: task.assigned_person_id || '',
-          timeInvestment: task.time_investment as 'low' | 'medium' | 'high',
+          timeInvestment: task.time_investment as TaskTimeInvestment,
+          customTimeMinutes: (task as any).custom_time_minutes || undefined,
           category: (task.category === 'work' || task.category === 'health' || task.category === 'education') 
             ? 'business' 
             : task.category as 'personal' | 'business',
@@ -96,7 +97,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           isRecurrent: false,
           isForwarded: task.forward_count > 0 || hasForwardHistory,
           isConcluded: task.concluded_at ? true : false,
-          isProcessed: (task as any).is_processed || false // Usar any para evitar erro de tipo
+          isProcessed: (task as any).is_processed || false
         };
       });
 
@@ -187,6 +188,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           status: taskData.status,
           assigned_person_id: taskData.assignedPersonId || null,
           time_investment: taskData.timeInvestment,
+          custom_time_minutes: taskData.customTimeMinutes || null,
           category: taskData.category,
           sub_items: taskData.subItems as any,
           observations: taskData.observations || null,
@@ -261,6 +263,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           status: updates.status,
           assigned_person_id: updates.assignedPersonId || null,
           time_investment: updates.timeInvestment,
+          custom_time_minutes: updates.customTimeMinutes || null,
           category: updates.category,
           sub_items: updates.subItems as any,
           observations: updates.observations,
