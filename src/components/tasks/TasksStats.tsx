@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -13,21 +12,35 @@ import {
   Shield
 } from "lucide-react";
 import { Task } from "@/types";
-import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
+import { getTimeInMinutes, formatTime, debugTotalTime } from "@/lib/taskUtils";
 
 interface TasksStatsProps {
   tasks: Task[];
 }
 
 export function TasksStats({ tasks }: TasksStatsProps) {
+  // DEBUG: Log detalhado das tarefas
+  console.log(`[TasksStats] Recebeu ${tasks.length} tarefas`);
+  debugTotalTime(tasks, "TODAS AS TAREFAS");
+  
   // Calcular estatísticas
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  
+  // DEBUG: Tarefas completadas
+  const completedTasksList = tasks.filter(task => task.status === 'completed');
+  debugTotalTime(completedTasksList, "TAREFAS COMPLETADAS");
   
   // Tarefas "não feitas" = tarefas que foram clicadas como "não feitas" (têm histórico de not-done)
   const notDoneTasks = tasks.filter(task => 
     task.completionHistory?.some(completion => completion.status === 'not-done')
   ).length;
+  
+  // DEBUG: Tarefas não feitas
+  const notDoneTasksList = tasks.filter(task => 
+    task.completionHistory?.some(completion => completion.status === 'not-done')
+  );
+  debugTotalTime(notDoneTasksList, "TAREFAS NÃO FEITAS");
   
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
   
@@ -61,22 +74,35 @@ export function TasksStats({ tasks }: TasksStatsProps) {
 
   // Calcular tempos totais
   const totalEstimatedTime = tasks.reduce((total, task) => {
-    return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    console.log(`[TOTAL TIME] "${task.title}": ${taskTime}min`);
+    return total + taskTime;
   }, 0);
 
   const completedTime = tasks
     .filter(task => task.status === 'completed')
     .reduce((total, task) => {
-      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      console.log(`[COMPLETED TIME] "${task.title}": ${taskTime}min`);
+      return total + taskTime;
     }, 0);
 
   const notDoneTime = tasks
     .filter(task => task.completionHistory?.some(completion => completion.status === 'not-done'))
     .reduce((total, task) => {
-      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      console.log(`[NOT DONE TIME] "${task.title}": ${taskTime}min`);
+      return total + taskTime;
     }, 0);
 
   const pendingTime = totalEstimatedTime - completedTime - notDoneTime;
+
+  // Log final dos totais
+  console.log(`[FINAL TOTALS]`);
+  console.log(`Total: ${totalEstimatedTime}min (${(totalEstimatedTime/60).toFixed(1)}h)`);
+  console.log(`Completed: ${completedTime}min (${(completedTime/60).toFixed(1)}h)`);
+  console.log(`Not Done: ${notDoneTime}min (${(notDoneTime/60).toFixed(1)}h)`);
+  console.log(`Pending: ${pendingTime}min (${(pendingTime/60).toFixed(1)}h)`);
 
   const stats = [
     {

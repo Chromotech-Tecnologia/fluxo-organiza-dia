@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +11,7 @@ import {
   RotateCcw,
   XCircle
 } from "lucide-react";
-import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
+import { getTimeInMinutes, formatTime, debugTotalTime } from "@/lib/taskUtils";
 
 interface TaskStatsImprovedProps {
   tasks: Task[];
@@ -20,6 +19,10 @@ interface TaskStatsImprovedProps {
 }
 
 export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) {
+  // DEBUG: Log detalhado das tarefas
+  console.log(`[TaskStatsImproved] Recebeu ${tasks.length} tarefas`);
+  debugTotalTime(tasks, "TODAS AS TAREFAS (TaskStatsImproved)");
+
   // Estatísticas básicas
   const totalTasks = tasks.length;
   const processedTasks = tasks.filter(task => task.isProcessed).length;
@@ -27,6 +30,10 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
   
   // Tarefas feitas (completed)
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  
+  // DEBUG: Tarefas completadas
+  const completedTasksList = tasks.filter(task => task.status === 'completed');
+  debugTotalTime(completedTasksList, "TAREFAS COMPLETADAS (TaskStatsImproved)");
   
   // Tarefas não feitas (not-done)
   const notDoneTasks = tasks.filter(task => 
@@ -50,26 +57,41 @@ export function TaskStatsImproved({ tasks, className }: TaskStatsImprovedProps) 
 
   // Calcular tempos totais usando a função getTimeInMinutes
   const totalEstimatedTime = tasks.reduce((total, task) => {
-    return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    console.log(`[TaskStatsImproved TOTAL] "${task.title}": ${taskTime}min`);
+    return total + taskTime;
   }, 0);
 
   const completedTime = tasks
     .filter(task => task.status === 'completed')
     .reduce((total, task) => {
-      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      console.log(`[TaskStatsImproved COMPLETED] "${task.title}": ${taskTime}min`);
+      return total + taskTime;
     }, 0);
 
   const notDoneTime = tasks
     .filter(task => task.completionHistory?.some(completion => completion.status === 'not-done'))
     .reduce((total, task) => {
-      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      console.log(`[TaskStatsImproved NOT DONE] "${task.title}": ${taskTime}min`);
+      return total + taskTime;
     }, 0);
 
   const pendingTime = tasks
     .filter(task => !task.isProcessed)
     .reduce((total, task) => {
-      return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+      console.log(`[TaskStatsImproved PENDING] "${task.title}": ${taskTime}min`);
+      return total + taskTime;
     }, 0);
+
+  // Log final dos totais
+  console.log(`[TaskStatsImproved FINAL TOTALS]`);
+  console.log(`Total: ${totalEstimatedTime}min (${(totalEstimatedTime/60).toFixed(1)}h)`);
+  console.log(`Completed: ${completedTime}min (${(completedTime/60).toFixed(1)}h)`);
+  console.log(`Not Done: ${notDoneTime}min (${(notDoneTime/60).toFixed(1)}h)`);
+  console.log(`Pending: ${pendingTime}min (${(pendingTime/60).toFixed(1)}h)`);
 
   // Estatísticas de tempo por categoria
   const timeStats = {

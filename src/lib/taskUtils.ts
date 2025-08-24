@@ -119,9 +119,29 @@ export function getTimeInMinutes(timeInvestment: string, customTimeMinutes?: num
     'custom': customTimeMinutes || 0
   };
   
-  console.log(`Calculando tempo para ${timeInvestment}, customTimeMinutes: ${customTimeMinutes}, resultado: ${timeValues[timeInvestment] || customTimeMinutes || 0}`);
+  const result = timeValues[timeInvestment] || customTimeMinutes || 0;
   
-  return timeValues[timeInvestment] || customTimeMinutes || 0;
+  // Log detalhado para debug
+  console.log(`[DEBUG TIME] timeInvestment: "${timeInvestment}", customTimeMinutes: ${customTimeMinutes}, resultado: ${result}min (${(result/60).toFixed(1)}h)`);
+  
+  return result;
+}
+
+// Função para debug de cálculo de tempo total
+export function debugTotalTime(tasks: Task[], filterDescription: string = ""): void {
+  console.log(`\n[DEBUG TOTAL TIME] ${filterDescription}`);
+  console.log(`Total de tarefas: ${tasks.length}`);
+  
+  let totalMinutes = 0;
+  tasks.forEach((task, index) => {
+    const taskMinutes = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+    totalMinutes += taskMinutes;
+    console.log(`${index + 1}. "${task.title}" - ${task.timeInvestment} - ${taskMinutes}min (${(taskMinutes/60).toFixed(1)}h)`);
+  });
+  
+  console.log(`TOTAL: ${totalMinutes}min (${(totalMinutes/60).toFixed(1)}h)`);
+  console.log(`Formatado: ${formatTime(totalMinutes)}`);
+  console.log('---');
 }
 
 // Função para obter cor do número da ordem (termômetro invertido: vermelho -> verde)
