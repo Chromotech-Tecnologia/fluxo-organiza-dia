@@ -1,3 +1,4 @@
+
 // Tipos principais do sistema de controle de tarefas
 
 export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
@@ -155,7 +156,7 @@ export interface TaskFilter {
   priority?: TaskPriority[];
   status?: TaskStatus[];
   assignedPersonId?: string;
-  timeInvestment?: ('low' | 'medium' | 'high')[];
+  timeInvestment?: TaskTimeInvestment[];
   category?: ('personal' | 'business')[];
   hasChecklist?: boolean;
   isForwarded?: boolean;

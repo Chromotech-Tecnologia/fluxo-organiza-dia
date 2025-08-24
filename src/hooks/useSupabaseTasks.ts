@@ -1,6 +1,7 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskFilter, TaskPriority, TaskStatus, TaskType, SubItem } from "@/types";
+import { Task, TaskFilter, TaskPriority, TaskStatus, TaskType, TaskTimeInvestment, SubItem } from "@/types";
 import { calculateInsertReordering, calculateMoveReordering, OrderAdjustment } from "@/lib/taskOrderUtils";
 
 export function useSupabaseTasks(filters?: TaskFilter) {
