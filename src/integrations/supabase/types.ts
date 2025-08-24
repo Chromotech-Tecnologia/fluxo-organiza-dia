@@ -162,6 +162,7 @@ export type Database = {
           completion_history: Json | null
           concluded_at: string | null
           created_at: string
+          custom_time_minutes: number | null
           delivery_dates: string[] | null
           description: string | null
           forward_count: number | null
@@ -190,6 +191,7 @@ export type Database = {
           completion_history?: Json | null
           concluded_at?: string | null
           created_at?: string
+          custom_time_minutes?: number | null
           delivery_dates?: string[] | null
           description?: string | null
           forward_count?: number | null
@@ -218,6 +220,7 @@ export type Database = {
           completion_history?: Json | null
           concluded_at?: string | null
           created_at?: string
+          custom_time_minutes?: number | null
           delivery_dates?: string[] | null
           description?: string | null
           forward_count?: number | null

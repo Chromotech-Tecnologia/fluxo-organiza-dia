@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFilter, TaskPriority, TaskStatus, TaskType, TaskTimeInvestment, SubItem } from "@/types";
@@ -80,7 +79,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           scheduledDate: task.scheduled_date,
           assignedPersonId: task.assigned_person_id || '',
           timeInvestment: task.time_investment as TaskTimeInvestment,
-          customTimeMinutes: (task as any).custom_time_minutes || undefined,
+          customTimeMinutes: task.custom_time_minutes || undefined,
           category: (task.category === 'work' || task.category === 'health' || task.category === 'education') 
             ? 'business' 
             : task.category as 'personal' | 'business',
