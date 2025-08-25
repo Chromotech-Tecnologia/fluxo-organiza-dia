@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -64,7 +65,7 @@ export function TasksStats({ tasks }: TasksStatsProps) {
   const concludedTasks = tasks.filter(task => task.isConcluded).length;
   const notConcludedTasks = tasks.filter(task => !task.isConcluded).length;
   
-  // Tarefas definitivas: completadas E não repassadas
+  // Tarefas definitivas: completadas E não reagendadas
   const definitiveTasks = tasks.filter(task => 
     task.status === 'completed' && 
     !task.isForwarded && 
@@ -72,10 +73,10 @@ export function TasksStats({ tasks }: TasksStatsProps) {
     (!task.forwardHistory || task.forwardHistory.length === 0)
   ).length;
 
-  // Calcular tempos totais
+  // Calcular tempos totais - CORRIGINDO AQUI
   const totalEstimatedTime = tasks.reduce((total, task) => {
     const taskTime = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
-    console.log(`[TOTAL TIME] "${task.title}": ${taskTime}min`);
+    console.log(`[TOTAL TIME] "${task.title}": timeInvestment="${task.timeInvestment}", customTimeMinutes=${task.customTimeMinutes}, calculado=${taskTime}min`);
     return total + taskTime;
   }, 0);
 

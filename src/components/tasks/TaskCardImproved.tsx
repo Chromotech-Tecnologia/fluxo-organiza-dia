@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,15 +87,23 @@ export function TaskCardImproved({
 
   const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
-  const canReschedule = hasCompletion && (lastCompletion?.status === 'completed' || lastCompletion?.status === 'not-done');
-
-  const today = getCurrentDateInSaoPaulo();
   
-  // Verificar se a tarefa foi reagendada hoje baseado no histórico
+  // Verificar se foi reagendada hoje baseado no histórico
+  const today = getCurrentDateInSaoPaulo();
   const wasRescheduledToday = task.forwardHistory?.some(forward => {
     const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
     return forwardDate === today;
   }) || false || isRescheduling;
+
+  // O botão reagendar só pode aparecer se:
+  // 1. A tarefa não foi concluída E
+  // 2. A tarefa não tem status de completed/not-done OU foi reagendada hoje
+  const canShowReschedule = !task.isConcluded && (
+    !hasCompletion || 
+    lastCompletion?.status === 'pending' || 
+    wasRescheduledToday || 
+    isRescheduling
+  );
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
@@ -298,7 +307,7 @@ export function TaskCardImproved({
                     {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
                   </Button>
                   
-                  {canReschedule && (
+                  {canShowReschedule && (
                     <Button
                       size="sm"
                       variant="outline"
