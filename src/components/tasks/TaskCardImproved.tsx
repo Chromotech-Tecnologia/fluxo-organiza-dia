@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +10,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Progress } from '@/components/ui/progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { getOrderNumberColor, getPriorityColor } from '@/lib/taskUtils';
+import { getOrderNumberColor, getPriorityColor, getTimeInMinutes, formatTime } from '@/lib/taskUtils';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 
@@ -57,15 +56,12 @@ export function TaskCardImproved({
     transition,
   };
 
-  // Encontrar a equipe delegada
   const assignedTeam = task.assignedPersonId 
     ? teamMembers.find(team => team.id === task.assignedPersonId)
     : null;
 
-  // Verificar se a tarefa foi reagendada (tem histórico de reagendamentos)
   const wasRescheduled = task.forwardHistory && task.forwardHistory.length > 0;
 
-  // Determinar cores baseadas no status
   const getCardColor = () => {
     if (task.isConcluded) return 'border-green-500 bg-green-50';
     
@@ -82,34 +78,31 @@ export function TaskCardImproved({
     return 'border-border bg-background';
   };
 
-  // Calcular progresso do checklist
   const completedSubItems = task.subItems?.filter(item => item.completed).length || 0;
   const totalSubItems = task.subItems?.length || 0;
   const checklistProgress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
 
-  // Verificar se tem baixa
   const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
   const canReschedule = hasCompletion && (lastCompletion?.status === 'completed' || lastCompletion?.status === 'not-done');
 
-  // LÓGICA CORRIGIDA: só mostrar laranja se a tarefa foi processada E reagendada DA sua data agendada
   const today = getCurrentDateInSaoPaulo();
   
-  // Verificar se a tarefa foi efetivamente reagendada DA sua data agendada para outra data
   const wasForwardedFromScheduledDate = task.forwardHistory?.some(forward => 
     forward.originalDate === task.scheduledDate
   ) || false;
 
-  // O botão só deve ficar laranja se:
-  // 1. A tarefa foi marcada como completed/not-done na sua data agendada
-  // 2. E a tarefa foi reagendada DA sua data agendada para outra data
   const wasRescheduledToday = canReschedule && lastCompletion && 
-    lastCompletion.date === task.scheduledDate && // Completion na data agendada
+    lastCompletion.date === task.scheduledDate && 
     (lastCompletion.status === 'completed' || lastCompletion.status === 'not-done') &&
-    wasForwardedFromScheduledDate; // Foi reagendada DA data agendada
+    wasForwardedFromScheduledDate;
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
+
+  // Obter tempo formatado
+  const timeMinutes = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
+  const formattedTime = formatTime(timeMinutes);
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (
@@ -152,7 +145,6 @@ export function TaskCardImproved({
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
               
-              {/* Número da tarefa com cor dinâmica */}
               {taskIndex !== undefined && (
                 <Badge 
                   variant="outline" 
@@ -162,7 +154,6 @@ export function TaskCardImproved({
                 </Badge>
               )}
               
-              {/* Nome da equipe delegada (se houver) */}
               {assignedTeam && (
                 <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300 flex-shrink-0">
                   {assignedTeam.name}
@@ -179,9 +170,7 @@ export function TaskCardImproved({
               </div>
             </div>
 
-            {/* Menu de ações */}
             <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Histórico com contador */}
               {onHistory && historyCount > 0 && (
                 <Button 
                   variant="ghost" 
@@ -266,11 +255,11 @@ export function TaskCardImproved({
               </Badge>
             )}
 
-            {/* Tempo */}
-            {task.timeInvestment !== 'low' && (
+            {/* Tempo - mostrar tempo exato em vez de alto/médio */}
+            {timeMinutes > 0 && (
               <Badge variant="outline" className="text-xs h-5 bg-indigo-100 text-indigo-800 border-indigo-300">
                 <Clock className="h-2.5 w-2.5 mr-1" />
-                {task.timeInvestment === 'medium' ? 'Médio' : 'Alto'}
+                {formattedTime}
               </Badge>
             )}
           </div>

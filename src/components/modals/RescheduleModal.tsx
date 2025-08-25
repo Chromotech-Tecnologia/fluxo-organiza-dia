@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
   const [keepChecklistStatus, setKeepChecklistStatus] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Calcular próximo dia útil (segunda-feira se for fim de semana)
   const getNextBusinessDay = () => {
     if (!taskToForward) return undefined;
     
@@ -42,7 +40,6 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
     return nextDay;
   };
 
-  // Definir data padrão quando abrir o modal
   React.useEffect(() => {
     if (isForwardTaskModalOpen && !selectedDate) {
       setSelectedDate(getNextBusinessDay());
@@ -100,7 +97,6 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
         updatedAt: new Date().toISOString()
       };
 
-      // Adicionar a nova tarefa
       await addTask(newTask);
 
       toast({
@@ -116,23 +112,25 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
       setKeepOrder(true);
       setKeepChecklistStatus(true);
       
-      // Invalidar todas as queries de tarefas para forçar atualização
+      // Invalidar cache mais agressivamente
       console.log('Invalidando cache das tarefas após reagendamento...');
       await queryClient.invalidateQueries({ 
         queryKey: ['tasks'],
-        refetchType: 'active'
+        refetchType: 'all'
       });
-      console.log('Cache das tarefas invalidado após reagendamento');
       
-      // Notificar componente pai para atualizar dados
+      // Aguardar um pouco e invalidar novamente para garantir
+      setTimeout(async () => {
+        await queryClient.invalidateQueries({ 
+          queryKey: ['tasks'],
+          refetchType: 'all'
+        });
+      }, 100);
+      
+      // Executar callback se fornecido
       if (onRescheduleComplete) {
         console.log('Executando callback de reagendamento...');
-        try {
-          await onRescheduleComplete();
-          console.log('Callback de reagendamento executado com sucesso');
-        } catch (callbackError) {
-          console.error('Erro no callback de reagendamento:', callbackError);
-        }
+        await onRescheduleComplete();
       }
 
     } catch (error) {
@@ -155,7 +153,6 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Mostrar status atual da tarefa */}
           {taskToForward && (
             <div className="p-3 bg-muted rounded-lg">
               <Label className="text-sm font-medium">Tarefa atual:</Label>
@@ -185,7 +182,6 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
             />
           </div>
 
-          {/* Opções de reagendamento */}
           <div className="space-y-3 p-3 bg-muted rounded-lg">
             <div className="flex items-center justify-between">
               <Label htmlFor="keep-order" className="text-sm">Manter ordenação da tarefa?</Label>

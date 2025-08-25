@@ -16,7 +16,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         .select('*')
         .order('task_order', { ascending: true });
 
-      // Aplicar filtros de data
       if (filters?.dateRange) {
         if (filters.dateRange.start && filters.dateRange.end) {
           query = query
@@ -25,7 +24,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
-      // Aplicar outros filtros
       if (filters?.type && filters.type.length > 0) {
         query = query.in('type', filters.type);
       }
@@ -35,7 +33,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       }
 
       if (filters?.status && filters.status.length > 0) {
-        // Não aplicar filtro "not-done" no Supabase, será tratado no client-side
         const supabaseStatuses = filters.status.filter(s => s !== 'not-done');
         if (supabaseStatuses.length > 0) {
           query = query.in('status', supabaseStatuses);
@@ -63,9 +60,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       console.log('Tarefas encontradas:', data?.length || 0);
 
-      // Converter dados do Supabase para o tipo Task
       let convertedTasks: Task[] = (data || []).map(task => {
-        // Verificar se forward_history é um array válido
         const forwardHistory = Array.isArray(task.forward_history) ? task.forward_history : [];
         const hasForwardHistory = forwardHistory.length > 0;
         
@@ -101,7 +96,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         };
       });
 
-      // Aplicar filtros client-side que não podem ser feitos no Supabase
       if (filters?.hasChecklist !== undefined) {
         convertedTasks = convertedTasks.filter(task => {
           const hasSubItems = task.subItems && task.subItems.length > 0;
@@ -109,7 +103,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         });
       }
 
-      // Filtro para reagendadas/não reagendadas
       if (filters?.isForwarded !== undefined) {
         convertedTasks = convertedTasks.filter(task => {
           const isTaskForwarded = task.isForwarded || 
@@ -133,7 +126,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         });
       }
 
-      // Filtro especial para "não feito" - tarefas que têm histórico de not-done
       if (filters?.status && filters.status.includes('not-done')) {
         convertedTasks = convertedTasks.filter(task => {
           return task.completionHistory?.some(completion => completion.status === 'not-done');
@@ -142,6 +134,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       return convertedTasks;
     },
+    staleTime: 30 * 1000, // 30 segundos
+    gcTime: 5 * 60 * 1000, // 5 minutos
   });
 
   const applyOrderAdjustments = async (adjustments: OrderAdjustment[]) => {
@@ -165,7 +159,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     console.log('Adicionando nova tarefa:', taskData);
     
-    // Calcular reordenamento necessário
     const reorderResult = calculateInsertReordering(
       tasks,
       taskData.scheduledDate,
@@ -173,10 +166,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     );
 
     try {
-      // Aplicar reordenamento das tarefas existentes
       await applyOrderAdjustments(reorderResult.adjustments);
 
-      // Inserir nova tarefa
       const { data, error } = await supabase
         .from('tasks')
         .insert({
@@ -216,7 +207,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       return data;
     } catch (error) {
       console.error('Erro durante inserção com reordenamento:', error);
-      await refetch(); // Recarregar para garantir consistência
+      await refetch();
       throw error;
     }
   };
@@ -230,7 +221,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     try {
-      // Se a ordem ou data foi alterada, calcular reordenamento
       let reorderResult = { adjustments: [], message: '' };
       
       if (updates.order && updates.order !== currentTask.order) {
@@ -242,16 +232,13 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           updates.order
         );
         
-        // Aplicar reordenamento das outras tarefas
         await applyOrderAdjustments(reorderResult.adjustments);
       } else if (updates.scheduledDate && updates.scheduledDate !== currentTask.scheduledDate) {
-        // Se mudou apenas a data, colocar no final da nova data
         const tasksForNewDate = tasks.filter(t => t.scheduledDate === updates.scheduledDate);
         const maxOrder = Math.max(...tasksForNewDate.map(t => t.order || 0), 0);
         updates.order = maxOrder + 1;
       }
 
-      // Atualizar a tarefa principal
       const { data, error } = await supabase
         .from('tasks')
         .update({
@@ -274,6 +261,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           is_routine: updates.isRoutine,
           routine_config: updates.recurrence as any,
           task_order: updates.order,
+          concluded_at: updates.isConcluded ? (updates.concludedAt || new Date().toISOString()) : null,
           updated_at: new Date().toISOString()
         })
         .eq('id', taskId)
@@ -294,7 +282,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       return data;
     } catch (error) {
       console.error('Erro durante atualização com reordenamento:', error);
-      await refetch(); // Recarregar para garantir consistência
+      await refetch();
       throw error;
     }
   };
@@ -320,10 +308,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     console.log('Reordenando tarefas:', taskIds);
 
     try {
-      // Atualizar a ordem de cada tarefa individualmente com ordem 1-based
       for (let i = 0; i < taskIds.length; i++) {
         const taskId = taskIds[i];
-        const newOrder = i + 1; // Ordem 1-based
+        const newOrder = i + 1;
 
         const { error } = await supabase
           .from('tasks')

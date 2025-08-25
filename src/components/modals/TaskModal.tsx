@@ -40,7 +40,7 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         });
         toast({
           title: "Tarefa atualizada",
-          description: "A tarefa foi atualizada com sucesso. Outras tarefas foram reordenadas automaticamente se necessário.",
+          description: "A tarefa foi atualizada com sucesso.",
         });
         console.log('Tarefa atualizada com sucesso');
       } else {
@@ -58,30 +58,32 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         });
         toast({
           title: "Tarefa criada",
-          description: "A nova tarefa foi criada com sucesso. Outras tarefas foram reordenadas automaticamente se necessário.",
+          description: "A nova tarefa foi criada com sucesso.",
         });
         console.log('Nova tarefa criada com sucesso');
       }
       
       closeTaskModal();
       
-      // Invalidar todas as queries de tarefas para forçar atualização
-      console.log('Invalidando cache das tarefas...');
+      // Invalidar cache de forma mais robusta
+      console.log('Invalidando cache das tarefas após salvar...');
       await queryClient.invalidateQueries({ 
         queryKey: ['tasks'],
-        refetchType: 'active'
+        refetchType: 'all'
       });
-      console.log('Cache das tarefas invalidado com sucesso');
       
-      // Notificar componente pai se fornecido
+      // Aguardar um pouco e invalidar novamente
+      setTimeout(async () => {
+        await queryClient.invalidateQueries({ 
+          queryKey: ['tasks'],
+          refetchType: 'all'
+        });
+      }, 100);
+      
+      // Executar callback se fornecido
       if (onTaskSaved) {
         console.log('Executando callback após salvar tarefa...');
-        try {
-          await onTaskSaved();
-          console.log('Callback após salvar tarefa executado com sucesso');
-        } catch (callbackError) {
-          console.error('Erro no callback após salvar tarefa:', callbackError);
-        }
+        await onTaskSaved();
       }
       
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,36 +33,32 @@ const TasksPage = () => {
     }
   });
   const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
-  const { tasks, updateTask, deleteTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
+  const { tasks, updateTask, deleteTask, reorderTasks, concludeTask } = useSupabaseTasks(taskFilters);
   const queryClient = useQueryClient();
 
-  // Função para atualizar dados após qualquer ação usando invalidação robusta
+  // Função para forçar atualização de dados mais robusta
   const refreshData = async () => {
     try {
-      console.log('Invalidando e atualizando dados das tarefas...');
+      console.log('Forçando atualização completa dos dados...');
       
-      // Invalidar todas as queries de tarefas
+      // Invalidar todas as queries relacionadas a tarefas
       await queryClient.invalidateQueries({ 
         queryKey: ['tasks'],
-        refetchType: 'active'
+        refetchType: 'all'
       });
       
-      // Aguardar um momento para garantir que a invalidação foi processada
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Aguardar um momento
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Forçar refetch como backup
-      await refetch();
+      // Segunda invalidação para garantir
+      await queryClient.invalidateQueries({ 
+        queryKey: ['tasks'],
+        refetchType: 'all'
+      });
       
-      console.log('Dados das tarefas atualizados com sucesso');
+      console.log('Dados atualizados com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar dados:', error);
-      // Tentar apenas refetch em caso de erro na invalidação
-      try {
-        await refetch();
-        console.log('Fallback refetch executado com sucesso');
-      } catch (refetchError) {
-        console.error('Erro no fallback refetch:', refetchError);
-      }
     }
   };
 
@@ -72,11 +67,9 @@ const TasksPage = () => {
     useSensor(KeyboardSensor)
   );
 
-  // Aplicar busca e ordenação
   const filteredTasks = tasks.filter(task => searchInTask(task, searchQuery));
   const sortedTasks = sortTasks(filteredTasks, sortBy);
 
-  // Para múltiplos dias, mostrar a ordem real sem reordenar
   const isMultipleDays = taskFilters.dateRange?.start !== taskFilters.dateRange?.end;
   const displayTasks = isMultipleDays 
     ? filteredTasks.sort((a, b) => {
@@ -87,7 +80,6 @@ const TasksPage = () => {
       })
     : sortedTasks;
 
-  // Calcular ordem máxima para cores
   const maxOrder = Math.max(...tasks.map(t => t.order || 0), 1);
 
   const handleTaskSelection = (task: Task, checked: boolean) => {
@@ -180,7 +172,6 @@ const TasksPage = () => {
     const activeTaskId = active.id as string;
     const overTaskId = over.id as string;
 
-    // Encontrar as tarefas
     const activeTask = displayTasks.find(task => task.id === activeTaskId);
     const overTask = displayTasks.find(task => task.id === overTaskId);
     
@@ -241,7 +232,6 @@ const TasksPage = () => {
     }
   };
 
-  // Verificar se todas as tarefas do período estão concluídas
   const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
 
   return (
@@ -272,7 +262,6 @@ const TasksPage = () => {
         </Card>
       )}
 
-      {/* Filtros Horizontais */}
       <TaskFiltersHorizontal 
         currentFilters={taskFilters}
         onFiltersChange={setTaskFilters}
@@ -284,7 +273,6 @@ const TasksPage = () => {
 
       <TaskStatsCompact tasks={displayTasks} />
 
-      {/* Lista de Tarefas com Drag & Drop */}
       <div className="grid gap-4">
         {displayTasks.length === 0 ? (
           <Card>
@@ -309,7 +297,6 @@ const TasksPage = () => {
           </Card>
         ) : (
           <>
-            {/* Checkbox para selecionar todas */}
             <div className="flex items-center gap-2 px-1">
               <Checkbox
                 checked={selectedTasks.length === displayTasks.length}
@@ -362,7 +349,6 @@ const TasksPage = () => {
         />
       </div>
 
-      {/* Modais */}
       <TaskHistoryModal
         task={taskForHistory}
         isOpen={!!taskForHistory}
