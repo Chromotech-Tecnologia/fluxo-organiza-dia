@@ -1,4 +1,3 @@
-
 import { Task } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 
@@ -109,22 +108,26 @@ export function sortTasks(tasks: Task[], sortBy: SortOption): Task[] {
 
 // Função para obter o valor em minutos baseado no timeInvestment
 export function getTimeInMinutes(timeInvestment: string, customTimeMinutes?: number): number {
+  // Se o timeInvestment for 'custom' e tiver customTimeMinutes, usar esse valor
+  if (timeInvestment === 'custom' && customTimeMinutes) {
+    console.log(`[DEBUG TIME] timeInvestment: "custom", customTimeMinutes: ${customTimeMinutes}, resultado: ${customTimeMinutes}min (${(customTimeMinutes/60).toFixed(1)}h)`);
+    return customTimeMinutes;
+  }
+  
   const timeValues: Record<string, number> = {
+    // Tempos personalizados pré-definidos
     'custom-5': 5,
     'custom-30': 30,
     'custom-1h': 60,
-    'low': 60,      // 1 hora 
-    'medium': 120,  // 2 horas
-    'high': 240,    // 4 horas
     'custom-4h': 240,
     'custom-8h': 480,
+    // Tempos padrão - CORRIGIDOS
+    'low': 30,      // Era 60, agora 30min (0.5h)
+    'medium': 120,  // Era 120, mantém 2 horas
+    'high': 480,    // Era 240, agora 8 horas (não 4h)
+    // Fallback para custom sem valor
     'custom': customTimeMinutes || 0
   };
-  
-  // Se o timeInvestment for 'custom' e tiver customTimeMinutes, usar esse valor
-  if (timeInvestment === 'custom' && customTimeMinutes) {
-    return customTimeMinutes;
-  }
   
   const result = timeValues[timeInvestment] || 0;
   

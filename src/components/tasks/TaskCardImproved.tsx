@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ export function TaskCardImproved({
   maxOrder = 100
 }: TaskCardImprovedProps) {
   const [isRescheduling, setIsRescheduling] = React.useState(false);
+  const [justRescheduled, setJustRescheduled] = React.useState(false);
   
   const {
     attributes,
@@ -107,8 +109,8 @@ export function TaskCardImproved({
     return isToday && isRealReschedule && isUserRescheduleAction;
   }) || false;
 
-  // Sempre mostrar o botão reagendar (remover condicionais)
-  const canShowReschedule = !task.isConcluded;
+  // Sempre mostrar o botão reagendar
+  const canShowReschedule = true; // Sempre mostrar
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
@@ -138,11 +140,39 @@ export function TaskCardImproved({
   };
 
   const handleRescheduleClick = () => {
+    console.log('Clicou reagendar - mudando estado local imediatamente');
     setIsRescheduling(true);
+    setJustRescheduled(true);
     onForward();
+    
     // Reset after a delay to allow UI to update
-    setTimeout(() => setIsRescheduling(false), 2000);
+    setTimeout(() => {
+      setIsRescheduling(false);
+      // Manter justRescheduled por mais tempo para garantir que seja visível
+      setTimeout(() => {
+        setJustRescheduled(false);
+      }, 1000);
+    }, 500);
   };
+
+  // Função para lidar com a exclusão sem abrir o formulário
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Clicou excluir - chamando onDelete diretamente');
+    onDelete?.();
+  };
+
+  // Função para lidar com a edição
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Clicou editar - chamando onEdit');
+    onEdit?.();
+  };
+
+  // Determinar se o botão deve estar laranja
+  const shouldShowOrangeButton = wasActuallyRescheduledToday || isRescheduling || justRescheduled;
 
   return (
     <Card 
@@ -214,13 +244,13 @@ export function TaskCardImproved({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   {onEdit && (
-                    <DropdownMenuItem onClick={onEdit}>
+                    <DropdownMenuItem onClick={handleEditClick}>
                       <Edit2 className="h-4 w-4 mr-2" />
                       Editar
                     </DropdownMenuItem>
                   )}
                   {onDelete && (
-                    <DropdownMenuItem onClick={onDelete} className="text-red-600">
+                    <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
                       <Trash2 className="h-4 w-4 mr-2" />
                       Excluir
                     </DropdownMenuItem>
@@ -312,7 +342,7 @@ export function TaskCardImproved({
                     {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
                   </Button>
                   
-                  {/* Sempre mostrar o botão reagendar */}
+                  {/* Sempre mostrar o botão reagendar com lógica corrigida */}
                   <Button
                     size="sm"
                     variant="outline"
@@ -321,12 +351,12 @@ export function TaskCardImproved({
                       handleRescheduleClick();
                     }}
                     className={`h-7 px-2 text-xs min-w-[90px] ${
-                      wasActuallyRescheduledToday || isRescheduling
+                      shouldShowOrangeButton
                         ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
                         : 'text-orange-600 border-orange-600 hover:bg-orange-50'
                     }`}
                   >
-                    {wasActuallyRescheduledToday || isRescheduling ? '✓ Reagendada' : 'Reagendar'}
+                    {shouldShowOrangeButton ? '✓ Reagendada' : 'Reagendar'}
                   </Button>
                   
                   <Button
@@ -344,18 +374,37 @@ export function TaskCardImproved({
               )}
 
               {task.isConcluded && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUnconclude();
-                  }}
-                  className="h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50"
-                >
-                  <Undo className="h-3 w-3 mr-1" />
-                  Desfazer
-                </Button>
+                <>
+                  {/* Mostrar botão reagendar mesmo para tarefas concluídas */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRescheduleClick();
+                    }}
+                    className={`h-7 px-2 text-xs min-w-[90px] ${
+                      shouldShowOrangeButton
+                        ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
+                        : 'text-orange-600 border-orange-600 hover:bg-orange-50'
+                    }`}
+                  >
+                    {shouldShowOrangeButton ? '✓ Reagendada' : 'Reagendar'}
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUnconclude();
+                    }}
+                    className="h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50"
+                  >
+                    <Undo className="h-3 w-3 mr-1" />
+                    Desfazer
+                  </Button>
+                </>
               )}
             </div>
 
