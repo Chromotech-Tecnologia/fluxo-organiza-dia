@@ -1,48 +1,96 @@
+export type TaskType = 'feature' | 'bug' | 'chore' | 'documentation';
+export type TaskPriority = 'high' | 'medium' | 'low';
+export type TaskStatus = 'pending' | 'in progress' | 'completed' | 'blocked';
+export type TaskTimeInvestment = 'low' | 'medium' | 'high' | 'custom';
 
-// Tipos principais do sistema de controle de tarefas
-
-export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
-export type TaskPriority = 'none' | 'priority' | 'extreme';
-export type TaskTimeInvestment = 'custom-5' | 'custom-30' | 'low' | 'medium' | 'high' | 'custom-4h' | 'custom-8h' | 'custom';
-export type TaskCategory = 'personal' | 'business';
-export type TaskStatus = 'pending' | 'completed' | 'not-done' | 'forwarded-date' | 'forwarded-person';
-export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
-
-export interface Skill {
+export interface SubItem {
   id: string;
-  name: string;
-  observation: string;
-  area: string;
+  label: string;
+  checked: boolean;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: TaskPriority;
+  status: TaskStatus;
+  scheduledDate: string;
+  assignedPersonId: string;
+  timeInvestment: TaskTimeInvestment;
+  customTimeMinutes?: number;
+  category: 'personal' | 'business';
+  subItems: SubItem[];
+  observations: string;
+  completionHistory: any[];
+  forwardHistory: any[];
+  forwardCount: number;
+  deliveryDates: string[];
+  isRoutine: boolean;
+  recurrence: any;
+  order: number;
   createdAt: string;
   updatedAt: string;
+  isRecurrent: boolean;
+  isForwarded: boolean;
+  isConcluded: boolean;
+  isProcessed: boolean;
 }
 
-export interface Project {
-  id: string;
-  name: string;
-  status: 'apresentado' | 'cotado' | 'iniciado' | 'finalizado';
+export interface TaskFilter {
+  dateRange?: { start: string; end: string };
+  type?: TaskType[];
+  priority?: TaskPriority[];
+  status?: TaskStatus[];
+  assignedPersonId?: string;
+  timeInvestment?: TaskTimeInvestment[];
+  category?: ('personal' | 'business')[];
+  hasChecklist?: boolean;
+  isForwarded?: boolean;
+  noOrder?: boolean;
+  isProcessed?: boolean;
 }
 
-export interface TeamMember {
+export interface TaskStats {
+  totalTasks: number;
+  completedTasks: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  completionRate: number;
+  averageForwards: number;
+}
+
+export interface TaskFormValues {
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: TaskPriority;
+  status: TaskStatus;
+  scheduledDate: string;
+  assignedPersonId: string;
+  timeInvestment: TaskTimeInvestment;
+  customTimeMinutes?: number;
+  category: 'personal' | 'business';
+  subItems: SubItem[];
+  observations: string;
+  completionHistory: any[];
+  forwardHistory: any[];
+  forwardCount: number;
+  deliveryDates: string[];
+  isRoutine: boolean;
+  recurrence: any;
+  order: number;
+  isRecurrent: boolean;
+  isForwarded: boolean;
+  isConcluded: boolean;
+  isProcessed: boolean;
+}
+
+export interface User {
   id: string;
   name: string;
-  role: string;
   email: string;
-  phone: string;
-  address: {
-    cep: string;
-    street: string;
-    number: string;
-    complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-  };
-  status: 'ativo' | 'inativo';
-  isPartner: boolean;
-  skillIds: string[];
-  origin: string;
-  projects: Project[];
   createdAt: string;
   updatedAt: string;
 }
@@ -57,145 +105,6 @@ export interface Person {
   updatedAt: string;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SubItem {
-  id: string;
-  text: string;
-  completed: boolean;
-  order: number;
-}
-
-export interface RecurrenceConfig {
-  type: RecurrenceType;
-  interval: number; // a cada X dias/semanas/meses/anos
-  endDate?: string;
-  daysOfWeek?: number[]; // para semanal
-  dayOfMonth?: number; // para mensal
-  monthOfYear?: number; // para anual
-}
-
-export interface ForwardRecord {
-  forwardedAt: string;
-  forwardedTo?: string | null;
-  newDate: string;
-  originalDate: string;
-  statusAtForward: TaskStatus;
-  reason: string;
-}
-
-export interface CompletionRecord {
-  completedAt: string;
-  status: 'completed' | 'not-done';
-  date: string;
-  wasForwarded?: boolean;
-}
-
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  type: TaskType;
-  priority: TaskPriority;
-  timeInvestment: TaskTimeInvestment;
-  customTimeMinutes?: number; // Novo campo para tempo personalizado
-  category: TaskCategory;
-  status: TaskStatus;
-  assignedPersonId?: string;
-  subItems: SubItem[];
-  deliveryDates: string[];
-  observations: string;
-  order: number;
-  isRecurrent: boolean;
-  isRoutine: boolean;
-  routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
-  routineStartDate?: string;
-  routineEndDate?: string;
-  recurrence?: RecurrenceConfig;
-  forwardHistory: ForwardRecord[];
-  forwardCount: number;
-  completionHistory: CompletionRecord[];
-  completedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  scheduledDate: string;
-  isForwarded: boolean;
-  isConcluded?: boolean;
-  concludedAt?: string;
-  isProcessed?: boolean;
-}
-
-export interface DailyReport {
-  id: string;
-  date: string;
-  totalTasks: number;
-  completedTasks: number;
-  completedInDay: number;
-  forwardedTasks: number;
-  meetingTasks: number;
-  notDoneTasks: number;
-  averageForwards: number;
-  isClosed: boolean;
-  closedAt?: string;
-  notes: string;
-}
-
-export interface TaskFilter {
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-  type?: TaskType[];
-  priority?: TaskPriority[];
-  status?: TaskStatus[];
-  assignedPersonId?: string;
-  timeInvestment?: TaskTimeInvestment[];
-  category?: ('personal' | 'business')[];
-  hasChecklist?: boolean;
-  isForwarded?: boolean;
-  noOrder?: boolean;
-  isConcluded?: boolean;
-  isProcessed?: boolean;
-}
-
-export interface TaskStats {
-  totalTasks: number;
-  completedTasks: number;
-  pendingTasks: number;
-  overdueTasks: number;
-  completionRate: number;
-  averageForwards: number;
-  topPersonByTasks?: Person;
-  mostForwardedTask?: Task;
-}
-
-// Form types
-export interface TaskFormValues {
-  title: string;
-  description?: string;
-  type: TaskType;
-  priority: TaskPriority;
-  timeInvestment: TaskTimeInvestment;
-  customTimeMinutes?: number; // Novo campo para tempo personalizado
-  category: TaskCategory;
-  assignedPersonId?: string;
-  scheduledDate: string;
-  order: number;
-  observations?: string;
-  isRoutine: boolean;
-  routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
-  routineStartDate?: string;
-  routineEndDate?: string;
-  subItems: SubItem[];
-}
-
 export interface PersonFormValues {
   name: string;
   role: string;
@@ -203,10 +112,51 @@ export interface PersonFormValues {
   isPartner: boolean;
 }
 
+export interface Skill {
+  id: string;
+  name: string;
+  area: string;
+  observation: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SkillFormValues {
   name: string;
-  observation: string;
   area: string;
+  observation: string;
+}
+
+export interface Address {
+  cep: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  address: Address;
+  skillIds: string[];
+  status: 'ativo' | 'inativo';
+  isPartner: boolean;
+  origin: string;
+  projects: Project[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamMemberFilter {
+  search?: string;
+  status?: 'ativo' | 'inativo';
+  skillIds?: string[];
 }
 
 export interface TeamMemberFormValues {
@@ -214,24 +164,25 @@ export interface TeamMemberFormValues {
   role: string;
   email: string;
   phone: string;
-  address: {
-    cep: string;
-    street: string;
-    number: string;
-    complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-  };
+  address: Address;
+  skillIds: string[];
   status: 'ativo' | 'inativo';
   isPartner: boolean;
-  skillIds: string[];
   origin: string;
   projects: Project[];
 }
 
-export interface TeamMemberFilter {
-  search?: string;
-  skillIds?: string[];
-  status?: 'ativo' | 'inativo';
+export interface DailyReport {
+  date: string;
+  totalTasks: number;
+  completedTasks: number;
+  forwardedTasks: number;
+}
+
+export type ProjectStatus = 'apresentado' | 'cotado' | 'iniciado' | 'finalizado';
+
+export interface Project {
+  id: string;
+  name: string;
+  status: ProjectStatus;
 }

@@ -1,81 +1,74 @@
 
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AppLayout } from "./components/layout/AppLayout";
-import { AuthGuard } from "./components/auth/AuthGuard";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import Index from "@/pages/Index";
+import TasksPage from "@/pages/TasksPage";
+import PeoplePage from "@/pages/PeoplePage";
+import SkillsPage from "@/pages/SkillsPage";
+import StatsPage from "@/pages/StatsPage";
+import CalendarPage from "@/pages/CalendarPage";
+import ReportsPage from "@/pages/ReportsPage";
+import DailyClosePage from "@/pages/DailyClosePage";
+import BackupPage from "@/pages/BackupPage";
+import SettingsPage from "@/pages/SettingsPage";
+import MigrationPage from "@/pages/MigrationPage";
+import NotFound from "@/pages/NotFound";
+import "./App.css";
 
-// Modals
-import { PersonModal } from "./components/modals/PersonModal";
-import { DeleteModal } from "./components/modals/DeleteModal";
-import { DailyCloseModal } from "./components/modals/DailyCloseModal";
-import { SkillModal } from "./components/modals/SkillModal";
-import { TeamMemberModal } from "./components/modals/TeamMemberModal";
-import { ForwardTaskModal } from "./components/modals/ForwardTaskModal";
-
-// Pages
-import Dashboard from "./pages/Dashboard";
-import TasksPage from "./pages/TasksPage";
-import CalendarPage from "./pages/CalendarPage";
-import PeoplePage from "./pages/PeoplePage";
-import ReportsPage from "./pages/ReportsPage";
-import DailyClosePage from "./pages/DailyClosePage";
-import StatsPage from "./pages/StatsPage";
-import SettingsPage from "./pages/SettingsPage";
-import BackupPage from "./pages/BackupPage";
-import { SkillsPage } from "./pages/SkillsPage";
-import NotFound from "./pages/NotFound";
-
-// Create QueryClient with better configuration for immediate updates
+// Configure React Query with security considerations
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      staleTime: 30 * 1000, // Reduzido de 5 minutos para 30 segundos
+      retry: (failureCount, error: any) => {
+        // Don't retry on authentication errors
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        // Limit retries to prevent abuse
+        return failureCount < 2;
+      },
+      staleTime: 30 * 1000, // 30 seconds
       gcTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false, // Prevent data leaks
+    },
+    mutations: {
+      retry: false, // Don't retry mutations to prevent duplicate operations
     },
   },
 });
 
-const App = () => {
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <Router>
           <AuthGuard>
             <AppLayout>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Index />} />
                 <Route path="/tasks" element={<TasksPage />} />
-                <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/people" element={<PeoplePage />} />
                 <Route path="/skills" element={<SkillsPage />} />
+                <Route path="/stats" element={<StatsPage />} />
+                <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/daily-close" element={<DailyClosePage />} />
-                <Route path="/stats" element={<StatsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/backup" element={<BackupPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/migration" element={<MigrationPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
-            
-            {/* Global Modals - TaskModal removido pois está no TasksPage */}
-            <PersonModal />
-            <SkillModal />
-            <TeamMemberModal />
-            <ForwardTaskModal />
-            <DeleteModal />
-            <DailyCloseModal />
           </AuthGuard>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
-};
+}
 
 export default App;

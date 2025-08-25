@@ -26,7 +26,7 @@ export type Database = {
           pending_tasks: number | null
           total_tasks: number | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           completed_tasks?: number | null
@@ -39,7 +39,7 @@ export type Database = {
           pending_tasks?: number | null
           total_tasks?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           completed_tasks?: number | null
@@ -52,7 +52,7 @@ export type Database = {
           pending_tasks?: number | null
           total_tasks?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -68,7 +68,7 @@ export type Database = {
           phone: string | null
           role: string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           active?: boolean
@@ -81,7 +81,7 @@ export type Database = {
           phone?: string | null
           role?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           active?: boolean
@@ -94,7 +94,7 @@ export type Database = {
           phone?: string | null
           role?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -131,7 +131,7 @@ export type Database = {
           level: string | null
           name: string
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           category?: string | null
@@ -141,7 +141,7 @@ export type Database = {
           level?: string | null
           name: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           category?: string | null
@@ -151,7 +151,7 @@ export type Database = {
           level?: string | null
           name?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -183,7 +183,7 @@ export type Database = {
           title: string
           type: string
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           assigned_person_id?: string | null
@@ -212,7 +212,7 @@ export type Database = {
           title: string
           type: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           assigned_person_id?: string | null
@@ -241,7 +241,7 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -260,7 +260,7 @@ export type Database = {
           skill_ids: string[] | null
           status: string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -276,7 +276,7 @@ export type Database = {
           skill_ids?: string[] | null
           status?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -292,7 +292,7 @@ export type Database = {
           skill_ids?: string[] | null
           status?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
