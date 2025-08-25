@@ -67,6 +67,7 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
       await updateTask(taskToForward.id, {
         forwardHistory: [...(taskToForward.forwardHistory || []), forwardRecord],
         isConcluded: true,
+        concludedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
 

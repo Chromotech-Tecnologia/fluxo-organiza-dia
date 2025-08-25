@@ -1,32 +1,81 @@
 
-import { Routes, Route } from 'react-router-dom';
-import { AuthGuard } from '@/components/auth/AuthGuard';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { Toaster } from '@/components/ui/toaster';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
-import { SkillsPage } from '@/pages/SkillsPage';
-import Index from '@/pages/Index';
-import TasksPage from '@/pages/TasksPage';
-import CalendarPage from '@/pages/CalendarPage';
-import SettingsPage from '@/pages/SettingsPage';
-import ReportsPage from '@/pages/ReportsPage';
+import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AppLayout } from "./components/layout/AppLayout";
+import { AuthGuard } from "./components/auth/AuthGuard";
 
-function App() {
+// Modals
+import { PersonModal } from "./components/modals/PersonModal";
+import { DeleteModal } from "./components/modals/DeleteModal";
+import { DailyCloseModal } from "./components/modals/DailyCloseModal";
+import { SkillModal } from "./components/modals/SkillModal";
+import { TeamMemberModal } from "./components/modals/TeamMemberModal";
+import { ForwardTaskModal } from "./components/modals/ForwardTaskModal";
+
+// Pages
+import Dashboard from "./pages/Dashboard";
+import TasksPage from "./pages/TasksPage";
+import CalendarPage from "./pages/CalendarPage";
+import PeoplePage from "./pages/PeoplePage";
+import ReportsPage from "./pages/ReportsPage";
+import DailyClosePage from "./pages/DailyClosePage";
+import StatsPage from "./pages/StatsPage";
+import SettingsPage from "./pages/SettingsPage";
+import BackupPage from "./pages/BackupPage";
+import { SkillsPage } from "./pages/SkillsPage";
+import NotFound from "./pages/NotFound";
+
+// Create QueryClient with better configuration for immediate updates
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30 * 1000, // Reduzido de 5 minutos para 30 segundos
+      gcTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+const App = () => {
   return (
-    <ErrorBoundary>
-      <AuthGuard>
-        <Routes>
-          <Route path="/" element={<AppLayout><Index /></AppLayout>} />
-          <Route path="/tasks" element={<AppLayout><TasksPage /></AppLayout>} />
-          <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
-          <Route path="/skills" element={<AppLayout><SkillsPage /></AppLayout>} />
-          <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
-          <Route path="/reports" element={<AppLayout><ReportsPage /></AppLayout>} />
-        </Routes>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
         <Toaster />
-      </AuthGuard>
-    </ErrorBoundary>
+        <Sonner />
+        <BrowserRouter>
+          <AuthGuard>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/tasks" element={<TasksPage />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/people" element={<PeoplePage />} />
+                <Route path="/skills" element={<SkillsPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/daily-close" element={<DailyClosePage />} />
+                <Route path="/stats" element={<StatsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/backup" element={<BackupPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AppLayout>
+            
+            {/* Global Modals - TaskModal removido pois está no TasksPage */}
+            <PersonModal />
+            <SkillModal />
+            <TeamMemberModal />
+            <ForwardTaskModal />
+            <DeleteModal />
+            <DailyCloseModal />
+          </AuthGuard>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
-}
+};
 
 export default App;

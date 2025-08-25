@@ -1,37 +1,27 @@
-
 import { useState } from 'react';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 
 export function SignInPage() {
-  const [isLogin, setIsLogin] = useState(true);
-
-  const toggleMode = () => setIsLogin(!isLogin);
+  const [isLoginMode, setIsLoginMode] = useState(true);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Task Manager</h1>
-          <p className="mt-2 text-gray-600">Entre em sua conta</p>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img 
+            src="/lovable-uploads/62746c0f-6206-4a0e-9672-06fa744bddf2.png" 
+            alt="Organize-se" 
+            className="h-20 w-auto"
+          />
         </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          {isLogin ? (
-            <LoginForm onToggleMode={toggleMode} />
-          ) : (
-            <RegisterForm />
-          )}
-          
-          <div className="mt-4 text-center">
-            <button
-              onClick={toggleMode}
-              className="text-blue-600 hover:text-blue-500 font-medium"
-            >
-              {isLogin ? 'Criar conta' : 'Já tem conta? Entre'}
-            </button>
-          </div>
-        </div>
+        
+        {isLoginMode ? (
+          <LoginForm onToggleMode={() => setIsLoginMode(false)} />
+        ) : (
+          <RegisterForm onToggleMode={() => setIsLoginMode(true)} />
+        )}
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { SubItem, TaskFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePeople } from "@/hooks/usePeople";
 
 interface TaskModalProps {
   onTaskSaved?: () => void;
@@ -17,7 +16,6 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
   const { addTask, updateTask } = useSupabaseTasks();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { people } = usePeople();
 
   const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
     try {
@@ -107,10 +105,9 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
           </DialogTitle>
         </DialogHeader>
         <TaskForm
-          defaultValues={taskToEdit}
+          task={taskToEdit}
           onSubmit={handleSubmit}
           onCancel={closeTaskModal}
-          people={people}
         />
       </DialogContent>
     </Dialog>
