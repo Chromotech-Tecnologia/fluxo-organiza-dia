@@ -16,7 +16,6 @@ export function useSupabasePeople() {
     
     setLoading(true);
     try {
-      console.log('Loading active people from Supabase...');
       const { data, error } = await supabase
         .from('people')
         .select('*')
@@ -37,7 +36,6 @@ export function useSupabasePeople() {
         updatedAt: person.updated_at
       }));
 
-      console.log('Active people loaded:', convertedPeople.length);
       setPeople(convertedPeople);
     } catch (error: any) {
       console.error('Error loading people:', error);
@@ -80,6 +78,7 @@ export function useSupabasePeople() {
         description: "Pessoa adicionada com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error adding person:', error);
       toast({
         title: "Erro",
         description: "Erro ao adicionar pessoa: " + error.message,
@@ -114,6 +113,7 @@ export function useSupabasePeople() {
         description: "Pessoa atualizada com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error updating person:', error);
       toast({
         title: "Erro",
         description: "Erro ao atualizar pessoa: " + error.message,
@@ -140,6 +140,7 @@ export function useSupabasePeople() {
         description: "Pessoa removida com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error deleting person:', error);
       toast({
         title: "Erro",
         description: "Erro ao remover pessoa: " + error.message,
@@ -182,7 +183,6 @@ export function useSupabasePeople() {
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('People changed, reloading...', payload);
             loadPeople();
           }
         )

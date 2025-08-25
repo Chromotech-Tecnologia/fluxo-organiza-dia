@@ -37,6 +37,7 @@ export function useSupabaseSkills() {
 
       setSkills(convertedSkills);
     } catch (error: any) {
+      console.error('Error loading skills:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar habilidades: " + error.message,
@@ -72,6 +73,7 @@ export function useSupabaseSkills() {
         description: "Habilidade adicionada com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error adding skill:', error);
       toast({
         title: "Erro",
         description: "Erro ao adicionar habilidade: " + error.message,
@@ -103,6 +105,7 @@ export function useSupabaseSkills() {
         description: "Habilidade atualizada com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error updating skill:', error);
       toast({
         title: "Erro",
         description: "Erro ao atualizar habilidade: " + error.message,
@@ -129,6 +132,7 @@ export function useSupabaseSkills() {
         description: "Habilidade removida com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error deleting skill:', error);
       toast({
         title: "Erro",
         description: "Erro ao remover habilidade: " + error.message,
@@ -171,7 +175,6 @@ export function useSupabaseSkills() {
             filter: `user_id=eq.${user.id}`
           },
           () => {
-            console.log('Skills changed, reloading...');
             loadSkills();
           }
         )

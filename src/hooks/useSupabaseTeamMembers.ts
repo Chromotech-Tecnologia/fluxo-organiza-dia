@@ -15,7 +15,6 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   const loadTeamMembers = useCallback(async () => {
     if (!user) return;
     
-    console.log('Loading team members from Supabase...');
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -51,7 +50,6 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         updatedAt: member.updated_at
       }));
 
-      console.log('Team members loaded:', convertedMembers.length);
       setAllTeamMembers(convertedMembers);
     } catch (error: any) {
       console.error('Error loading team members:', error);
@@ -66,9 +64,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   }, [user?.id]);
 
   // Aplicar filtros usando useMemo para otimização
-  const filteredTeamMembers = useMemo(() => {
-    console.log('Applying filters to team members...', filters);
-    
+  const filteredTeamMembers = useMemo(() => {    
     if (!filters || (!filters.search && !filters.status && (!filters.skillIds || filters.skillIds.length === 0))) {
       return allTeamMembers;
     }
@@ -140,6 +136,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         description: "Membro da equipe adicionado com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error adding team member:', error);
       toast({
         title: "Erro",
         description: "Erro ao adicionar membro da equipe: " + error.message,
@@ -177,6 +174,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         description: "Membro da equipe atualizado com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error updating team member:', error);
       toast({
         title: "Erro",
         description: "Erro ao atualizar membro da equipe: " + error.message,
@@ -203,6 +201,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         description: "Membro da equipe removido com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error deleting team member:', error);
       toast({
         title: "Erro",
         description: "Erro ao remover membro da equipe: " + error.message,
@@ -220,7 +219,6 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   // Carregamento inicial e setup de real-time apenas quando o usuário estiver disponível
   useEffect(() => {
     if (user) {
-      console.log('Setting up team members for user:', user.id);
       loadTeamMembers();
       
       // Setup real-time subscription
@@ -235,14 +233,12 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('Team members changed, reloading...', payload);
             loadTeamMembers();
           }
         )
         .subscribe();
 
       return () => {
-        console.log('Cleaning up team members subscription');
         supabase.removeChannel(channel);
       };
     }
