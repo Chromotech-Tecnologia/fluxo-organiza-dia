@@ -1,9 +1,12 @@
+
 import { useState } from 'react';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 
 export function SignInPage() {
   const [isLogin, setIsLogin] = useState(true);
+
+  const toggleMode = () => setIsLogin(!isLogin);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -15,14 +18,14 @@ export function SignInPage() {
 
         <div className="bg-white rounded-lg shadow-md p-6">
           {isLogin ? (
-            <LoginForm />
+            <LoginForm onToggleMode={toggleMode} />
           ) : (
             <RegisterForm />
           )}
           
           <div className="mt-4 text-center">
             <button
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={toggleMode}
               className="text-blue-600 hover:text-blue-500 font-medium"
             >
               {isLogin ? 'Criar conta' : 'Já tem conta? Entre'}

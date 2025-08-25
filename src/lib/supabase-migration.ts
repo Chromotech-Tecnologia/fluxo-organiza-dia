@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { taskStorage, peopleStorage, skillsStorage, teamMembersStorage, dailyReportStorage } from '@/lib/storage';
 import { Task, Person, Skill, TeamMember, DailyReport } from '@/types';
@@ -7,20 +8,26 @@ export class SupabaseMigration {
     try {
       console.log('Iniciando migração de dados para Supabase...');
       
+      // Get current user ID for migration
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado para migração');
+      }
+      
       // Migrar pessoas primeiro (pois tarefas referenciam pessoas)
-      await this.migratePeople();
+      await this.migratePeople(user.id);
       
       // Migrar habilidades
-      await this.migrateSkills();
+      await this.migrateSkills(user.id);
       
       // Migrar membros da equipe
-      await this.migrateTeamMembers();
+      await this.migrateTeamMembers(user.id);
       
       // Migrar tarefas
-      await this.migrateTasks();
+      await this.migrateTasks(user.id);
       
       // Migrar relatórios diários
-      await this.migrateDailyReports();
+      await this.migrateDailyReports(user.id);
       
       console.log('Migração concluída com sucesso!');
       return { success: true };
@@ -30,7 +37,7 @@ export class SupabaseMigration {
     }
   }
 
-  private static async migratePeople() {
+  private static async migratePeople(userId: string) {
     const localPeople = peopleStorage.getAll();
     console.log(`Migrando ${localPeople.length} pessoas...`);
     
@@ -39,12 +46,13 @@ export class SupabaseMigration {
     const supabasePeople = localPeople.map(person => ({
       id: person.id,
       name: person.name,
-      email: null, // Person não tem email no tipo atual
-      phone: null, // Person não tem phone no tipo atual
+      email: null,
+      phone: null,
       role: person.role || null,
-      department: null, // Person não tem department no tipo atual
-      notes: null, // Person não tem notes no tipo atual
-      active: true, // Person não tem active no tipo atual
+      department: null,
+      notes: null,
+      active: true,
+      user_id: userId,
       created_at: person.createdAt,
       updated_at: person.updatedAt
     }));
@@ -57,7 +65,7 @@ export class SupabaseMigration {
     console.log('Pessoas migradas com sucesso');
   }
 
-  private static async migrateSkills() {
+  private static async migrateSkills(userId: string) {
     const localSkills = skillsStorage.getAll();
     console.log(`Migrando ${localSkills.length} habilidades...`);
     
@@ -66,9 +74,10 @@ export class SupabaseMigration {
     const supabaseSkills = localSkills.map(skill => ({
       id: skill.id,
       name: skill.name,
-      description: skill.observation || null, // observation mapeado para description
-      category: skill.area || null, // area mapeado para category
-      level: 'beginner', // Skill não tem level no tipo atual
+      description: skill.observation || null,
+      category: skill.area || null,
+      level: 'beginner' as const,
+      user_id: userId,
       created_at: skill.createdAt,
       updated_at: skill.updatedAt
     }));
@@ -81,7 +90,7 @@ export class SupabaseMigration {
     console.log('Habilidades migradas com sucesso');
   }
 
-  private static async migrateTeamMembers() {
+  private static async migrateTeamMembers(userId: string) {
     const localTeamMembers = teamMembersStorage.getAll();
     console.log(`Migrando ${localTeamMembers.length} membros da equipe...`);
     
@@ -93,12 +102,13 @@ export class SupabaseMigration {
       email: member.email || null,
       phone: member.phone || null,
       role: member.role || null,
-      department: null, // TeamMember não tem department no tipo atual
+      department: null,
       skill_ids: member.skillIds || [],
       project_ids: member.projects?.map(p => p.id) || [],
-      hire_date: null, // TeamMember não tem hireDate no tipo atual
+      hire_date: null,
       status: member.status || 'ativo',
-      notes: null, // TeamMember não tem notes no tipo atual
+      notes: null,
+      user_id: userId,
       created_at: member.createdAt,
       updated_at: member.updatedAt
     }));
@@ -111,7 +121,7 @@ export class SupabaseMigration {
     console.log('Membros da equipe migrados com sucesso');
   }
 
-  private static async migrateTasks() {
+  private static async migrateTasks(userId: string) {
     const localTasks = taskStorage.getAll();
     console.log(`Migrando ${localTasks.length} tarefas...`);
     
@@ -120,7 +130,8 @@ export class SupabaseMigration {
     // Obter lista de pessoas existentes para validar referências
     const { data: existingPeople } = await supabase
       .from('people')
-      .select('id');
+      .select('id')
+      .eq('user_id', userId);
     
     const existingPersonIds = new Set(existingPeople?.map(p => p.id) || []);
 
@@ -134,7 +145,6 @@ export class SupabaseMigration {
       time_investment: task.timeInvestment || 'low',
       category: task.category || 'personal',
       status: task.status,
-      // Só definir assigned_person_id se a pessoa existir na base
       assigned_person_id: (task.assignedPersonId && existingPersonIds.has(task.assignedPersonId)) 
         ? task.assignedPersonId 
         : null,
@@ -147,6 +157,7 @@ export class SupabaseMigration {
       is_routine: task.isRoutine || false,
       routine_config: task.recurrence as any || null,
       task_order: task.order || 0,
+      user_id: userId,
       created_at: task.createdAt,
       updated_at: task.updatedAt
     }));
@@ -164,7 +175,7 @@ export class SupabaseMigration {
     console.log('Tarefas migradas com sucesso');
   }
 
-  private static async migrateDailyReports() {
+  private static async migrateDailyReports(userId: string) {
     const localReports = dailyReportStorage.getAll();
     console.log(`Migrando ${localReports.length} relatórios diários...`);
     
@@ -174,10 +185,11 @@ export class SupabaseMigration {
       date: report.date,
       total_tasks: report.totalTasks || 0,
       completed_tasks: report.completedTasks || 0,
-      pending_tasks: 0, // Não existe no tipo DailyReport atual
+      pending_tasks: 0,
       forwarded_tasks: report.forwardedTasks || 0,
-      completion_rate: 0, // Não existe no tipo DailyReport atual
-      observations: null, // Não existe no tipo DailyReport atual
+      completion_rate: 0,
+      observations: null,
+      user_id: userId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }));
@@ -192,21 +204,28 @@ export class SupabaseMigration {
 
   static async checkMigrationStatus() {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
       const { count: tasksCount } = await supabase
         .from('tasks')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
       
       const { count: peopleCount } = await supabase
         .from('people')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
       const { count: skillsCount } = await supabase
         .from('skills')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
       const { count: teamMembersCount } = await supabase
         .from('team_members')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
       return {
         tasksInSupabase: tasksCount || 0,
