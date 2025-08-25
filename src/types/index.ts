@@ -1,3 +1,4 @@
+
 export type TaskType = 'feature' | 'bug' | 'chore' | 'documentation' | 'meeting' | 'own-task' | 'delegated-task';
 export type TaskPriority = 'high' | 'medium' | 'low' | 'none' | 'priority' | 'extreme';
 export type TaskStatus = 'pending' | 'in progress' | 'completed' | 'blocked' | 'not-done' | 'forwarded-date' | 'forwarded-person';
@@ -200,10 +201,12 @@ export interface Project {
 export interface CompletionRecord {
   date: string;
   completedBy?: string;
+  wasForwarded: boolean;
 }
 
 export interface ForwardRecord {
   date: string;
+  originalDate: string;
   forwardedTo?: string;
   reason?: string;
 }
