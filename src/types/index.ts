@@ -196,3 +196,14 @@ export interface Project {
   name: string;
   status: ProjectStatus;
 }
+
+export interface CompletionRecord {
+  date: string;
+  completedBy?: string;
+}
+
+export interface ForwardRecord {
+  date: string;
+  forwardedTo?: string;
+  reason?: string;
+}
