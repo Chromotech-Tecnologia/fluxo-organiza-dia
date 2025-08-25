@@ -1,12 +1,16 @@
-export type TaskType = 'feature' | 'bug' | 'chore' | 'documentation';
-export type TaskPriority = 'high' | 'medium' | 'low';
-export type TaskStatus = 'pending' | 'in progress' | 'completed' | 'blocked';
-export type TaskTimeInvestment = 'low' | 'medium' | 'high' | 'custom';
+
+export type TaskType = 'feature' | 'bug' | 'chore' | 'documentation' | 'meeting' | 'own-task' | 'delegated-task';
+export type TaskPriority = 'high' | 'medium' | 'low' | 'none' | 'priority' | 'extreme';
+export type TaskStatus = 'pending' | 'in progress' | 'completed' | 'blocked' | 'not-done' | 'forwarded-date' | 'forwarded-person';
+export type TaskTimeInvestment = 'low' | 'medium' | 'high' | 'custom' | 'custom-5' | 'custom-30' | 'custom-4h' | 'custom-8h';
 
 export interface SubItem {
   id: string;
   label: string;
+  text: string;
   checked: boolean;
+  completed: boolean;
+  order: number;
 }
 
 export interface Task {
@@ -36,6 +40,7 @@ export interface Task {
   isForwarded: boolean;
   isConcluded: boolean;
   isProcessed: boolean;
+  concludedAt?: string;
 }
 
 export interface TaskFilter {
@@ -85,6 +90,9 @@ export interface TaskFormValues {
   isForwarded: boolean;
   isConcluded: boolean;
   isProcessed: boolean;
+  routineEndDate?: string;
+  routineStartDate?: string;
+  routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
 }
 
 export interface User {
