@@ -1,4 +1,3 @@
-
 export type TaskType = 'feature' | 'bug' | 'chore' | 'documentation' | 'meeting' | 'own-task' | 'delegated-task';
 export type TaskPriority = 'high' | 'medium' | 'low' | 'none' | 'priority' | 'extreme';
 export type TaskStatus = 'pending' | 'in progress' | 'completed' | 'blocked' | 'not-done' | 'forwarded-date' | 'forwarded-person';
@@ -41,6 +40,9 @@ export interface Task {
   isConcluded: boolean;
   isProcessed: boolean;
   concludedAt?: string;
+  routineEndDate?: string;
+  routineStartDate?: string;
+  routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
 }
 
 export interface TaskFilter {

@@ -35,12 +35,12 @@ export async function fetchCepData(cep: string): Promise<CepData | null> {
       throw new Error('CEP deve ter 8 dígitos');
     }
 
-    // Ensure HTTPS URL
-    const url = `${CEP_API_URL}/${cleanCep}/json/`;
-    
-    if (!url.startsWith('https://')) {
+    // Ensure HTTPS URL - validate the base URL is HTTPS
+    if (!CEP_API_URL.startsWith('https://')) {
       throw new Error('Apenas URLs HTTPS são permitidas');
     }
+
+    const url = `${CEP_API_URL}/${cleanCep}/json/`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -88,3 +88,9 @@ export function formatCep(cep: string): string {
   
   return `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}`;
 }
+
+// Export service object for compatibility
+export const cepService = {
+  fetchAddress: fetchCepData,
+  formatCep
+};

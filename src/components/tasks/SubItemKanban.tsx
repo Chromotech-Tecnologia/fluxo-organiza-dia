@@ -89,14 +89,16 @@ export function SubItemKanban({ subItems, onSubItemsChange }: SubItemKanbanProps
 
   const addSubItem = () => {
     if (newItemText.trim()) {
-      const newItem: SubItem = {
+      const newSubItem: SubItem = {
         id: crypto.randomUUID(),
+        label: newItemText.trim(),
         text: newItemText.trim(),
-        completed: false, // Sempre criar pendente
-        order: subItems.length, // Adicionar a propriedade order que estava faltando
+        checked: false,
+        completed: false,
+        order: subItems.length,
       };
       
-      onSubItemsChange([...subItems, newItem]);
+      onSubItemsChange([...subItems, newSubItem]);
       setNewItemText('');
     }
   };
