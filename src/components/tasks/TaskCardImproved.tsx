@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +41,8 @@ export function TaskCardImproved({
   taskIndex,
   maxOrder = 100
 }: TaskCardImprovedProps) {
+  const [isRescheduling, setIsRescheduling] = React.useState(false);
+  
   const {
     attributes,
     listeners,
@@ -93,7 +94,7 @@ export function TaskCardImproved({
   const wasRescheduledToday = task.forwardHistory?.some(forward => {
     const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
     return forwardDate === today;
-  }) || false;
+  }) || false || isRescheduling;
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
@@ -120,6 +121,13 @@ export function TaskCardImproved({
       return;
     }
     onStatusChange(status);
+  };
+
+  const handleRescheduleClick = () => {
+    setIsRescheduling(true);
+    onForward();
+    // Reset after a delay to allow UI to update
+    setTimeout(() => setIsRescheduling(false), 2000);
   };
 
   return (
@@ -296,15 +304,15 @@ export function TaskCardImproved({
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onForward();
+                        handleRescheduleClick();
                       }}
                       className={`h-7 px-2 text-xs min-w-[90px] ${
-                        wasRescheduledToday
+                        wasRescheduledToday || isRescheduling
                           ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
                           : 'text-orange-600 border-orange-600 hover:bg-orange-50'
                       }`}
                     >
-                      {wasRescheduledToday ? '✓ Reagendada' : 'Reagendar'}
+                      {wasRescheduledToday || isRescheduling ? '✓ Reagendada' : 'Reagendar'}
                     </Button>
                   )}
                   

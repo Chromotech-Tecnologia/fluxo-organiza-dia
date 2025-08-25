@@ -171,7 +171,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || 'own-task'}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -210,7 +210,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Prioridade</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -233,7 +233,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tempo Estimado</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || 'low'}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -245,6 +245,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                         <SelectItem value="low">1 hora</SelectItem>
                         <SelectItem value="medium">2 horas</SelectItem>
                         <SelectItem value="high">4 horas</SelectItem>
+                        <SelectItem value="custom-4h">4 horas</SelectItem>
                         <SelectItem value="custom-8h">8 horas</SelectItem>
                         <SelectItem value="custom">Personalizado</SelectItem>
                       </SelectContent>
@@ -260,7 +261,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || 'personal'}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -344,8 +345,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                     <FormItem>
                       <FormLabel>Equipe Delegada</FormLabel>
                       <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value || ''}
+                        onValueChange={(value) => field.onChange(value === 'none' ? '' : value)} 
+                        value={field.value || 'none'}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -353,7 +354,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Nenhuma equipe</SelectItem>
+                          <SelectItem value="none">Nenhuma equipe</SelectItem>
                           {teamMembers.map((member) => (
                             <SelectItem key={member.id} value={member.id}>
                               {member.name}

@@ -87,7 +87,7 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
             newDate: calendarDateToString(selectedDate),
             originalDate: taskToForward.scheduledDate,
             statusAtForward: 'pending' as const,
-            reason: `Recebido reagendamento de ${format(new Date(taskToForward.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`
+            reason: `Reagendamento recebido de ${format(new Date(taskToForward.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`
           }
         ],
         completionHistory: [],
