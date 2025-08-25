@@ -93,7 +93,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const watchedType = useWatch({ control: form.control, name: 'type' });
   const watchedTimeInvestment = useWatch({ control: form.control, name: 'timeInvestment' });
 
-  // Calcular previsão de reordenamento
   const getReorderPreview = () => {
     if (!watchedOrder || !watchedScheduledDate) return null;
 
@@ -102,11 +101,10 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
     );
 
     if (task && task.scheduledDate === watchedScheduledDate && task.order === watchedOrder) {
-      return null; // Sem mudança
+      return null;
     }
 
     if (task) {
-      // Editando tarefa existente
       const reorderResult = calculateMoveReordering(
         tasks,
         watchedScheduledDate,
@@ -115,7 +113,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       );
       return reorderResult.adjustments.length > 0 ? reorderResult.message : null;
     } else {
-      // Nova tarefa
       const reorderResult = calculateInsertReordering(
         tasks,
         watchedScheduledDate,
@@ -280,7 +277,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               />
             </div>
 
-            {/* Campo de tempo personalizado */}
             {watchedTimeInvestment === 'custom' && (
               <FormField
                 control={form.control}
@@ -348,8 +344,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                     <FormItem>
                       <FormLabel>Equipe Delegada</FormLabel>
                       <Select 
-                        onValueChange={(value) => field.onChange(value === 'no-team' ? '' : value)} 
-                        defaultValue={field.value || 'no-team'}
+                        onValueChange={field.onChange} 
+                        value={field.value || ''}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -357,7 +353,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="no-team">Nenhuma equipe</SelectItem>
+                          <SelectItem value="">Nenhuma equipe</SelectItem>
                           {teamMembers.map((member) => (
                             <SelectItem key={member.id} value={member.id}>
                               {member.name}
@@ -372,7 +368,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               )}
             </div>
 
-            {/* Preview de reordenamento */}
             {reorderPreview && (
               <Alert>
                 <Info className="h-4 w-4" />
@@ -383,7 +378,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             )}
           </div>
 
-          {/* Checklist */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">Checklist</h3>
@@ -436,7 +430,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             </div>
           </div>
 
-          {/* Observações */}
           <FormField
             control={form.control}
             name="observations"

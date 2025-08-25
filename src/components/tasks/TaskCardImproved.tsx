@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -88,19 +89,15 @@ export function TaskCardImproved({
 
   const today = getCurrentDateInSaoPaulo();
   
-  const wasForwardedFromScheduledDate = task.forwardHistory?.some(forward => 
-    forward.originalDate === task.scheduledDate
-  ) || false;
-
-  const wasRescheduledToday = canReschedule && lastCompletion && 
-    lastCompletion.date === task.scheduledDate && 
-    (lastCompletion.status === 'completed' || lastCompletion.status === 'not-done') &&
-    wasForwardedFromScheduledDate;
+  // Verificar se a tarefa foi reagendada hoje baseado no histórico
+  const wasRescheduledToday = task.forwardHistory?.some(forward => {
+    const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
+    return forwardDate === today;
+  }) || false;
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
 
-  // Obter tempo formatado
   const timeMinutes = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
   const formattedTime = formatTime(timeMinutes);
 
@@ -134,7 +131,6 @@ export function TaskCardImproved({
     >
       <CardContent className="p-3">
         <div className="space-y-3">
-          {/* Header */}
           <div className="flex justify-between items-start gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <div
@@ -212,27 +208,23 @@ export function TaskCardImproved({
             </div>
           </div>
 
-          {/* Descrição */}
           {task.description && (
             <div className="text-xs text-muted-foreground line-clamp-2">
               {task.description}
             </div>
           )}
 
-          {/* Tags - data completa com ano + outras tags */}
           <div className="flex gap-1 flex-wrap">
             <Badge variant="secondary" className="text-xs h-5">
               {format(taskDate, 'dd/MM/yyyy', { locale: ptBR })}
             </Badge>
 
-            {/* Prioridade */}
             {task.priority !== 'none' && (
               <Badge variant="outline" className={`text-xs h-5 ${getPriorityColor(task.priority)}`}>
                 {task.priority === 'extreme' ? 'Extrema' : 'Prioridade'}
               </Badge>
             )}
 
-            {/* Tipo */}
             {task.type === 'meeting' && (
               <Badge variant="outline" className="text-xs h-5 bg-blue-100 text-blue-800 border-blue-300">
                 <Calendar className="h-2.5 w-2.5 mr-1" />
@@ -247,7 +239,6 @@ export function TaskCardImproved({
               </Badge>
             )}
 
-            {/* Reagendamentos - apenas mostrar se foi reagendada */}
             {wasRescheduled && task.forwardCount > 0 && (
               <Badge variant="outline" className="text-xs h-5 bg-yellow-100 text-yellow-800 border-yellow-300">
                 <ArrowRight className="h-2.5 w-2.5 mr-1" />
@@ -255,7 +246,6 @@ export function TaskCardImproved({
               </Badge>
             )}
 
-            {/* Tempo - mostrar tempo exato em vez de alto/médio */}
             {timeMinutes > 0 && (
               <Badge variant="outline" className="text-xs h-5 bg-indigo-100 text-indigo-800 border-indigo-300">
                 <Clock className="h-2.5 w-2.5 mr-1" />
@@ -264,9 +254,7 @@ export function TaskCardImproved({
             )}
           </div>
 
-          {/* Layout inferior: Botões de ação à esquerda, Checklist à direita */}
           <div className="flex justify-between items-end gap-4">
-            {/* Botões de ação no rodapé esquerdo */}
             <div className="flex gap-1 flex-shrink-0">
               {!task.isConcluded && (
                 <>
@@ -310,13 +298,13 @@ export function TaskCardImproved({
                         e.stopPropagation();
                         onForward();
                       }}
-                      className={`h-7 px-2 text-xs min-w-[80px] ${
+                      className={`h-7 px-2 text-xs min-w-[90px] ${
                         wasRescheduledToday
                           ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
                           : 'text-orange-600 border-orange-600 hover:bg-orange-50'
                       }`}
                     >
-                      {wasRescheduledToday ? '✓ Reagendar' : 'Reagendar'}
+                      {wasRescheduledToday ? '✓ Reagendada' : 'Reagendar'}
                     </Button>
                   )}
                   
@@ -350,7 +338,6 @@ export function TaskCardImproved({
               )}
             </div>
 
-            {/* Checklist compacto no lado direito */}
             {totalSubItems > 0 && (
               <div className="flex-shrink-0 min-w-[120px] max-w-[200px]">
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">

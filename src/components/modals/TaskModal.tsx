@@ -19,18 +19,20 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
 
   const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
     try {
-      console.log('Salvando tarefa...', taskToEdit ? 'Edição' : 'Nova');
+      console.log('Salvando tarefa...', taskToEdit ? 'Edição' : 'Nova', data);
       
-      // Limpar campos vazios para evitar problemas com UUID
+      // Garantir que assignedPersonId seja tratado corretamente
       const cleanData = {
         ...data,
-        assignedPersonId: data.assignedPersonId || null,
-        description: data.description || null,
-        observations: data.observations || null,
-        routineEndDate: data.routineEndDate || null,
-        routineStartDate: data.isRoutine ? data.routineStartDate : null,
-        routineCycle: data.isRoutine ? data.routineCycle : null,
+        assignedPersonId: data.assignedPersonId && data.assignedPersonId !== '' ? data.assignedPersonId : undefined,
+        description: data.description || '',
+        observations: data.observations || '',
+        routineEndDate: data.routineEndDate || undefined,
+        routineStartDate: data.isRoutine ? data.routineStartDate : undefined,
+        routineCycle: data.isRoutine ? data.routineCycle : undefined,
       };
+
+      console.log('Dados limpos para salvar:', cleanData);
 
       if (taskToEdit) {
         await updateTask(taskToEdit.id, {
@@ -72,6 +74,18 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         refetchType: 'all'
       });
       
+      // Força um refetch imediato
+      await queryClient.refetchQueries({ 
+        queryKey: ['tasks'],
+        type: 'active'
+      });
+      
+      // Executar callback se fornecido
+      if (onTaskSaved) {
+        console.log('Executando callback após salvar tarefa...');
+        await onTaskSaved();
+      }
+      
       // Aguardar um pouco e invalidar novamente
       setTimeout(async () => {
         await queryClient.invalidateQueries({ 
@@ -79,12 +93,6 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
           refetchType: 'all'
         });
       }, 100);
-      
-      // Executar callback se fornecido
-      if (onTaskSaved) {
-        console.log('Executando callback após salvar tarefa...');
-        await onTaskSaved();
-      }
       
     } catch (error) {
       console.error('Erro ao salvar tarefa:', error);

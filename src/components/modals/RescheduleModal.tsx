@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,6 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
     const taskDate = new Date(taskToForward.scheduledDate + 'T00:00:00');
     let nextDay = addDays(taskDate, 1);
     
-    // Se cair no fim de semana, mover para segunda
     while (nextDay.getDay() === 0 || nextDay.getDay() === 6) {
       nextDay = addDays(nextDay, 1);
     }
@@ -112,26 +112,32 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
       setKeepOrder(true);
       setKeepChecklistStatus(true);
       
-      // Invalidar cache mais agressivamente
+      // Invalidar cache de forma mais agressiva e forçar re-render
       console.log('Invalidando cache das tarefas após reagendamento...');
       await queryClient.invalidateQueries({ 
         queryKey: ['tasks'],
         refetchType: 'all'
       });
       
-      // Aguardar um pouco e invalidar novamente para garantir
+      // Força um refetch imediato
+      await queryClient.refetchQueries({ 
+        queryKey: ['tasks'],
+        type: 'active'
+      });
+      
+      // Executar callback se fornecido para forçar atualização
+      if (onRescheduleComplete) {
+        console.log('Executando callback de reagendamento...');
+        await onRescheduleComplete();
+      }
+
+      // Aguardar um pouco e invalidar novamente para garantir atualização visual
       setTimeout(async () => {
         await queryClient.invalidateQueries({ 
           queryKey: ['tasks'],
           refetchType: 'all'
         });
       }, 100);
-      
-      // Executar callback se fornecido
-      if (onRescheduleComplete) {
-        console.log('Executando callback de reagendamento...');
-        await onRescheduleComplete();
-      }
 
     } catch (error) {
       console.error('Erro ao reagendar tarefa:', error);
