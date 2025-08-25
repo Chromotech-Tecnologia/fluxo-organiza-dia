@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { searchInTask } from "@/lib/searchUtils";
 import { sortTasks, SortOption } from "@/lib/taskUtils";
+import { TaskModal } from "@/components/modals/TaskModal";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,10 +34,12 @@ const TasksPage = () => {
   const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
   const { tasks, updateTask, deleteTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
 
-  // Função para atualizar dados após qualquer ação
+  // Função para atualizar dados após qualquer ação com await
   const refreshData = async () => {
     try {
+      console.log('Atualizando dados das tarefas...');
       await refetch();
+      console.log('Dados das tarefas atualizados com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar dados:', error);
     }
@@ -94,7 +96,7 @@ const TasksPage = () => {
           completionHistory: newHistory,
           updatedAt: new Date().toISOString()
         });
-        await refreshData();
+        await refreshData(); // Aguardar atualização
         return;
       }
 
@@ -123,7 +125,7 @@ const TasksPage = () => {
         updatedAt: new Date().toISOString()
       });
       
-      await refreshData();
+      await refreshData(); // Aguardar atualização
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
     }
@@ -187,12 +189,12 @@ const TasksPage = () => {
       .map(task => task.id);
 
     await reorderTasks(taskIds);
-    await refreshData();
+    await refreshData(); // Aguardar atualização
   };
 
   const handleConcludeTask = async (taskId: string) => {
     await concludeTask(taskId);
-    await refreshData();
+    await refreshData(); // Aguardar atualização
   };
 
   const handleUnconcludeTask = async (taskId: string) => {
@@ -206,19 +208,11 @@ const TasksPage = () => {
         status: 'pending',
         updatedAt: new Date().toISOString()
       });
-      await refreshData();
+      await refreshData(); // Aguardar atualização
     } catch (error) {
       console.error('Erro ao desfazer conclusão da tarefa:', error);
     }
   };
-
-  // Atualizar dados quando o modal de reagendamento fechar
-  useEffect(() => {
-    const { isForwardTaskModalOpen } = useModalStore.getState();
-    if (!isForwardTaskModalOpen) {
-      refreshData();
-    }
-  }, [useModalStore.getState().isForwardTaskModalOpen]);
 
   // Verificar se todas as tarefas do período estão concluídas
   const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
@@ -349,6 +343,7 @@ const TasksPage = () => {
         onClose={() => setTaskForHistory(null)}
       />
       <RescheduleModal onRescheduleComplete={refreshData} />
+      <TaskModal onTaskSaved={refreshData} />
     </div>
   );
 };

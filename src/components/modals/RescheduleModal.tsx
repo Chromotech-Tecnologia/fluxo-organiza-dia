@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -109,9 +110,11 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
       setKeepOrder(true);
       setKeepChecklistStatus(true);
       
-      // Notificar componente pai para atualizar dados
+      // Notificar componente pai para atualizar dados e aguardar
       if (onRescheduleComplete) {
-        onRescheduleComplete();
+        console.log('Executando callback de reagendamento...');
+        await onRescheduleComplete();
+        console.log('Callback de reagendamento executado com sucesso');
       }
 
     } catch (error) {

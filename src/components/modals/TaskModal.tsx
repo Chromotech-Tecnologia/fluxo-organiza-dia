@@ -60,11 +60,14 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
       closeTaskModal();
       
       // Atualizar dados sem recarregar a página, mantendo os filtros
+      console.log('Atualizando dados após salvar tarefa...');
       await refetch();
       
-      // Notificar componente pai se fornecido
+      // Notificar componente pai se fornecido e aguardar
       if (onTaskSaved) {
-        onTaskSaved();
+        console.log('Executando callback após salvar tarefa...');
+        await onTaskSaved();
+        console.log('Callback após salvar tarefa executado com sucesso');
       }
       
     } catch (error) {
