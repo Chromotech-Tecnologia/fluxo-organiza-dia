@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,14 +12,15 @@ import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal"
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
 import { RescheduleModal } from "@/components/modals/RescheduleModal";
+import { TaskModal } from "@/components/modals/TaskModal";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { useQueryClient } from "@tanstack/react-query";
 import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { searchInTask } from "@/lib/searchUtils";
 import { sortTasks, SortOption } from "@/lib/taskUtils";
-import { TaskModal } from "@/components/modals/TaskModal";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,15 +35,35 @@ const TasksPage = () => {
   });
   const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
   const { tasks, updateTask, deleteTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
+  const queryClient = useQueryClient();
 
-  // Função para atualizar dados após qualquer ação com await
+  // Função para atualizar dados após qualquer ação usando invalidação robusta
   const refreshData = async () => {
     try {
-      console.log('Atualizando dados das tarefas...');
+      console.log('Invalidando e atualizando dados das tarefas...');
+      
+      // Invalidar todas as queries de tarefas
+      await queryClient.invalidateQueries({ 
+        queryKey: ['tasks'],
+        refetchType: 'active'
+      });
+      
+      // Aguardar um momento para garantir que a invalidação foi processada
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Forçar refetch como backup
       await refetch();
+      
       console.log('Dados das tarefas atualizados com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar dados:', error);
+      // Tentar apenas refetch em caso de erro na invalidação
+      try {
+        await refetch();
+        console.log('Fallback refetch executado com sucesso');
+      } catch (refetchError) {
+        console.error('Erro no fallback refetch:', refetchError);
+      }
     }
   };
 
@@ -86,6 +108,8 @@ const TasksPage = () => {
 
   const handleStatusChange = async (taskId: string, status: Task['status']) => {
     try {
+      console.log('Alterando status da tarefa:', taskId, 'para:', status);
+      
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
@@ -96,7 +120,7 @@ const TasksPage = () => {
           completionHistory: newHistory,
           updatedAt: new Date().toISOString()
         });
-        await refreshData(); // Aguardar atualização
+        await refreshData();
         return;
       }
 
@@ -125,7 +149,7 @@ const TasksPage = () => {
         updatedAt: new Date().toISOString()
       });
       
-      await refreshData(); // Aguardar atualização
+      await refreshData();
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
     }
@@ -189,16 +213,19 @@ const TasksPage = () => {
       .map(task => task.id);
 
     await reorderTasks(taskIds);
-    await refreshData(); // Aguardar atualização
+    await refreshData();
   };
 
   const handleConcludeTask = async (taskId: string) => {
+    console.log('Concluindo tarefa:', taskId);
     await concludeTask(taskId);
-    await refreshData(); // Aguardar atualização
+    await refreshData();
   };
 
   const handleUnconcludeTask = async (taskId: string) => {
     try {
+      console.log('Desfazendo conclusão da tarefa:', taskId);
+      
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
@@ -208,7 +235,7 @@ const TasksPage = () => {
         status: 'pending',
         updatedAt: new Date().toISOString()
       });
-      await refreshData(); // Aguardar atualização
+      await refreshData();
     } catch (error) {
       console.error('Erro ao desfazer conclusão da tarefa:', error);
     }
@@ -255,7 +282,6 @@ const TasksPage = () => {
         onSortChange={setSortBy}
       />
 
-      {/* Resumo de Estatísticas Compacto */}
       <TaskStatsCompact tasks={displayTasks} />
 
       {/* Lista de Tarefas com Drag & Drop */}

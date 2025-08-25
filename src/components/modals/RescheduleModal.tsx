@@ -10,6 +10,7 @@ import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 
 interface RescheduleModalProps {
@@ -20,6 +21,7 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
   const { isForwardTaskModalOpen, taskToForward, closeForwardTaskModal } = useModalStore();
   const { updateTask, addTask } = useSupabaseTasks();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [keepOrder, setKeepOrder] = useState(true);
   const [keepChecklistStatus, setKeepChecklistStatus] = useState(true);
@@ -53,6 +55,8 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
     setIsProcessing(true);
 
     try {
+      console.log('Reagendando tarefa...', taskToForward.title);
+      
       const forwardRecord = {
         forwardedAt: new Date().toISOString(),
         forwardedTo: null,
@@ -62,7 +66,7 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
         reason: 'Reagendada pelo usuário'
       };
 
-      // Atualizar a tarefa original com histórico de repasse e auto-conclusão
+      // Atualizar a tarefa original com histórico de reagendamento e auto-conclusão
       await updateTask(taskToForward.id, {
         forwardHistory: [...(taskToForward.forwardHistory || []), forwardRecord],
         isConcluded: true,
@@ -86,7 +90,7 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
             newDate: calendarDateToString(selectedDate),
             originalDate: taskToForward.scheduledDate,
             statusAtForward: 'pending' as const,
-            reason: `Recebido repasse de ${format(new Date(taskToForward.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`
+            reason: `Recebido reagendamento de ${format(new Date(taskToForward.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`
           }
         ],
         completionHistory: [],
@@ -104,17 +108,31 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
         description: `Nova tarefa criada para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })} e tarefa original concluída automaticamente.`,
       });
 
+      console.log('Tarefa reagendada com sucesso');
+
       // Fechar modal e resetar estados
       closeForwardTaskModal();
       setSelectedDate(undefined);
       setKeepOrder(true);
       setKeepChecklistStatus(true);
       
-      // Notificar componente pai para atualizar dados e aguardar
+      // Invalidar todas as queries de tarefas para forçar atualização
+      console.log('Invalidando cache das tarefas após reagendamento...');
+      await queryClient.invalidateQueries({ 
+        queryKey: ['tasks'],
+        refetchType: 'active'
+      });
+      console.log('Cache das tarefas invalidado após reagendamento');
+      
+      // Notificar componente pai para atualizar dados
       if (onRescheduleComplete) {
         console.log('Executando callback de reagendamento...');
-        await onRescheduleComplete();
-        console.log('Callback de reagendamento executado com sucesso');
+        try {
+          await onRescheduleComplete();
+          console.log('Callback de reagendamento executado com sucesso');
+        } catch (callbackError) {
+          console.error('Erro no callback de reagendamento:', callbackError);
+        }
       }
 
     } catch (error) {

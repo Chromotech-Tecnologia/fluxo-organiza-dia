@@ -5,6 +5,7 @@ import { TaskForm } from "@/components/tasks/TaskForm";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { SubItem, TaskFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface TaskModalProps {
   onTaskSaved?: () => void;
@@ -12,11 +13,14 @@ interface TaskModalProps {
 
 export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
   const { isTaskModalOpen, taskToEdit, closeTaskModal } = useModalStore();
-  const { addTask, updateTask, refetch } = useSupabaseTasks();
+  const { addTask, updateTask } = useSupabaseTasks();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
     try {
+      console.log('Salvando tarefa...', taskToEdit ? 'Edição' : 'Nova');
+      
       // Limpar campos vazios para evitar problemas com UUID
       const cleanData = {
         ...data,
@@ -38,6 +42,7 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
           title: "Tarefa atualizada",
           description: "A tarefa foi atualizada com sucesso. Outras tarefas foram reordenadas automaticamente se necessário.",
         });
+        console.log('Tarefa atualizada com sucesso');
       } else {
         await addTask({
           ...cleanData,
@@ -55,19 +60,28 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
           title: "Tarefa criada",
           description: "A nova tarefa foi criada com sucesso. Outras tarefas foram reordenadas automaticamente se necessário.",
         });
+        console.log('Nova tarefa criada com sucesso');
       }
       
       closeTaskModal();
       
-      // Atualizar dados sem recarregar a página, mantendo os filtros
-      console.log('Atualizando dados após salvar tarefa...');
-      await refetch();
+      // Invalidar todas as queries de tarefas para forçar atualização
+      console.log('Invalidando cache das tarefas...');
+      await queryClient.invalidateQueries({ 
+        queryKey: ['tasks'],
+        refetchType: 'active'
+      });
+      console.log('Cache das tarefas invalidado com sucesso');
       
-      // Notificar componente pai se fornecido e aguardar
+      // Notificar componente pai se fornecido
       if (onTaskSaved) {
         console.log('Executando callback após salvar tarefa...');
-        await onTaskSaved();
-        console.log('Callback após salvar tarefa executado com sucesso');
+        try {
+          await onTaskSaved();
+          console.log('Callback após salvar tarefa executado com sucesso');
+        } catch (callbackError) {
+          console.error('Erro no callback após salvar tarefa:', callbackError);
+        }
       }
       
     } catch (error) {

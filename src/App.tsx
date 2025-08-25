@@ -9,7 +9,6 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { AuthGuard } from "./components/auth/AuthGuard";
 
 // Modals
-import { TaskModal } from "./components/modals/TaskModal";
 import { PersonModal } from "./components/modals/PersonModal";
 import { DeleteModal } from "./components/modals/DeleteModal";
 import { DailyCloseModal } from "./components/modals/DailyCloseModal";
@@ -30,12 +29,13 @@ import BackupPage from "./pages/BackupPage";
 import { SkillsPage } from "./pages/SkillsPage";
 import NotFound from "./pages/NotFound";
 
-// Create QueryClient outside of component to avoid re-creation
+// Create QueryClient with better configuration for immediate updates
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 30 * 1000, // Reduzido de 5 minutos para 30 segundos
+      gcTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
@@ -64,8 +64,7 @@ const App = () => {
               </Routes>
             </AppLayout>
             
-            {/* Global Modals */}
-            <TaskModal />
+            {/* Global Modals - TaskModal removido pois está no TasksPage */}
             <PersonModal />
             <SkillModal />
             <TeamMemberModal />
