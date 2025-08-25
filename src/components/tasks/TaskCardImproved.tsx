@@ -97,10 +97,9 @@ export function TaskCardImproved({
 
   // O botão reagendar só pode aparecer se:
   // 1. A tarefa não foi concluída E
-  // 2. A tarefa não tem status de completed/not-done OU foi reagendada hoje
+  // 2. A tarefa não tem completion history OU foi reagendada hoje
   const canShowReschedule = !task.isConcluded && (
     !hasCompletion || 
-    lastCompletion?.status === 'pending' || 
     wasRescheduledToday || 
     isRescheduling
   );
