@@ -6,7 +6,11 @@ import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { SubItem, TaskFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
-export function TaskModal() {
+interface TaskModalProps {
+  onTaskSaved?: () => void;
+}
+
+export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
   const { isTaskModalOpen, taskToEdit, closeTaskModal } = useModalStore();
   const { addTask, updateTask, refetch } = useSupabaseTasks();
   const { toast } = useToast();
@@ -57,6 +61,11 @@ export function TaskModal() {
       
       // Atualizar dados sem recarregar a página, mantendo os filtros
       await refetch();
+      
+      // Notificar componente pai se fornecido
+      if (onTaskSaved) {
+        onTaskSaved();
+      }
       
     } catch (error) {
       console.error('Erro ao salvar tarefa:', error);

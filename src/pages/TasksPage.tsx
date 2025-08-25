@@ -1,6 +1,5 @@
 
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,6 +33,15 @@ const TasksPage = () => {
   });
   const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
   const { tasks, updateTask, deleteTask, reorderTasks, concludeTask, refetch } = useSupabaseTasks(taskFilters);
+
+  // Função para atualizar dados após qualquer ação
+  const refreshData = async () => {
+    try {
+      await refetch();
+    } catch (error) {
+      console.error('Erro ao atualizar dados:', error);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -74,18 +82,19 @@ const TasksPage = () => {
     }
   };
 
-  const handleStatusChange = (taskId: string, status: Task['status']) => {
+  const handleStatusChange = async (taskId: string, status: Task['status']) => {
     try {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
       if (status === 'pending') {
         const newHistory = task.completionHistory?.slice(0, -1) || [];
-        updateTask(taskId, { 
+        await updateTask(taskId, { 
           status: 'pending',
           completionHistory: newHistory,
           updatedAt: new Date().toISOString()
         });
+        await refreshData();
         return;
       }
 
@@ -108,11 +117,13 @@ const TasksPage = () => {
         completionRecord
       ];
 
-      updateTask(taskId, { 
+      await updateTask(taskId, { 
         status,
         completionHistory: updatedCompletionHistory,
         updatedAt: new Date().toISOString()
       });
+      
+      await refreshData();
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
     }
@@ -134,7 +145,7 @@ const TasksPage = () => {
     setTaskForHistory(task);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     if (isMultipleDays || sortBy !== 'order') return;
 
     const { active, over } = event;
@@ -149,27 +160,21 @@ const TasksPage = () => {
     
     if (!activeTask || !overTask) return;
 
-    // Se as tarefas não são do mesmo dia, não permitir reordenamento
     if (activeTask.scheduledDate !== overTask.scheduledDate) return;
 
     const activeOrder = activeTask.order || 0;
     const overOrder = overTask.order || 0;
 
-    // Obter TODAS as tarefas do mesmo dia (não apenas as filtradas)
     const allTasksForDate = tasks.filter(task => task.scheduledDate === activeTask.scheduledDate);
     
-    // Criar o novo array de IDs baseado na nova ordem
     const updatedTasks = allTasksForDate.map(task => {
       if (task.id === activeTaskId) {
-        // A tarefa movida assume a posição da tarefa de destino
         return { ...task, order: overOrder };
       } else if (activeOrder < overOrder) {
-        // Movendo para baixo: tarefas entre activeOrder e overOrder sobem uma posição
         if (task.order > activeOrder && task.order <= overOrder) {
           return { ...task, order: task.order - 1 };
         }
       } else if (activeOrder > overOrder) {
-        // Movendo para cima: tarefas entre overOrder e activeOrder descem uma posição
         if (task.order >= overOrder && task.order < activeOrder) {
           return { ...task, order: task.order + 1 };
         }
@@ -177,25 +182,17 @@ const TasksPage = () => {
       return task;
     });
 
-    // Ordenar pelo nova ordem e criar array de IDs
     const taskIds = updatedTasks
       .sort((a, b) => (a.order || 0) - (b.order || 0))
       .map(task => task.id);
 
-    console.log('Reordenando tarefas:', {
-      activeTask: activeTask.title,
-      activeOrder,
-      overTask: overTask.title,
-      overOrder,
-      newOrder: taskIds
-    });
-
-    reorderTasks(taskIds);
+    await reorderTasks(taskIds);
+    await refreshData();
   };
 
   const handleConcludeTask = async (taskId: string) => {
     await concludeTask(taskId);
-    refetch();
+    await refreshData();
   };
 
   const handleUnconcludeTask = async (taskId: string) => {
@@ -209,11 +206,19 @@ const TasksPage = () => {
         status: 'pending',
         updatedAt: new Date().toISOString()
       });
-      refetch();
+      await refreshData();
     } catch (error) {
       console.error('Erro ao desfazer conclusão da tarefa:', error);
     }
   };
+
+  // Atualizar dados quando o modal de reagendamento fechar
+  useEffect(() => {
+    const { isForwardTaskModalOpen } = useModalStore.getState();
+    if (!isForwardTaskModalOpen) {
+      refreshData();
+    }
+  }, [useModalStore.getState().isForwardTaskModalOpen]);
 
   // Verificar se todas as tarefas do período estão concluídas
   const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
@@ -343,7 +348,7 @@ const TasksPage = () => {
         isOpen={!!taskForHistory}
         onClose={() => setTaskForHistory(null)}
       />
-      <RescheduleModal />
+      <RescheduleModal onRescheduleComplete={refreshData} />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,13 +11,18 @@ import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 
-export function RescheduleModal() {
+interface RescheduleModalProps {
+  onRescheduleComplete?: () => void;
+}
+
+export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) {
   const { isForwardTaskModalOpen, taskToForward, closeForwardTaskModal } = useModalStore();
   const { updateTask, addTask } = useSupabaseTasks();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [keepOrder, setKeepOrder] = useState(true);
   const [keepChecklistStatus, setKeepChecklistStatus] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Calcular próximo dia útil (segunda-feira se for fim de semana)
   const getNextBusinessDay = () => {
@@ -43,7 +47,9 @@ export function RescheduleModal() {
   }, [isForwardTaskModalOpen, taskToForward]);
 
   const handleReschedule = async () => {
-    if (!taskToForward || !selectedDate) return;
+    if (!taskToForward || !selectedDate || isProcessing) return;
+
+    setIsProcessing(true);
 
     try {
       const forwardRecord = {
@@ -97,10 +103,17 @@ export function RescheduleModal() {
         description: `Nova tarefa criada para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })} e tarefa original concluída automaticamente.`,
       });
 
+      // Fechar modal e resetar estados
       closeForwardTaskModal();
       setSelectedDate(undefined);
       setKeepOrder(true);
       setKeepChecklistStatus(true);
+      
+      // Notificar componente pai para atualizar dados
+      if (onRescheduleComplete) {
+        onRescheduleComplete();
+      }
+
     } catch (error) {
       console.error('Erro ao reagendar tarefa:', error);
       toast({
@@ -108,6 +121,8 @@ export function RescheduleModal() {
         description: "Erro ao reagendar tarefa",
         variant: "destructive"
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -171,11 +186,18 @@ export function RescheduleModal() {
           </div>
 
           <div className="flex gap-2 justify-end pt-4">
-            <Button variant="outline" onClick={closeForwardTaskModal}>
+            <Button 
+              variant="outline" 
+              onClick={closeForwardTaskModal}
+              disabled={isProcessing}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleReschedule} disabled={!selectedDate}>
-              Reagendar
+            <Button 
+              onClick={handleReschedule} 
+              disabled={!selectedDate || isProcessing}
+            >
+              {isProcessing ? "Reagendando..." : "Reagendar"}
             </Button>
           </div>
         </div>
