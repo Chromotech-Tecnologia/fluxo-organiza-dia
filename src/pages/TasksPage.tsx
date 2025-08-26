@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -257,205 +256,205 @@ export default function TasksPage() {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TaskFiltersImproved
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            activeFiltersCount={activeFiltersCount}
+          />
+
+          {/* Tasks Content */}
+          <TabsContent value="today" className="space-y-4">
+            {todayTasks.length === 0 ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center py-12">
+                    <Calendar className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      Nenhuma tarefa para hoje
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Aproveite o seu dia!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {todayTasks.map(task => (
+                  <TaskCardImproved
+                    key={task.id}
+                    task={task}
+                    onStatusChange={handleStatusChange}
+                    onConclude={handleConclude}
+                    onUnconclude={handleUnconclude}
+                    onEdit={() => handleEditTask(task)}
+                    onForward={() => handleForwardTask(task)}
+                    onHistory={() => handleViewTaskHistory(task)}
+                    onDelete={() => handleDeleteTask(task)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="pending" className="space-y-4">
+            {pendingTasks.length === 0 ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center py-12">
+                    <Clock className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      Nenhuma tarefa pendente
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Todas as suas tarefas estão em dia!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {pendingTasks.map(task => (
+                  <TaskCardImproved
+                    key={task.id}
+                    task={task}
+                    onStatusChange={handleStatusChange}
+                    onConclude={handleConclude}
+                    onUnconclude={handleUnconclude}
+                    onEdit={() => handleEditTask(task)}
+                    onForward={() => handleForwardTask(task)}
+                    onHistory={() => handleViewTaskHistory(task)}
+                    onDelete={() => handleDeleteTask(task)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="completed" className="space-y-4">
+            {completedTasks.length === 0 ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center py-12">
+                    <CheckCircle className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      Nenhuma tarefa concluída
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Comece a concluir suas tarefas!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {completedTasks.map(task => (
+                  <TaskCardImproved
+                    key={task.id}
+                    task={task}
+                    onStatusChange={handleStatusChange}
+                    onConclude={handleConclude}
+                    onUnconclude={handleUnconclude}
+                    onEdit={() => handleEditTask(task)}
+                    onForward={() => handleForwardTask(task)}
+                    onHistory={() => handleViewTaskHistory(task)}
+                    onDelete={() => handleDeleteTask(task)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="not-done" className="space-y-4">
+            {notDoneTasks.length === 0 ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center py-12">
+                    <X className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      Nenhuma tarefa não feita
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Todas as suas tarefas estão sendo realizadas!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {notDoneTasks.map(task => (
+                  <TaskCardImproved
+                    key={task.id}
+                    task={task}
+                    onStatusChange={handleStatusChange}
+                    onConclude={handleConclude}
+                    onUnconclude={handleUnconclude}
+                    onEdit={() => handleEditTask(task)}
+                    onForward={() => handleForwardTask(task)}
+                    onHistory={() => handleViewTaskHistory(task)}
+                    onDelete={() => handleDeleteTask(task)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="rescheduled" className="space-y-4">
+            {rescheduledTasks.length === 0 ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center py-12">
+                    <RotateCcw className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      Nenhuma tarefa reagendada
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Todas as suas tarefas estão dentro do prazo!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {rescheduledTasks.map(task => (
+                  <TaskCardImproved
+                    key={task.id}
+                    task={task}
+                    onStatusChange={handleStatusChange}
+                    onConclude={handleConclude}
+                    onUnconclude={handleUnconclude}
+                    onEdit={() => handleEditTask(task)}
+                    onForward={() => handleForwardTask(task)}
+                    onHistory={() => handleViewTaskHistory(task)}
+                    onDelete={() => handleDeleteTask(task)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="stats" className="space-y-4">
+            <TaskStatsImproved tasks={visibleTasks} />
+          </TabsContent>
+
+          <TabsContent value="team" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center py-12">
+                  <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Funcionalidade em desenvolvimento
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Acompanhe o desempenho da sua equipe em breve!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
-
-        <TaskFiltersImproved
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          activeFiltersCount={activeFiltersCount}
-        />
       </div>
-
-      {/* Tasks Content */}
-      <TabsContent value="today" className="space-y-4">
-        {todayTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <Calendar className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhuma tarefa para hoje
-                </h3>
-                <p className="text-muted-foreground">
-                  Aproveite o seu dia!
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {todayTasks.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={handleStatusChange}
-                onConclude={handleConclude}
-                onUnconclude={handleUnconclude}
-                onEdit={() => handleEditTask(task)}
-                onForward={() => handleForwardTask(task)}
-                onHistory={() => handleViewTaskHistory(task)}
-                onDelete={() => handleDeleteTask(task)}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="pending" className="space-y-4">
-        {pendingTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <Clock className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhuma tarefa pendente
-                </h3>
-                <p className="text-muted-foreground">
-                  Todas as suas tarefas estão em dia!
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {pendingTasks.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={handleStatusChange}
-                onConclude={handleConclude}
-                onUnconclude={handleUnconclude}
-                onEdit={() => handleEditTask(task)}
-                onForward={() => handleForwardTask(task)}
-                onHistory={() => handleViewTaskHistory(task)}
-                onDelete={() => handleDeleteTask(task)}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="completed" className="space-y-4">
-        {completedTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <CheckCircle className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhuma tarefa concluída
-                </h3>
-                <p className="text-muted-foreground">
-                  Comece a concluir suas tarefas!
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {completedTasks.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={handleStatusChange}
-                onConclude={handleConclude}
-                onUnconclude={handleUnconclude}
-                onEdit={() => handleEditTask(task)}
-                onForward={() => handleForwardTask(task)}
-                onHistory={() => handleViewTaskHistory(task)}
-                onDelete={() => handleDeleteTask(task)}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="not-done" className="space-y-4">
-        {notDoneTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <X className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhuma tarefa não feita
-                </h3>
-                <p className="text-muted-foreground">
-                  Todas as suas tarefas estão sendo realizadas!
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {notDoneTasks.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={handleStatusChange}
-                onConclude={handleConclude}
-                onUnconclude={handleUnconclude}
-                onEdit={() => handleEditTask(task)}
-                onForward={() => handleForwardTask(task)}
-                onHistory={() => handleViewTaskHistory(task)}
-                onDelete={() => handleDeleteTask(task)}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="rescheduled" className="space-y-4">
-        {rescheduledTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <RotateCcw className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhuma tarefa reagendada
-                </h3>
-                <p className="text-muted-foreground">
-                  Todas as suas tarefas estão dentro do prazo!
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {rescheduledTasks.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={handleStatusChange}
-                onConclude={handleConclude}
-                onUnconclude={handleUnconclude}
-                onEdit={() => handleEditTask(task)}
-                onForward={() => handleForwardTask(task)}
-                onHistory={() => handleViewTaskHistory(task)}
-                onDelete={() => handleDeleteTask(task)}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="stats" className="space-y-4">
-        <TaskStatsImproved tasks={visibleTasks} />
-      </TabsContent>
-
-      <TabsContent value="team" className="space-y-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center py-12">
-              <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                Funcionalidade em desenvolvimento
-              </h3>
-              <p className="text-muted-foreground">
-                Acompanhe o desempenho da sua equipe em breve!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
 
       {/* Modals */}
       <TaskModal />
