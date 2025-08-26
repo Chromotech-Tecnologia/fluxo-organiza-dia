@@ -32,8 +32,3 @@ export function searchInTask(task: any, searchQuery: string): boolean {
   
   return false;
 }
-
-export function filterTasks(tasks: any[], searchQuery: string): any[] {
-  if (!searchQuery.trim()) return tasks;
-  return tasks.filter(task => searchInTask(task, searchQuery));
-}

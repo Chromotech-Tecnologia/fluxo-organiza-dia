@@ -1,504 +1,363 @@
-
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar as CalendarIcon, BarChart3, Users } from "lucide-react";
-import { TaskFiltersImproved } from "@/components/tasks/TaskFiltersImproved";
-import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal";
-import { TaskCard } from "@/components/tasks/TaskCard";
-import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
-import { TaskStatsImproved } from "@/components/tasks/TaskStatsImproved";
-import { TaskModal } from "@/components/modals/TaskModal";
-import { ForwardTaskModal } from "@/components/modals/ForwardTaskModal";
-import { RescheduleModal } from "@/components/modals/RescheduleModal";
-import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
-import { useSupabasePeople } from "@/hooks/useSupabasePeople";
-import { Task, TaskFilter, Person, TaskStatus, SortOption } from "@/types";
-import { sortTasks, calculateTotalEstimatedTime, formatTime, isTaskRescheduledToday } from "@/lib/taskUtils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, CheckCircle } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
-import { filterTasks } from "@/lib/searchUtils";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
+import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
+import { TaskStatsCompact } from "@/components/tasks/TaskStatsCompact";
+import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal";
+import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
+import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
+import { RescheduleModal } from "@/components/modals/RescheduleModal";
+import { TaskModal } from "@/components/modals/TaskModal";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { useQueryClient } from "@tanstack/react-query";
+import { Task, TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-import { toast } from "sonner";
+import { searchInTask } from "@/lib/searchUtils";
+import { sortTasks, SortOption } from "@/lib/taskUtils";
 
-export default function TasksPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentFilters, setCurrentFilters] = useState<TaskFilter>({
+const TasksPage = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
+  const [taskForHistory, setTaskForHistory] = useState<Task | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('order');
+  const [taskFilters, setTaskFilters] = useState<TaskFilter>({
     dateRange: {
       start: getCurrentDateInSaoPaulo(),
       end: getCurrentDateInSaoPaulo()
     }
   });
-  const [sortBy, setSortBy] = useState<SortOption>('order');
-  const { tasks, loading, addTask, updateTask, deleteTask } = useSupabaseTasks();
-  const { people } = useSupabasePeople();
-  const { openTaskModal, closeTaskModal, isTaskModalOpen, taskToEdit, openForwardTaskModal } = useModalStore();
-  const [selectedTab, setSelectedTab] = useState("today");
+  const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
+  const { tasks, updateTask, deleteTask, reorderTasks, concludeTask } = useSupabaseTasks(taskFilters);
+  const queryClient = useQueryClient();
 
-  // Filtra as tasks com base na data selecionada
-  const filteredTasksByDate = useMemo(() => {
-    if (!tasks) return [];
-
-    return tasks.filter(task => {
-      if (!currentFilters.dateRange) return true;
-
-      const taskDate = task.scheduledDate;
-      const startDate = currentFilters.dateRange.start;
-      const endDate = currentFilters.dateRange.end;
-
-      return taskDate >= startDate && taskDate <= endDate;
-    });
-  }, [tasks, currentFilters.dateRange]);
-
-  // Filtra as tasks com base nos outros filtros e na busca
-  const filteredTasks = useMemo(() => {
-    let filtered = filteredTasksByDate;
-
-    // Aplica os filtros
-    if (currentFilters) {
-      if (currentFilters.type) {
-        filtered = filtered.filter(task => currentFilters.type?.includes(task.type));
-      }
-      if (currentFilters.priority) {
-        filtered = filtered.filter(task => currentFilters.priority?.includes(task.priority));
-      }
-      if (currentFilters.status) {
-        filtered = filtered.filter(task => currentFilters.status?.includes(task.status));
-      }
-      if (currentFilters.assignedPersonId) {
-        filtered = filtered.filter(task => task.assignedPersonId === currentFilters.assignedPersonId);
-      }
-      if (currentFilters.timeInvestment) {
-        filtered = filtered.filter(task => currentFilters.timeInvestment?.includes(task.timeInvestment));
-      }
-      if (currentFilters.category) {
-        filtered = filtered.filter(task => currentFilters.category?.includes(task.category));
-      }
-      if (currentFilters.hasChecklist === true) {
-        filtered = filtered.filter(task => task.subItems && task.subItems.length > 0);
-      }
-      if (currentFilters.isForwarded === true) {
-        filtered = filtered.filter(task => task.isForwarded === true);
-      }
-      if (currentFilters.isForwarded === false) {
-        filtered = filtered.filter(task => task.isForwarded === false);
-      }
-      if (currentFilters.noOrder === true) {
-        filtered = filtered.filter(task => !task.order);
-      }
-    }
-
-    // Aplica a busca
-    if (searchQuery) {
-      filtered = filterTasks(filtered, searchQuery);
-    }
-
-    return filtered;
-  }, [filteredTasksByDate, searchQuery, currentFilters]);
-
-  // Ordena as tasks
-  const sortedTasks = useMemo(() => {
-    if (!filteredTasks) return [];
-    return sortTasks(filteredTasks, sortBy);
-  }, [filteredTasks, sortBy]);
-
-  // Calcula as estatísticas das tasks
-  const taskStats = useMemo(() => {
-    if (!tasks) return null;
-
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(task => task.status === 'completed').length;
-    const pendingTasks = tasks.filter(task => task.status === 'pending').length;
-    const overdueTasks = tasks.filter(task => task.status === 'not-done').length;
-    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-    const averageForwards = totalTasks > 0 ? tasks.reduce((acc, task) => acc + task.forwardCount, 0) / totalTasks : 0;
-
-    // Encontrar a pessoa com mais tasks atribuídas
-    const personTaskCounts: { [key: string]: number } = {};
-    tasks.forEach(task => {
-      if (task.assignedPersonId) {
-        personTaskCounts[task.assignedPersonId] = (personTaskCounts[task.assignedPersonId] || 0) + 1;
-      }
-    });
-
-    let topPersonByTasks: Person | undefined;
-    let maxTasks = 0;
-    Object.keys(personTaskCounts).forEach(personId => {
-      if (personTaskCounts[personId] > maxTasks) {
-        maxTasks = personTaskCounts[personId];
-        topPersonByTasks = people?.find(person => person.id === personId);
-      }
-    });
-
-    // Encontrar a task mais forwardada
-    let mostForwardedTask: Task | undefined;
-    let maxForwards = 0;
-    tasks.forEach(task => {
-      if (task.forwardCount > maxForwards) {
-        maxForwards = task.forwardCount;
-        mostForwardedTask = task;
-      }
-    });
-
-    return {
-      totalTasks,
-      completedTasks,
-      pendingTasks,
-      overdueTasks,
-      completionRate,
-      averageForwards,
-      topPersonByTasks,
-      mostForwardedTask
-    };
-  }, [tasks, people]);
-
-  // Calcula o tempo estimado total das tasks filtradas
-  const totalEstimatedTime = useMemo(() => {
-    return calculateTotalEstimatedTime(filteredTasks);
-  }, [filteredTasks]);
-
-  // Handlers
-  const handleOpenTaskModal = (task?: Task) => {
-    openTaskModal(task);
-  };
-
-  const handleOpenForwardModal = (task: Task) => {
-    openForwardTaskModal(task);
-  };
-
-  const handleTaskUpdate = async (taskId: string, newData: Partial<Task>) => {
+  // Função para forçar atualização de dados mais robusta
+  const refreshData = async () => {
     try {
-      await updateTask(taskId, newData);
-      toast.success('Tarefa atualizada com sucesso!');
+      console.log('Forçando atualização completa dos dados...');
+      
+      // Invalidar todas as queries relacionadas a tarefas
+      await queryClient.invalidateQueries({ 
+        queryKey: ['tasks'],
+        refetchType: 'all'
+      });
+      
+      // Aguardar um momento
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Segunda invalidação para garantir
+      await queryClient.invalidateQueries({ 
+        queryKey: ['tasks'],
+        refetchType: 'all'
+      });
+      
+      console.log('Dados atualizados com sucesso');
     } catch (error) {
-      console.error("Erro ao atualizar a tarefa:", error);
-      toast.error('Erro ao atualizar a tarefa.');
+      console.error('Erro ao atualizar dados:', error);
     }
   };
 
-  const handleTaskDelete = async (taskId: string) => {
-    try {
-      await deleteTask(taskId);
-      toast.success('Tarefa excluída com sucesso!');
-    } catch (error) {
-      console.error("Erro ao excluir a tarefa:", error);
-      toast.error('Erro ao excluir a tarefa.');
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
+
+  const filteredTasks = tasks.filter(task => searchInTask(task, searchQuery));
+  const sortedTasks = sortTasks(filteredTasks, sortBy);
+
+  const isMultipleDays = taskFilters.dateRange?.start !== taskFilters.dateRange?.end;
+  const displayTasks = isMultipleDays 
+    ? filteredTasks.sort((a, b) => {
+        if (a.scheduledDate !== b.scheduledDate) {
+          return a.scheduledDate.localeCompare(b.scheduledDate);
+        }
+        return (a.order || 0) - (b.order || 0);
+      })
+    : sortedTasks;
+
+  const maxOrder = Math.max(...tasks.map(t => t.order || 0), 1);
+
+  const handleTaskSelection = (task: Task, checked: boolean) => {
+    if (checked) {
+      setSelectedTasks([...selectedTasks, task]);
+    } else {
+      setSelectedTasks(selectedTasks.filter(t => t.id !== task.id));
     }
   };
 
-  const handleStatusChange = async (taskId: string, status: TaskStatus) => {
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTasks(displayTasks);
+    } else {
+      setSelectedTasks([]);
+    }
+  };
+
+  const handleStatusChange = async (taskId: string, status: Task['status']) => {
     try {
+      console.log('Alterando status da tarefa:', taskId, 'para:', status);
+      
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
-      if (status === 'completed') {
-        // Verifica se a tarefa já foi concluída hoje
-        const alreadyCompletedToday = task.completionHistory?.some(record => {
-          const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
-          const today = getCurrentDateInSaoPaulo();
-          return recordDate === today && record.status === 'completed';
+      if (status === 'pending') {
+        const newHistory = task.completionHistory?.slice(0, -1) || [];
+        await updateTask(taskId, { 
+          status: 'pending',
+          completionHistory: newHistory,
+          updatedAt: new Date().toISOString()
         });
-
-        if (alreadyCompletedToday) {
-          toast('Esta tarefa já foi concluída hoje!');
-          return;
-        }
-
-        // Se não foi concluída hoje, prossegue com a conclusão
-        const updatedData = {
-          status: 'completed' as TaskStatus,
-          isConcluded: true,
-          concludedAt: new Date().toISOString(),
-          completionHistory: [
-            ...(task.completionHistory || []),
-            {
-              completedAt: new Date().toISOString(),
-              status: 'completed' as const,
-              date: getCurrentDateInSaoPaulo(),
-              wasForwarded: task.isForwarded || false
-            }
-          ]
-        };
-        await updateTask(taskId, updatedData);
-        toast.success('Tarefa marcada como concluída!');
-      } else if (status === 'not-done') {
-        // Verifica se a tarefa já foi marcada como não feita hoje
-        const alreadyMarkedNotDoneToday = task.completionHistory?.some(record => {
-          const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
-          const today = getCurrentDateInSaoPaulo();
-          return recordDate === today && record.status === 'not-done';
-        });
-
-        if (alreadyMarkedNotDoneToday) {
-          toast('Esta tarefa já foi marcada como não feita hoje!');
-          return;
-        }
-
-        // Se não foi marcada como não feita hoje, prossegue com a ação
-        const updatedData = {
-          status: 'not-done' as TaskStatus,
-          isConcluded: false,
-          concludedAt: null,
-          completionHistory: [
-            ...(task.completionHistory || []),
-            {
-              completedAt: new Date().toISOString(),
-              status: 'not-done' as const,
-              date: getCurrentDateInSaoPaulo(),
-              wasForwarded: task.isForwarded || false
-            }
-          ]
-        };
-        await updateTask(taskId, updatedData);
-        toast.success('Tarefa marcada como não feita!');
-      } else {
-        await updateTask(taskId, { status });
-        toast.success('Status da tarefa atualizado!');
+        await refreshData();
+        return;
       }
-    } catch (error) {
-      console.error("Erro ao atualizar status da tarefa:", error);
-      toast.error('Erro ao atualizar status da tarefa.');
-    }
-  };
 
-  const handleConclude = async (task: Task) => {
-    try {
-      const updatedData = {
-        isConcluded: true,
-        concludedAt: new Date().toISOString(),
-        status: 'completed' as TaskStatus
+      const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
+      const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
+      
+      if (hasCompletion && lastCompletion?.status === status) {
+        return;
+      }
+
+      const completionRecord = {
+        completedAt: getCurrentDateInSaoPaulo(),
+        status: status as 'completed' | 'not-done',
+        date: task.scheduledDate,
+        wasForwarded: task.forwardHistory && task.forwardHistory.length > 0
       };
-      await updateTask(task.id, updatedData);
-      toast.success('Tarefa concluída!');
+
+      const updatedCompletionHistory = [
+        ...(task.completionHistory || []),
+        completionRecord
+      ];
+
+      await updateTask(taskId, { 
+        status,
+        completionHistory: updatedCompletionHistory,
+        updatedAt: new Date().toISOString()
+      });
+      
+      await refreshData();
     } catch (error) {
-      console.error("Erro ao concluir tarefa:", error);
-      toast.error('Erro ao concluir tarefa.');
+      console.error('Erro ao atualizar status da tarefa:', error);
     }
   };
 
-  const handleUnconclude = async (task: Task) => {
+  const handleForwardTask = (task: Task) => {
+    openForwardTaskModal(task);
+  };
+
+  const handleEditTask = (task: Task) => {
+    openTaskModal(task);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    openDeleteModal('task', task);
+  };
+
+  const handleTaskHistory = (task: Task) => {
+    setTaskForHistory(task);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    if (isMultipleDays || sortBy !== 'order') return;
+
+    const { active, over } = event;
+    if (!active.id || !over?.id || active.id === over.id) return;
+
+    const activeTaskId = active.id as string;
+    const overTaskId = over.id as string;
+
+    const activeTask = displayTasks.find(task => task.id === activeTaskId);
+    const overTask = displayTasks.find(task => task.id === overTaskId);
+    
+    if (!activeTask || !overTask) return;
+
+    if (activeTask.scheduledDate !== overTask.scheduledDate) return;
+
+    const activeOrder = activeTask.order || 0;
+    const overOrder = overTask.order || 0;
+
+    const allTasksForDate = tasks.filter(task => task.scheduledDate === activeTask.scheduledDate);
+    
+    const updatedTasks = allTasksForDate.map(task => {
+      if (task.id === activeTaskId) {
+        return { ...task, order: overOrder };
+      } else if (activeOrder < overOrder) {
+        if (task.order > activeOrder && task.order <= overOrder) {
+          return { ...task, order: task.order - 1 };
+        }
+      } else if (activeOrder > overOrder) {
+        if (task.order >= overOrder && task.order < activeOrder) {
+          return { ...task, order: task.order + 1 };
+        }
+      }
+      return task;
+    });
+
+    const taskIds = updatedTasks
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(task => task.id);
+
+    await reorderTasks(taskIds);
+    await refreshData();
+  };
+
+  const handleConcludeTask = async (taskId: string) => {
+    console.log('Concluindo tarefa:', taskId);
+    await concludeTask(taskId);
+    await refreshData();
+  };
+
+  const handleUnconcludeTask = async (taskId: string) => {
     try {
-      const updatedData = {
+      console.log('Desfazendo conclusão da tarefa:', taskId);
+      
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      await updateTask(taskId, {
+        ...task,
         isConcluded: false,
-        concludedAt: null,
-        status: 'pending' as TaskStatus
-      };
-      await updateTask(task.id, updatedData);
-      toast.success('Conclusão da tarefa desfeita!');
+        status: 'pending',
+        updatedAt: new Date().toISOString()
+      });
+      await refreshData();
     } catch (error) {
-      console.error("Erro ao desfazer conclusão da tarefa:", error);
-      toast.error('Erro ao desfazer conclusão da tarefa.');
+      console.error('Erro ao desfazer conclusão da tarefa:', error);
     }
   };
 
-  // Tasks para hoje
-  const tasksForToday = useMemo(() => {
-    return sortedTasks?.filter(task => task.scheduledDate === getCurrentDateInSaoPaulo());
-  }, [sortedTasks]);
-
-  // Tasks pendentes
-  const pendingTasks = useMemo(() => {
-    return sortedTasks?.filter(task => task.status === 'pending');
-  }, [sortedTasks]);
-
-  // Tasks concluídas
-  const completedTasks = useMemo(() => {
-    return sortedTasks?.filter(task => task.status === 'completed');
-  }, [sortedTasks]);
-
-  // Tasks não feitas
-  const notDoneTasks = useMemo(() => {
-    return sortedTasks?.filter(task => task.status === 'not-done');
-  }, [sortedTasks]);
-
-  // Tasks reagendadas para hoje pelo usuário
-  const rescheduledTasksToday = useMemo(() => {
-    return sortedTasks?.filter(task => isTaskRescheduledToday(task));
-  }, [sortedTasks]);
-
-  useEffect(() => {
-    if (loading) {
-      console.log("Carregando tasks...");
-    }
-  }, [loading]);
-
-  if (loading) {
-    return <div>Carregando tasks...</div>;
-  }
+  const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
 
   return (
-    <div className="container py-10">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Tarefas</h1>
-        <Button onClick={() => handleOpenTaskModal()}>
-          <Plus className="mr-2 h-4 w-4" />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Gestão de Tarefas</h1>
+          <p className="text-muted-foreground">
+            Controle e organize suas tarefas diárias
+          </p>
+        </div>
+        <Button className="gap-2" onClick={() => openTaskModal()}>
+          <Plus className="h-4 w-4" />
           Nova Tarefa
         </Button>
       </div>
 
-      <TaskFiltersHorizontal
-        currentFilters={currentFilters}
-        onFiltersChange={setCurrentFilters}
+      {/* Indicador de Dia Fechado */}
+      {allTasksConcluded && (
+        <Card className="border-green-500 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">🎉 Período Fechado! Todas as tarefas foram concluídas!</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <TaskFiltersHorizontal 
+        currentFilters={taskFilters}
+        onFiltersChange={setTaskFilters}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         sortBy={sortBy}
         onSortChange={setSortBy}
       />
 
-      <Tabs defaultValue="today" className="mt-4" onValueChange={setSelectedTab}>
-        <TabsList>
-          <TabsTrigger value="today">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            Hoje
-          </TabsTrigger>
-          <TabsTrigger value="pending">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            Pendentes
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            Concluídas
-          </TabsTrigger>
-           <TabsTrigger value="not-done">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            Não Feitas
-          </TabsTrigger>
-          <TabsTrigger value="rescheduled">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            Reagendadas
-          </TabsTrigger>
-          <TabsTrigger value="stats">
-            <BarChart3 className="mr-2 h-4 w-4" />
-            Estatísticas
-          </TabsTrigger>
-          <TabsTrigger value="team">
-            <Users className="mr-2 h-4 w-4" />
-            Equipe
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="today" className="mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasksForToday?.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={(status) => handleStatusChange(task.id, status)}
-                onConclude={() => handleConclude(task)}
-                onUnconclude={() => handleUnconclude(task)}
-                onForward={() => handleOpenForwardModal(task)}
-                onEdit={() => handleOpenTaskModal(task)}
-                onDelete={() => handleTaskDelete(task.id)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="pending" className="mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pendingTasks?.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={(status) => handleStatusChange(task.id, status)}
-                onConclude={() => handleConclude(task)}
-                onUnconclude={() => handleUnconclude(task)}
-                onForward={() => handleOpenForwardModal(task)}
-                onEdit={() => handleOpenTaskModal(task)}
-                onDelete={() => handleTaskDelete(task.id)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="completed" className="mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {completedTasks?.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={(status) => handleStatusChange(task.id, status)}
-                onConclude={() => handleConclude(task)}
-                onUnconclude={() => handleUnconclude(task)}
-                onForward={() => handleOpenForwardModal(task)}
-                onEdit={() => handleOpenTaskModal(task)}
-                onDelete={() => handleTaskDelete(task.id)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="not-done" className="mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {notDoneTasks?.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={(status) => handleStatusChange(task.id, status)}
-                onConclude={() => handleConclude(task)}
-                onUnconclude={() => handleUnconclude(task)}
-                onForward={() => handleOpenForwardModal(task)}
-                onEdit={() => handleOpenTaskModal(task)}
-                onDelete={() => handleTaskDelete(task.id)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="rescheduled" className="mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rescheduledTasksToday?.map(task => (
-              <TaskCardImproved
-                key={task.id}
-                task={task}
-                onStatusChange={(status) => handleStatusChange(task.id, status)}
-                onConclude={() => handleConclude(task)}
-                onUnconclude={() => handleUnconclude(task)}
-                onForward={() => handleOpenForwardModal(task)}
-                onEdit={() => handleOpenTaskModal(task)}
-                onDelete={() => handleTaskDelete(task.id)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="stats" className="mt-4">
-          {taskStats && (
-            <div className="space-y-4">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Estatísticas Gerais</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">{taskStats.totalTasks}</div>
-                      <div className="text-sm text-muted-foreground">Total</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{taskStats.completedTasks}</div>
-                      <div className="text-sm text-muted-foreground">Concluídas</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-600">{taskStats.pendingTasks}</div>
-                      <div className="text-sm text-muted-foreground">Pendentes</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600">{taskStats.overdueTasks}</div>
-                      <div className="text-sm text-muted-foreground">Não Feitas</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="text-center">
-                      <div className="text-lg font-semibold">{taskStats.completionRate.toFixed(1)}%</div>
-                      <div className="text-sm text-muted-foreground">Taxa de Conclusão</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="team" className="mt-4">
-          <p>Gerenciar membros da equipe e suas atribuições.</p>
-        </TabsContent>
-      </Tabs>
+      <TaskStatsCompact tasks={displayTasks} />
 
-      <TaskModal />
-      <ForwardTaskModal />
-      <RescheduleModal />
+      <div className="grid gap-4">
+        {displayTasks.length === 0 ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center py-12">
+                <Plus className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery 
+                    ? "Tente ajustar sua busca ou criar uma nova tarefa"
+                    : "Comece criando sua primeira tarefa para organizar seu dia"
+                  }
+                </p>
+                <Button className="gap-2" onClick={() => openTaskModal()}>
+                  <Plus className="h-4 w-4" />
+                  {searchQuery ? "Nova Tarefa" : "Criar Primeira Tarefa"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 px-1">
+              <Checkbox
+                checked={selectedTasks.length === displayTasks.length}
+                onCheckedChange={handleSelectAll}
+              />
+              <label className="text-sm text-muted-foreground">
+                Selecionar todas ({displayTasks.length} tarefas)
+              </label>
+            </div>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+              modifiers={[restrictToVerticalAxis]}
+            >
+              <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+                {displayTasks.map((task, index) => (
+                  <div key={task.id} className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedTasks.some(t => t.id === task.id)}
+                      onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
+                      className="mt-4"
+                    />
+                    <div className="flex-1">
+                      <TaskCardImproved 
+                        task={task} 
+                        taskIndex={isMultipleDays ? undefined : index}
+                        maxOrder={maxOrder}
+                        onStatusChange={(status) => handleStatusChange(task.id, status)}
+                        onConclude={() => handleConcludeTask(task.id)}
+                        onUnconclude={() => handleUnconcludeTask(task.id)}
+                        onForward={() => handleForwardTask(task)}
+                        onEdit={() => handleEditTask(task)}
+                        onDelete={() => handleDeleteTask(task)}
+                        onHistory={() => handleTaskHistory(task)}
+                        currentViewDate={taskFilters.dateRange?.start}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </SortableContext>
+            </DndContext>
+          </>
+        )}
+        
+        <BulkActionsBar 
+          selectedTasks={selectedTasks}
+          onClearSelection={() => setSelectedTasks([])}
+        />
+      </div>
+
+      <TaskHistoryModal
+        task={taskForHistory}
+        isOpen={!!taskForHistory}
+        onClose={() => setTaskForHistory(null)}
+      />
+      <RescheduleModal onRescheduleComplete={refreshData} />
+      <TaskModal onTaskSaved={refreshData} />
     </div>
   );
-}
+};
+
+export default TasksPage;

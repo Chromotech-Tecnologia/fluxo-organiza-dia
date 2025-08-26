@@ -1,15 +1,7 @@
-
 import { create } from 'zustand';
 import { Task, Person, Skill, TeamMember } from '@/types';
 
 interface ModalState {
-  // Generic modal system
-  type: string | null;
-  isOpen: boolean;
-  initialData: any;
-  openModal: (config: { type: string; isOpen: boolean; initialData?: any }) => void;
-  closeModal: () => void;
-  
   // Task Modal
   isTaskModalOpen: boolean;
   taskToEdit: Task | null;
@@ -55,21 +47,6 @@ interface ModalState {
 }
 
 export const useModalStore = create<ModalState>((set) => ({
-  // Generic modal system
-  type: null,
-  isOpen: false,
-  initialData: null,
-  openModal: (config) => set({ 
-    type: config.type, 
-    isOpen: config.isOpen, 
-    initialData: config.initialData 
-  }),
-  closeModal: () => set({ 
-    type: null, 
-    isOpen: false, 
-    initialData: null 
-  }),
-  
   // Task Modal
   isTaskModalOpen: false,
   taskToEdit: null,

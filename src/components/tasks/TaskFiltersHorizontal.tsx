@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar, ChevronDown, Filter, Search, X, SortAsc } from "lucide-react";
-import { TaskFilter, TaskPriority, TaskStatus, TaskType, SortOption } from "@/types";
+import { TaskFilter, TaskPriority, TaskStatus, TaskType } from "@/types";
 import { getCurrentDateInSaoPaulo, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo } from "@/lib/utils";
+import { SortOption } from "@/lib/taskUtils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 
 interface TaskFiltersHorizontalProps {
