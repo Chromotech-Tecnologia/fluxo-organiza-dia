@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -127,12 +126,12 @@ export default function TasksPage() {
       );
     }
     
-    if (filters.priority) {
-      filteredTasks = filteredTasks.filter(task => task.priority === filters.priority);
+    if (filters.priority && filters.priority.length > 0) {
+      filteredTasks = filteredTasks.filter(task => filters.priority!.includes(task.priority));
     }
     
-    if (filters.status) {
-      filteredTasks = filteredTasks.filter(task => task.status === filters.status);
+    if (filters.status && filters.status.length > 0) {
+      filteredTasks = filteredTasks.filter(task => filters.status!.includes(task.status));
     }
     
     return sortTasks(filteredTasks, 'date');
@@ -160,10 +159,10 @@ export default function TasksPage() {
   const getActiveFiltersCount = () => {
     let count = 0;
     if (filters.search) count++;
-    if (filters.priority) count++;
-    if (filters.status) count++;
-    if (filters.category) count++;
-    if (filters.type) count++;
+    if (filters.priority && filters.priority.length > 0) count++;
+    if (filters.status && filters.status.length > 0) count++;
+    if (filters.category && filters.category.length > 0) count++;
+    if (filters.type && filters.type.length > 0) count++;
     if (filters.assignedPersonId) count++;
     if (filters.dateRange) {
       if (filters.dateRange.start) count++;
@@ -279,7 +278,6 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onSelect={handleTaskSelection}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onViewHistory={() => handleViewTaskHistory(task)}
@@ -312,7 +310,6 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onSelect={handleTaskSelection}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onViewHistory={() => handleViewTaskHistory(task)}
@@ -345,7 +342,6 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onSelect={handleTaskSelection}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onViewHistory={() => handleViewTaskHistory(task)}
@@ -378,7 +374,6 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onSelect={handleTaskSelection}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onViewHistory={() => handleViewTaskHistory(task)}
@@ -411,7 +406,6 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onSelect={handleTaskSelection}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onViewHistory={() => handleViewTaskHistory(task)}

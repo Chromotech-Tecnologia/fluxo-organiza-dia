@@ -52,7 +52,7 @@ export function TaskFiltersHorizontal({
 
           {/* Priority Filter */}
           <div>
-            <Select onValueChange={(value) => onFiltersChange({ ...filters, priority: value === 'all' ? undefined : value })}>
+            <Select onValueChange={(value) => onFiltersChange({ ...filters, priority: value === 'all' ? undefined : [value as any] })}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Prioridade" />
               </SelectTrigger>
@@ -67,7 +67,7 @@ export function TaskFiltersHorizontal({
 
           {/* Status Filter */}
           <div>
-            <Select onValueChange={(value) => onFiltersChange({ ...filters, status: value === 'all' ? undefined : value })}>
+            <Select onValueChange={(value) => onFiltersChange({ ...filters, status: value === 'all' ? undefined : [value as any] })}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>

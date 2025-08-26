@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { X, Search, Calendar, User, Filter, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { TaskFilter } from '@/types';
-import { SORT_OPTIONS } from '@/lib/taskUtils';
 import { PersonTeamSelect } from '@/components/people/PersonTeamSelect';
 
 interface TaskFiltersImprovedProps {
@@ -45,19 +44,19 @@ export function TaskFiltersImproved({
   };
 
   const handlePriorityChange = (value: string | undefined) => {
-    onFiltersChange({ ...filters, priority: value });
+    onFiltersChange({ ...filters, priority: value ? [value as any] : undefined });
   };
 
   const handleStatusChange = (value: string | undefined) => {
-    onFiltersChange({ ...filters, status: value });
+    onFiltersChange({ ...filters, status: value ? [value as any] : undefined });
   };
 
   const handleCategoryChange = (value: string | undefined) => {
-    onFiltersChange({ ...filters, category: value });
+    onFiltersChange({ ...filters, category: value ? [value as any] : undefined });
   };
 
   const handleTypeChange = (value: string | undefined) => {
-    onFiltersChange({ ...filters, type: value });
+    onFiltersChange({ ...filters, type: value ? [value as any] : undefined });
   };
 
   const handlePersonChange = (value: string | undefined) => {
@@ -116,7 +115,7 @@ export function TaskFiltersImproved({
 
               {/* Priority */}
               <div>
-                <Select value={filters.priority || undefined} onValueChange={handlePriorityChange}>
+                <Select value={filters.priority?.[0] || undefined} onValueChange={handlePriorityChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Prioridade" />
                   </SelectTrigger>
@@ -130,7 +129,7 @@ export function TaskFiltersImproved({
 
               {/* Status */}
               <div>
-                <Select value={filters.status || undefined} onValueChange={handleStatusChange}>
+                <Select value={filters.status?.[0] || undefined} onValueChange={handleStatusChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -145,7 +144,7 @@ export function TaskFiltersImproved({
 
               {/* Category */}
               <div>
-                <Select value={filters.category || undefined} onValueChange={handleCategoryChange}>
+                <Select value={filters.category?.[0] || undefined} onValueChange={handleCategoryChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
@@ -159,7 +158,7 @@ export function TaskFiltersImproved({
 
               {/* Type */}
               <div>
-                <Select value={filters.type || undefined} onValueChange={handleTypeChange}>
+                <Select value={filters.type?.[0] || undefined} onValueChange={handleTypeChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
