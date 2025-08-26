@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { TaskStatsImproved } from "@/components/tasks/TaskStatsImproved";
 import { TaskModal } from "@/components/modals/TaskModal";
 import { ForwardTaskModal } from "@/components/modals/ForwardTaskModal";
 import { RescheduleModal } from "@/components/modals/RescheduleModal";
-import { TaskHistoryModal } from "@/components/modals/TaskHistoryModal";
+import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { Task, TaskFilter, Person, TaskStatus, SortOption } from "@/types";
@@ -30,9 +31,9 @@ export default function TasksPage() {
     }
   });
   const [sortBy, setSortBy] = useState<SortOption>('order');
-  const { tasks, isLoading, error, createTask, updateTask, deleteTask } = useSupabaseTasks();
+  const { tasks, loading, addTask, updateTask, deleteTask } = useSupabaseTasks();
   const { people } = useSupabasePeople();
-  const { openModal } = useModalStore();
+  const { openModal, closeModal, isOpen, initialData } = useModalStore();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
@@ -179,7 +180,7 @@ export default function TasksPage() {
 
   const handleOpenRescheduleModal = (task: Task) => {
     setSelectedTask(task);
-    setIsRescheduleModalOpen(true);
+    setIsRescheduleModal(true);
   };
 
   const handleCloseRescheduleModal = () => {
@@ -197,10 +198,9 @@ export default function TasksPage() {
     setSelectedTask(null);
   };
 
-  const handleTaskUpdate = async (task: Task, newData: Partial<Task>) => {
+  const handleTaskUpdate = async (taskId: string, newData: Partial<Task>) => {
     try {
-      const updatedTask = { ...task, ...newData };
-      await updateTask(updatedTask);
+      await updateTask(taskId, newData);
       toast.success('Tarefa atualizada com sucesso!');
     } catch (error) {
       console.error("Erro ao atualizar a tarefa:", error);
@@ -208,9 +208,9 @@ export default function TasksPage() {
     }
   };
 
-  const handleTaskDelete = async (task: Task) => {
+  const handleTaskDelete = async (taskId: string) => {
     try {
-      await deleteTask(task.id);
+      await deleteTask(taskId);
       toast.success('Tarefa excluída com sucesso!');
     } catch (error) {
       console.error("Erro ao excluir a tarefa:", error);
@@ -218,8 +218,11 @@ export default function TasksPage() {
     }
   };
 
-  const handleTaskComplete = async (task: Task) => {
+  const handleTaskComplete = async (taskId: string) => {
     try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
       // Verifica se a tarefa já foi concluída hoje
       const alreadyCompletedToday = task.completionHistory?.some(record => {
         const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
@@ -233,8 +236,7 @@ export default function TasksPage() {
       }
 
       // Se não foi concluída hoje, prossegue com a conclusão
-      const updatedTask = {
-        ...task,
+      const updatedData = {
         status: 'completed',
         isConcluded: true,
         concludedAt: new Date().toISOString(),
@@ -248,7 +250,7 @@ export default function TasksPage() {
           }
         ]
       };
-      await updateTask(updatedTask);
+      await updateTask(taskId, updatedData);
       toast.success('Tarefa marcada como concluída!');
     } catch (error) {
       console.error("Erro ao marcar a tarefa como concluída:", error);
@@ -256,8 +258,11 @@ export default function TasksPage() {
     }
   };
 
-  const handleTaskNotDone = async (task: Task) => {
+  const handleTaskNotDone = async (taskId: string) => {
     try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
       // Verifica se a tarefa já foi marcada como não feita hoje
       const alreadyMarkedNotDoneToday = task.completionHistory?.some(record => {
         const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
@@ -271,8 +276,7 @@ export default function TasksPage() {
       }
 
       // Se não foi marcada como não feita hoje, prossegue com a ação
-      const updatedTask = {
-        ...task,
+      const updatedData = {
         status: 'not-done',
         isConcluded: false,
         concludedAt: null,
@@ -286,7 +290,7 @@ export default function TasksPage() {
           }
         ]
       };
-      await updateTask(updatedTask);
+      await updateTask(taskId, updatedData);
       toast.success('Tarefa marcada como não feita!');
     } catch (error) {
       console.error("Erro ao marcar a tarefa como não feita:", error);
@@ -334,12 +338,12 @@ export default function TasksPage() {
   }, [sortedTasks]);
 
   useEffect(() => {
-    if (error) {
-      console.error("Erro ao buscar as tasks:", error);
+    if (loading) {
+      console.log("Carregando tasks...");
     }
-  }, [error]);
+  }, [loading]);
 
-  if (isLoading) {
+  if (loading) {
     return <div>Carregando tasks...</div>;
   }
 
@@ -399,13 +403,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={handleTaskUpdate}
-                onDelete={handleTaskDelete}
-                onComplete={handleTaskComplete}
-                onNotDone={handleTaskNotDone}
-                onForward={handleOpenForwardModal}
-                onReschedule={handleOpenRescheduleModal}
-                onHistory={handleOpenTaskHistoryModal}
+                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onDelete={() => handleTaskDelete(task.id)}
+                onComplete={() => handleTaskComplete(task.id)}
+                onNotDone={() => handleTaskNotDone(task.id)}
+                onForward={() => handleOpenForwardModal(task)}
+                onReschedule={() => handleOpenRescheduleModal(task)}
+                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -416,13 +420,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={handleTaskUpdate}
-                onDelete={handleTaskDelete}
-                onComplete={handleTaskComplete}
-                onNotDone={handleTaskNotDone}
-                onForward={handleOpenForwardModal}
-                onReschedule={handleOpenRescheduleModal}
-                onHistory={handleOpenTaskHistoryModal}
+                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onDelete={() => handleTaskDelete(task.id)}
+                onComplete={() => handleTaskComplete(task.id)}
+                onNotDone={() => handleTaskNotDone(task.id)}
+                onForward={() => handleOpenForwardModal(task)}
+                onReschedule={() => handleOpenRescheduleModal(task)}
+                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -433,13 +437,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={handleTaskUpdate}
-                onDelete={handleTaskDelete}
-                onComplete={handleTaskComplete}
-                onNotDone={handleTaskNotDone}
-                onForward={handleOpenForwardModal}
-                onReschedule={handleOpenRescheduleModal}
-                onHistory={handleOpenTaskHistoryModal}
+                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onDelete={() => handleTaskDelete(task.id)}
+                onComplete={() => handleTaskComplete(task.id)}
+                onNotDone={() => handleTaskNotDone(task.id)}
+                onForward={() => handleOpenForwardModal(task)}
+                onReschedule={() => handleOpenRescheduleModal(task)}
+                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -450,13 +454,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={handleTaskUpdate}
-                onDelete={handleTaskDelete}
-                onComplete={handleTaskComplete}
-                onNotDone={handleTaskNotDone}
-                onForward={handleOpenForwardModal}
-                onReschedule={handleOpenRescheduleModal}
-                onHistory={handleOpenTaskHistoryModal}
+                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onDelete={() => handleTaskDelete(task.id)}
+                onComplete={() => handleTaskComplete(task.id)}
+                onNotDone={() => handleTaskNotDone(task.id)}
+                onForward={() => handleOpenForwardModal(task)}
+                onReschedule={() => handleOpenRescheduleModal(task)}
+                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -467,25 +471,27 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={handleTaskUpdate}
-                onDelete={handleTaskDelete}
-                onComplete={handleTaskComplete}
-                onNotDone={handleTaskNotDone}
-                onForward={handleOpenForwardModal}
-                onReschedule={handleOpenRescheduleModal}
-                onHistory={handleOpenTaskHistoryModal}
+                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onDelete={() => handleTaskDelete(task.id)}
+                onComplete={() => handleTaskComplete(task.id)}
+                onNotDone={() => handleTaskNotDone(task.id)}
+                onForward={() => handleOpenForwardModal(task)}
+                onReschedule={() => handleOpenRescheduleModal(task)}
+                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
         </TabsContent>
         <TabsContent value="stats" className="mt-4">
           <TaskStatsImproved
-            totalTasks={taskStats?.totalTasks || 0}
-            completedTasks={taskStats?.completedTasks || 0}
-            pendingTasks={taskStats?.pendingTasks || 0}
-            overdueTasks={taskStats?.overdueTasks || 0}
-            completionRate={taskStats?.completionRate || 0}
-            averageForwards={taskStats?.averageForwards || 0}
+            stats={{
+              totalTasks: taskStats?.totalTasks || 0,
+              completedTasks: taskStats?.completedTasks || 0,
+              pendingTasks: taskStats?.pendingTasks || 0,
+              overdueTasks: taskStats?.overdueTasks || 0,
+              completionRate: taskStats?.completionRate || 0,
+              averageForwards: taskStats?.averageForwards || 0
+            }}
             totalEstimatedTime={totalEstimatedTime}
             topPersonByTasks={taskStats?.topPersonByTasks}
             mostForwardedTask={taskStats?.mostForwardedTask}
@@ -497,26 +503,25 @@ export default function TasksPage() {
       </Tabs>
 
       <TaskModal
-        isOpen={useModalStore.getState().isOpen}
-        onClose={() => useModalStore.getState().closeModal()}
-        initialData={useModalStore.getState().initialData}
+        task={initialData}
         onSubmit={async (data) => {
           try {
             if (data.id) {
               // Atualizar task existente
-              await updateTask(data);
+              await updateTask(data.id, data);
               toast.success('Tarefa atualizada com sucesso!');
             } else {
               // Criar nova task
-              await createTask(data);
+              await addTask(data);
               toast.success('Tarefa criada com sucesso!');
             }
-            useModalStore.getState().closeModal();
+            closeModal();
           } catch (error) {
             console.error("Erro ao criar/atualizar a tarefa:", error);
             toast.error('Erro ao criar/atualizar a tarefa.');
           }
         }}
+        onCancel={closeModal}
       />
 
       {/* Modais */}
