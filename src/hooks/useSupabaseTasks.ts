@@ -153,8 +153,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (filters.isForwarded !== undefined) {
         // Verificar se a tarefa foi reagendada usando o histórico
         const wasRescheduledFromThisDate = task.forwardHistory?.some(forward => {
-          const fromDate = forward.fromDate; // Data DE: no histórico
-          return fromDate === task.scheduledDate; // Se corresponde à data atual da tarefa
+          const originalDate = forward.originalDate; // Data original no histórico
+          return originalDate === task.scheduledDate; // Se corresponde à data atual da tarefa
         }) || false;
         
         if (filters.isForwarded !== wasRescheduledFromThisDate) {

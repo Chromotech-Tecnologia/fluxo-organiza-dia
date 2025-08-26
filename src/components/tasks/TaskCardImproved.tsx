@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,10 +67,10 @@ export function TaskCardImproved({
   const wasRescheduledFromThisDate = React.useMemo(() => {
     if (!task.forwardHistory || task.forwardHistory.length === 0) return false;
     
-    // Verificar se algum reagendamento tem a data DE: igual à data agendada atual da tarefa
+    // Verificar se algum reagendamento tem a data original igual à data agendada atual da tarefa
     return task.forwardHistory.some(forward => {
-      const fromDate = forward.fromDate; // Data DE: no histórico
-      return fromDate === task.scheduledDate; // Se corresponde à data atual da tarefa
+      const originalDate = forward.originalDate; // Data original no histórico
+      return originalDate === task.scheduledDate; // Se corresponde à data atual da tarefa
     });
   }, [task.forwardHistory, task.scheduledDate]);
 
