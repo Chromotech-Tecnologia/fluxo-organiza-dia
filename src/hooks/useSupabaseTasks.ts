@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats, SubItem, CompletionRecord } from '@/types';
@@ -78,6 +76,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       return tasks;
     }
 
+    const today = getCurrentDateInSaoPaulo();
+
     return tasks.filter(task => {
       // Filtro por data
       if (filters.dateRange) {
@@ -149,9 +149,22 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por reagendadas
+      // Filtro por reagendadas - NOVA LÓGICA
       if (filters.isForwarded !== undefined) {
-        if (filters.isForwarded !== task.isForwarded) {
+        // Verificar se a tarefa foi reagendada para uma data futura (D+1 em diante)
+        const wasRescheduledToFuture = task.forwardHistory && 
+          task.forwardHistory.length > 0 && 
+          task.scheduledDate > today && 
+          task.forwardHistory.some(forward => 
+            forward.reason && (
+              forward.reason.includes('Reagendada pelo usuário') || 
+              forward.reason.includes('Tarefa reagendada') ||
+              forward.reason.includes('Reagendamento manual') ||
+              forward.reason === 'Reagendada'
+            )
+          );
+        
+        if (filters.isForwarded !== wasRescheduledToFuture) {
           return false;
         }
       }
@@ -187,9 +200,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         time_investment: newTask.timeInvestment,
         custom_time_minutes: newTask.customTimeMinutes || null,
         category: newTask.category,
-        sub_items: JSON.parse(JSON.stringify(newTask.subItems || [])), // Convert to Json
-        completion_history: JSON.parse(JSON.stringify(newTask.completionHistory || [])), // Convert to Json
-        forward_history: JSON.parse(JSON.stringify(newTask.forwardHistory || [])), // Convert to Json
+        sub_items: JSON.parse(JSON.stringify(newTask.subItems || [])),
+        completion_history: JSON.parse(JSON.stringify(newTask.completionHistory || [])),
+        forward_history: JSON.parse(JSON.stringify(newTask.forwardHistory || [])),
         forward_count: newTask.forwardCount || 0,
         task_order: newTask.order || 0,
         delivery_dates: newTask.deliveryDates || [],
@@ -210,7 +223,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       console.log('Tarefa adicionada com sucesso:', data);
       
-      // Invalidar cache
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
     } catch (error: any) {
@@ -231,18 +243,15 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     try {
       console.log('Atualizando tarefa no Supabase:', taskId, updates);
       
-      // Encontrar a tarefa atual para manter dados existentes
       const currentTask = tasks.find(t => t.id === taskId);
       if (!currentTask) {
         throw new Error('Tarefa não encontrada');
       }
       
-      // Construir dados da atualização preservando assignedPersonId
       const updateData: any = {
         updated_at: new Date().toISOString()
       };
 
-      // Mapear campos específicos se fornecidos
       if (updates.title !== undefined) updateData.title = updates.title;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.observations !== undefined) updateData.observations = updates.observations;
@@ -264,11 +273,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (updates.isConcluded !== undefined) updateData.is_concluded = updates.isConcluded;
       if (updates.concludedAt !== undefined) updateData.concluded_at = updates.concludedAt;
       
-      // IMPORTANTE: Preservar assignedPersonId SEMPRE
       if (updates.assignedPersonId !== undefined) {
         updateData.assigned_person_id = updates.assignedPersonId;
       } else {
-        // Manter o valor existente
         updateData.assigned_person_id = currentTask.assignedPersonId || null;
       }
 
@@ -286,7 +293,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       console.log('Tarefa atualizada com sucesso:', data);
       
-      // Invalidar cache
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
     } catch (error: any) {
@@ -340,7 +346,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       console.log('Tarefa deletada com sucesso');
       
-      // Invalidar cache
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
     } catch (error: any) {
@@ -379,7 +384,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       console.log('Tarefas reordenadas com sucesso');
       
-      // Invalidar cache
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
     } catch (error: any) {
@@ -404,7 +408,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     const completedTasks = filteredTasks.filter(t => t.isConcluded).length;
     const pendingTasks = totalTasks - completedTasks;
     
-    // Tarefas em atraso
     const today = getCurrentDateInSaoPaulo();
     const overdueTasks = filteredTasks.filter(t => 
       !t.isConcluded && t.scheduledDate < today
@@ -460,8 +463,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     reorderTasks,
     getTasksByDate,
     getStats,
-    concludeTask, // FUNÇÃO ADICIONADA
+    concludeTask,
     refetch
   };
 }
-
