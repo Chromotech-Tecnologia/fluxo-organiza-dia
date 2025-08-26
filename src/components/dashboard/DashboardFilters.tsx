@@ -4,7 +4,7 @@ import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal"
 import { TaskFilter, SortOption } from "@/types";
 
 interface DashboardFiltersProps {
-  currentFilters: TaskFilter;
+  filters: TaskFilter;
   onFiltersChange: (filters: TaskFilter) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -13,7 +13,7 @@ interface DashboardFiltersProps {
 }
 
 export function DashboardFilters({
-  currentFilters,
+  filters,
   onFiltersChange,
   searchQuery,
   onSearchChange,
@@ -22,7 +22,7 @@ export function DashboardFilters({
 }: DashboardFiltersProps) {
   // Convert search query to filters format
   const filtersWithSearch = {
-    ...currentFilters,
+    ...filters,
     search: searchQuery
   };
 
@@ -35,9 +35,9 @@ export function DashboardFilters({
     }
   };
 
-  const activeFiltersCount = Object.keys(currentFilters).filter(key => {
+  const activeFiltersCount = Object.keys(filters).filter(key => {
     const filterKey = key as keyof TaskFilter;
-    const filterValue = currentFilters[filterKey];
+    const filterValue = filters[filterKey];
     if (Array.isArray(filterValue)) return filterValue.length > 0;
     return filterValue !== undefined && filterValue !== '';
   }).length + (searchQuery ? 1 : 0);

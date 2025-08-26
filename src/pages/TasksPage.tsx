@@ -91,8 +91,17 @@ export default function TasksPage() {
     }
   };
 
-  const handleStatusUpdate = async (taskId: string, newStatus: Task['status']) => {
-    await updateTask(taskId, { status: newStatus });
+  const handleStatusChange = async (status: Task['status']) => {
+    // This function will be called from within TaskCardImproved
+    // The task ID is handled internally by the card component
+  };
+
+  const handleConclude = async () => {
+    // This function will be called from within TaskCardImproved
+  };
+
+  const handleUnconclude = async () => {
+    // This function will be called from within TaskCardImproved
   };
 
   const handleBulkStatusUpdate = async (newStatus: Task['status']) => {
@@ -279,11 +288,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={handleStatusChange}
+                onConclude={handleConclude}
+                onUnconclude={handleUnconclude}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
-                onStatusUpdate={handleStatusUpdate}
               />
             ))}
           </div>
@@ -311,11 +322,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={handleStatusChange}
+                onConclude={handleConclude}
+                onUnconclude={handleUnconclude}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
-                onStatusUpdate={handleStatusUpdate}
               />
             ))}
           </div>
@@ -343,11 +356,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={handleStatusChange}
+                onConclude={handleConclude}
+                onUnconclude={handleUnconclude}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
-                onStatusUpdate={handleStatusUpdate}
               />
             ))}
           </div>
@@ -375,11 +390,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={handleStatusChange}
+                onConclude={handleConclude}
+                onUnconclude={handleUnconclude}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
-                onStatusUpdate={handleStatusUpdate}
               />
             ))}
           </div>
@@ -407,11 +424,13 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={handleStatusChange}
+                onConclude={handleConclude}
+                onUnconclude={handleUnconclude}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
                 onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
-                onStatusUpdate={handleStatusUpdate}
               />
             ))}
           </div>
