@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -89,28 +88,54 @@ export function TaskCardImproved({
   const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
   
-  // Verificar se foi reagendada hoje para uma data FUTURA (reagendamento real)
+  // Lógica corrigida para detectar reagendamento real do dia atual para data futura
   const today = getCurrentDateInSaoPaulo();
-  const wasActuallyRescheduledToday = task.forwardHistory?.some(forward => {
-    const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
-    const isToday = forwardDate === today;
+  const wasActuallyRescheduledToday = React.useMemo(() => {
+    console.log('Verificando reagendamento para tarefa:', task.title);
+    console.log('Data da tarefa:', task.scheduledDate, 'Hoje:', today);
+    console.log('Forward history:', task.forwardHistory);
     
-    // Verificar se foi reagendamento real (para data diferente da atual)
-    const isRealReschedule = forward.originalDate !== forward.newDate;
+    if (!task.forwardHistory || task.forwardHistory.length === 0) {
+      console.log('Sem histórico de reagendamento');
+      return false;
+    }
     
-    // A ação deve ser explícita de reagendamento pelo usuário
-    const isUserRescheduleAction = forward.reason && (
-      forward.reason.includes('Reagendada pelo usuário') || 
-      forward.reason.includes('Tarefa reagendada') ||
-      forward.reason.includes('Reagendamento manual') ||
-      (forward.reason === 'Reagendada')
-    );
+    const hasReschedulingToday = task.forwardHistory.some(forward => {
+      const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
+      const isToday = forwardDate === today;
+      
+      console.log('Forward:', forward);
+      console.log('Forward date:', forwardDate, 'Is today:', isToday);
+      
+      // Verificar se foi reagendamento real (para data diferente da atual)
+      const isRealReschedule = forward.originalDate !== forward.newDate;
+      console.log('Original date:', forward.originalDate, 'New date:', forward.newDate, 'Is real reschedule:', isRealReschedule);
+      
+      // Verificar se a nova data é futura em relação à original
+      const isFutureDate = forward.newDate > forward.originalDate;
+      console.log('Is future date:', isFutureDate);
+      
+      // A ação deve ser explícita de reagendamento pelo usuário
+      const isUserRescheduleAction = forward.reason && (
+        forward.reason.includes('Reagendada pelo usuário') || 
+        forward.reason.includes('Tarefa reagendada') ||
+        forward.reason.includes('Reagendamento manual') ||
+        (forward.reason === 'Reagendada')
+      );
+      console.log('Is user reschedule action:', isUserRescheduleAction, 'Reason:', forward.reason);
+      
+      const result = isToday && isRealReschedule && isFutureDate && isUserRescheduleAction;
+      console.log('Final result for this forward:', result);
+      
+      return result;
+    });
     
-    return isToday && isRealReschedule && isUserRescheduleAction;
-  }) || false;
+    console.log('Final result for task:', hasReschedulingToday);
+    return hasReschedulingToday;
+  }, [task.forwardHistory, today, task.title, task.scheduledDate]);
 
   // Sempre mostrar o botão reagendar
-  const canShowReschedule = true; // Sempre mostrar
+  const canShowReschedule = true;
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
@@ -132,6 +157,8 @@ export function TaskCardImproved({
   };
 
   const handleStatusClick = (status: 'completed' | 'not-done') => {
+    console.log('Mudando status para:', status, 'Tarefa:', task.title, 'Assigned Person:', task.assignedPersonId);
+    
     if (lastCompletion?.status === status) {
       onStatusChange('pending');
       return;
