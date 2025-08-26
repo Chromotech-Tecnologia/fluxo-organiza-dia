@@ -63,6 +63,16 @@ const Dashboard = () => {
     }
   };
 
+  const handleStatusChange = async (taskId: string, status: 'completed' | 'not-done' | 'pending') => {
+    await updateTask(taskId, { status });
+    refetch();
+  };
+
+  const handleForwardTask = async (taskId: string) => {
+    // This would open the forward modal - for now just a placeholder
+    console.log('Forward task:', taskId);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -187,6 +197,10 @@ const Dashboard = () => {
                     <TaskCardImproved 
                       key={task.id}
                       task={task}
+                      onStatusChange={(status) => handleStatusChange(task.id, status)}
+                      onConclude={() => handleConcludeTask(task.id)}
+                      onUnconclude={() => handleUnconcludeTask(task.id)}
+                      onForward={() => handleForwardTask(task.id)}
                     />
                   ))}
                   {todayTasks.length > 8 && (
