@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, CheckCircle, Clock, Users, TrendingUp, Target, ArrowRight } from "lucide-react";
@@ -187,8 +186,7 @@ const Dashboard = () => {
                   {todayTasks.slice(0, 8).map((task) => (
                     <TaskCardImproved 
                       key={task.id}
-                      task={task} 
-                      onConcludeToggle={() => task.isConcluded ? handleUnconcludeTask(task.id) : handleConcludeTask(task.id)}
+                      task={task}
                     />
                   ))}
                   {todayTasks.length > 8 && (

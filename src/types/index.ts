@@ -1,4 +1,3 @@
-
 // Tipos principais do sistema de controle de tarefas
 
 export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
@@ -7,6 +6,7 @@ export type TaskTimeInvestment = 'custom-5' | 'custom-30' | 'low' | 'medium' | '
 export type TaskCategory = 'personal' | 'business';
 export type TaskStatus = 'pending' | 'completed' | 'not-done' | 'forwarded-date' | 'forwarded-person';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type SortOption = 'order' | 'date' | 'priority' | 'title' | 'type' | 'timeInvestment';
 
 export interface Skill {
   id: string;

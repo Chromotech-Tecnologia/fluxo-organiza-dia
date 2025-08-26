@@ -149,3 +149,46 @@ export function toSaoPauloDate(inputDate: string | Date): Date {
   const [year, month, day] = formatted.split('-').map(Number);
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 }
+
+// Função para obter range de datas baseado no período
+export function getDateRange(period: 'week' | 'month' | 'year'): { start: string; end: string } {
+  const today = getCurrentDateInSaoPaulo();
+  const currentDate = new Date();
+  
+  switch (period) {
+    case 'week': {
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+      const endOfWeek = new Date(currentDate);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      return {
+        start: formatDateToYMDInSaoPaulo(startOfWeek),
+        end: formatDateToYMDInSaoPaulo(endOfWeek)
+      };
+    }
+    case 'month': {
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      
+      return {
+        start: formatDateToYMDInSaoPaulo(startOfMonth),
+        end: formatDateToYMDInSaoPaulo(endOfMonth)
+      };
+    }
+    case 'year': {
+      const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+      const endOfYear = new Date(currentDate.getFullYear(), 11, 31);
+      
+      return {
+        start: formatDateToYMDInSaoPaulo(startOfYear),
+        end: formatDateToYMDInSaoPaulo(endOfYear)
+      };
+    }
+    default:
+      return {
+        start: today,
+        end: today
+      };
+  }
+}
