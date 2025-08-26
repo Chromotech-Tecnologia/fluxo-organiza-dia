@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +63,24 @@ export function TaskCardImproved({
     ? teamMembers.find(team => team.id === task.assignedPersonId)
     : null;
 
-  const wasRescheduled = task.forwardHistory && task.forwardHistory.length > 0;
+  // Verificar se a tarefa foi reagendada para uma data futura
+  const wasRescheduledToFuture = React.useMemo(() => {
+    if (!task.forwardHistory || task.forwardHistory.length === 0) return false;
+    
+    const today = getCurrentDateInSaoPaulo();
+    const currentTaskDate = task.scheduledDate;
+    
+    // Verificar se a data atual da tarefa é maior que hoje (D+1 em diante)
+    // E se existe histórico de reagendamento
+    return currentTaskDate > today && task.forwardHistory.some(forward => 
+      forward.reason && (
+        forward.reason.includes('Reagendada pelo usuário') || 
+        forward.reason.includes('Tarefa reagendada') ||
+        forward.reason.includes('Reagendamento manual') ||
+        forward.reason === 'Reagendada'
+      )
+    );
+  }, [task.forwardHistory, task.scheduledDate]);
 
   const getCardColor = () => {
     if (task.isConcluded) return 'border-green-500 bg-green-50';
@@ -150,8 +166,8 @@ export function TaskCardImproved({
     onEdit?.();
   };
 
-  // Botão reagendar laranja se tem histórico de reagendamento no banco
-  const shouldShowOrangeRescheduleButton = wasRescheduled || isRescheduling || justRescheduled;
+  // Botão reagendar laranja APENAS se foi reagendada para data futura (D+1 em diante)
+  const shouldShowOrangeRescheduleButton = wasRescheduledToFuture || isRescheduling || justRescheduled;
 
   return (
     <Card 
@@ -265,7 +281,7 @@ export function TaskCardImproved({
               </Badge>
             )}
 
-            {wasRescheduled && task.forwardCount > 0 && (
+            {task.forwardCount > 0 && (
               <Badge variant="outline" className="text-xs h-5 bg-yellow-100 text-yellow-800 border-yellow-300">
                 <ArrowRight className="h-2.5 w-2.5 mr-1" />
                 {task.forwardCount}x
@@ -316,7 +332,7 @@ export function TaskCardImproved({
                     {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
                   </Button>
                   
-                  {/* Botão reagendar com cor laranja baseada no banco de dados */}
+                  {/* Botão reagendar com cor laranja APENAS se foi reagendada para data futura */}
                   <Button
                     size="sm"
                     variant="outline"
