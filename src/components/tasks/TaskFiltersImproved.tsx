@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { DateRangePicker } from "./DateRangePicker";
 import { PeopleSelect } from "../people/PeopleSelect";
 import { X, Search, Filter } from "lucide-react";
-import { TaskFilter } from "@/types";
-import { SORT_OPTIONS, SortOption } from "@/lib/taskUtils";
+import { TaskFilter, SortOption } from "@/types";
+import { SORT_OPTIONS } from "@/lib/taskUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TaskFiltersImprovedProps {
