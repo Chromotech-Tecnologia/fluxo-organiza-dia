@@ -6,7 +6,7 @@ export type TaskTimeInvestment = 'custom-5' | 'custom-30' | 'low' | 'medium' | '
 export type TaskCategory = 'personal' | 'business';
 export type TaskStatus = 'pending' | 'completed' | 'not-done' | 'forwarded-date' | 'forwarded-person';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
-export type SortOption = 'order' | 'date' | 'priority' | 'title' | 'type' | 'timeInvestment' | 'status';
+export type SortOption = 'order' | 'date' | 'priority' | 'title' | 'type' | 'timeInvestment' | 'status' | 'time' | 'routine' | 'forward' | 'name-asc' | 'name-desc';
 
 export interface Skill {
   id: string;

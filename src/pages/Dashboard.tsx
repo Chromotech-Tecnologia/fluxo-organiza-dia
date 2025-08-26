@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, CheckCircle, Clock, Users, TrendingUp, Target, ArrowRight } from "lucide-react";
@@ -7,7 +8,7 @@ import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { TaskFilter, SortOption } from "@/types";
+import { TaskFilter, SortOption, TaskStatus } from "@/types";
 import { useState } from "react";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { MeetingsCard } from "@/components/dashboard/MeetingsCard";
@@ -63,9 +64,12 @@ const Dashboard = () => {
     }
   };
 
-  const handleStatusChange = async (taskId: string, status: 'completed' | 'not-done' | 'pending') => {
-    await updateTask(taskId, { status });
-    refetch();
+  const handleStatusChange = async (taskId: string, status: TaskStatus) => {
+    // Only allow certain status changes for this handler
+    if (status === 'pending' || status === 'completed' || status === 'not-done') {
+      await updateTask(taskId, { status });
+      refetch();
+    }
   };
 
   const handleForwardTask = async (taskId: string) => {
