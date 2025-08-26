@@ -8,7 +8,7 @@ import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { TaskFilter } from "@/types";
+import { TaskFilter, SortOption } from "@/types";
 import { useState } from "react";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { MeetingsCard } from "@/components/dashboard/MeetingsCard";
@@ -23,6 +23,9 @@ const Dashboard = () => {
       end: today
     }
   });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("order");
   
   const { tasks: todayTasks, concludeTask, updateTask, refetch } = useSupabaseTasks(filters);
   const { people } = useSupabasePeople();
@@ -77,7 +80,14 @@ const Dashboard = () => {
       </div>
 
       {/* Filtros */}
-      <DashboardFilters filters={filters} onFiltersChange={setFilters} />
+      <DashboardFilters 
+        filters={filters} 
+        onFiltersChange={setFilters}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
@@ -178,8 +188,7 @@ const Dashboard = () => {
                     <TaskCardImproved 
                       key={task.id}
                       task={task} 
-                      onComplete={() => handleConcludeTask(task.id)}
-                      onUncomplete={() => handleUnconcludeTask(task.id)}
+                      onConcludeToggle={() => task.isConcluded ? handleUnconcludeTask(task.id) : handleConcludeTask(task.id)}
                     />
                   ))}
                   {todayTasks.length > 8 && (
