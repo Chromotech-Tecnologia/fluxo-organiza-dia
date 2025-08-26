@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { getOrderNumberColor, getPriorityColor, getTimeInMinutes, formatTime } from '@/lib/taskUtils';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
+import { useSupabaseTasks } from '@/hooks/useSupabaseTasks';
 
 interface TaskCardImprovedProps {
   task: Task;
@@ -53,6 +54,7 @@ export function TaskCardImproved({
   } = useSortable({ id: task.id });
 
   const { teamMembers } = useSupabaseTeamMembers();
+  const { tasks: allTasks } = useSupabaseTasks();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -63,14 +65,17 @@ export function TaskCardImproved({
     ? teamMembers.find(team => team.id === task.assignedPersonId)
     : null;
 
-  // Lógica simples: se a tarefa está agendada para uma data futura E tem histórico de reagendamento
-  const wasRescheduledToFuture = React.useMemo(() => {
+  // Nova lógica: verificar se existe uma tarefa com mesmo título em data futura
+  const hasTaskInFuture = React.useMemo(() => {
     const today = getCurrentDateInSaoPaulo();
-    const taskDate = task.scheduledDate;
     
-    // Se a tarefa está em data futura E tem histórico de reagendamento
-    return taskDate > today && task.forwardHistory && task.forwardHistory.length > 0;
-  }, [task.forwardHistory, task.scheduledDate]);
+    // Procurar por tarefas com mesmo título em datas futuras
+    return allTasks.some(otherTask => 
+      otherTask.id !== task.id && // Não é a mesma tarefa
+      otherTask.title === task.title && // Mesmo título
+      otherTask.scheduledDate > today // Em data futura
+    );
+  }, [allTasks, task.id, task.title]);
 
   const getCardColor = () => {
     if (task.isConcluded) return 'border-green-500 bg-green-50';
@@ -156,8 +161,8 @@ export function TaskCardImproved({
     onEdit?.();
   };
 
-  // Botão reagendar laranja se foi reagendada para data futura OU se acabou de ser reagendada
-  const shouldShowOrangeRescheduleButton = wasRescheduledToFuture || isRescheduling || justRescheduled;
+  // Botão reagendar laranja se tem tarefa futura OU se acabou de ser reagendada
+  const shouldShowOrangeRescheduleButton = hasTaskInFuture || isRescheduling || justRescheduled;
 
   return (
     <Card 
@@ -322,7 +327,7 @@ export function TaskCardImproved({
                     {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
                   </Button>
                   
-                  {/* Botão reagendar com cor laranja se foi reagendada para data futura */}
+                  {/* Botão reagendar com cor laranja se tem tarefa futura */}
                   <Button
                     size="sm"
                     variant="outline"

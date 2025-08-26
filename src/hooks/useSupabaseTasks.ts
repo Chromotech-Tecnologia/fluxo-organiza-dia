@@ -149,14 +149,16 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por reagendadas - LÓGICA SIMPLES
+      // Filtro por reagendadas - NOVA LÓGICA CORRETA
       if (filters.isForwarded !== undefined) {
-        // Lógica simples: tarefa em data futura E tem histórico de reagendamento
-        const wasRescheduledToFuture = task.scheduledDate > today && 
-          task.forwardHistory && 
-          task.forwardHistory.length > 0;
+        // Verificar se existe uma tarefa com mesmo título em data futura
+        const hasTaskInFuture = tasks.some(otherTask => 
+          otherTask.id !== task.id && // Não é a mesma tarefa
+          otherTask.title === task.title && // Mesmo título
+          otherTask.scheduledDate > today // Em data futura
+        );
         
-        if (filters.isForwarded !== wasRescheduledToFuture) {
+        if (filters.isForwarded !== hasTaskInFuture) {
           return false;
         }
       }
