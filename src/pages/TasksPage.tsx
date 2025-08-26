@@ -31,10 +31,7 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = useState<SortOption>('order');
   const { tasks, loading, addTask, updateTask, deleteTask } = useSupabaseTasks();
   const { people } = useSupabasePeople();
-  const { openTaskModal, closeTaskModal, isTaskModalOpen, taskToEdit } = useModalStore();
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
-  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const { openTaskModal, closeTaskModal, isTaskModalOpen, taskToEdit, openForwardTaskModal } = useModalStore();
   const [selectedTab, setSelectedTab] = useState("today");
 
   // Filtra as tasks com base na data selecionada
@@ -165,23 +162,7 @@ export default function TasksPage() {
   };
 
   const handleOpenForwardModal = (task: Task) => {
-    setSelectedTask(task);
-    setIsForwardModalOpen(true);
-  };
-
-  const handleCloseForwardModal = () => {
-    setIsForwardModalOpen(false);
-    setSelectedTask(null);
-  };
-
-  const handleOpenRescheduleModal = (task: Task) => {
-    setSelectedTask(task);
-    setIsRescheduleModalOpen(true);
-  };
-
-  const handleCloseRescheduleModal = () => {
-    setIsRescheduleModalOpen(false);
-    setSelectedTask(null);
+    openForwardTaskModal(task);
   };
 
   const handleTaskUpdate = async (taskId: string, newData: Partial<Task>) => {
@@ -515,25 +496,8 @@ export default function TasksPage() {
       </Tabs>
 
       <TaskModal />
-
-      {/* Modais */}
-      {selectedTask && (
-        <>
-          <ForwardTaskModal
-            isOpen={isForwardModalOpen}
-            onClose={handleCloseForwardModal}
-            task={selectedTask}
-            onTaskUpdate={handleTaskUpdate}
-          />
-
-          <RescheduleModal
-            isOpen={isRescheduleModalOpen}
-            onClose={handleCloseRescheduleModal}
-            task={selectedTask}
-            onTaskUpdate={handleTaskUpdate}
-          />
-        </>
-      )}
+      <ForwardTaskModal />
+      <RescheduleModal />
     </div>
   );
 }
