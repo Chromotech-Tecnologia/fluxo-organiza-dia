@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats, SubItem, CompletionRecord } from '@/types';
@@ -186,9 +187,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         time_investment: newTask.timeInvestment,
         custom_time_minutes: newTask.customTimeMinutes || null,
         category: newTask.category,
-        sub_items: newTask.subItems || [],
-        completion_history: newTask.completionHistory || [],
-        forward_history: newTask.forwardHistory || [],
+        sub_items: JSON.parse(JSON.stringify(newTask.subItems || [])), // Convert to Json
+        completion_history: JSON.parse(JSON.stringify(newTask.completionHistory || [])), // Convert to Json
+        forward_history: JSON.parse(JSON.stringify(newTask.forwardHistory || [])), // Convert to Json
         forward_count: newTask.forwardCount || 0,
         task_order: newTask.order || 0,
         delivery_dates: newTask.deliveryDates || [],
@@ -252,9 +253,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (updates.timeInvestment !== undefined) updateData.time_investment = updates.timeInvestment;
       if (updates.customTimeMinutes !== undefined) updateData.custom_time_minutes = updates.customTimeMinutes;
       if (updates.category !== undefined) updateData.category = updates.category;
-      if (updates.subItems !== undefined) updateData.sub_items = updates.subItems;
-      if (updates.completionHistory !== undefined) updateData.completion_history = updates.completionHistory;
-      if (updates.forwardHistory !== undefined) updateData.forward_history = updates.forwardHistory;
+      if (updates.subItems !== undefined) updateData.sub_items = JSON.parse(JSON.stringify(updates.subItems));
+      if (updates.completionHistory !== undefined) updateData.completion_history = JSON.parse(JSON.stringify(updates.completionHistory));
+      if (updates.forwardHistory !== undefined) updateData.forward_history = JSON.parse(JSON.stringify(updates.forwardHistory));
       if (updates.forwardCount !== undefined) updateData.forward_count = updates.forwardCount;
       if (updates.order !== undefined) updateData.task_order = updates.order;
       if (updates.deliveryDates !== undefined) updateData.delivery_dates = updates.deliveryDates;
@@ -463,3 +464,4 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     refetch
   };
 }
+
