@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +35,7 @@ export default function TasksPage() {
   } = useSupabaseTasks();
   const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
 
-  // State
+  // State - Initialize filters with default values
   const [activeTab, setActiveTab] = useState<TaskTab>('today');
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [filters, setFilters] = useState<TaskFilter>({
@@ -280,7 +281,7 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
-                onViewHistory={() => handleViewTaskHistory(task)}
+                onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
                 onStatusUpdate={handleStatusUpdate}
               />
@@ -312,7 +313,7 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
-                onViewHistory={() => handleViewTaskHistory(task)}
+                onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
                 onStatusUpdate={handleStatusUpdate}
               />
@@ -344,7 +345,7 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
-                onViewHistory={() => handleViewTaskHistory(task)}
+                onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
                 onStatusUpdate={handleStatusUpdate}
               />
@@ -376,7 +377,7 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
-                onViewHistory={() => handleViewTaskHistory(task)}
+                onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
                 onStatusUpdate={handleStatusUpdate}
               />
@@ -408,7 +409,7 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleEditTask(task)}
                 onForward={() => handleForwardTask(task)}
-                onViewHistory={() => handleViewTaskHistory(task)}
+                onHistory={() => handleViewTaskHistory(task)}
                 onDelete={() => handleDeleteTask(task)}
                 onStatusUpdate={handleStatusUpdate}
               />
