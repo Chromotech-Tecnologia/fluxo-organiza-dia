@@ -63,23 +63,13 @@ export function TaskCardImproved({
     ? teamMembers.find(team => team.id === task.assignedPersonId)
     : null;
 
-  // Verificar se a tarefa foi reagendada para uma data futura
+  // Lógica simples: se a tarefa está agendada para uma data futura E tem histórico de reagendamento
   const wasRescheduledToFuture = React.useMemo(() => {
-    if (!task.forwardHistory || task.forwardHistory.length === 0) return false;
-    
     const today = getCurrentDateInSaoPaulo();
-    const currentTaskDate = task.scheduledDate;
+    const taskDate = task.scheduledDate;
     
-    // Verificar se a data atual da tarefa é maior que hoje (D+1 em diante)
-    // E se existe histórico de reagendamento
-    return currentTaskDate > today && task.forwardHistory.some(forward => 
-      forward.reason && (
-        forward.reason.includes('Reagendada pelo usuário') || 
-        forward.reason.includes('Tarefa reagendada') ||
-        forward.reason.includes('Reagendamento manual') ||
-        forward.reason === 'Reagendada'
-      )
-    );
+    // Se a tarefa está em data futura E tem histórico de reagendamento
+    return taskDate > today && task.forwardHistory && task.forwardHistory.length > 0;
   }, [task.forwardHistory, task.scheduledDate]);
 
   const getCardColor = () => {
@@ -166,7 +156,7 @@ export function TaskCardImproved({
     onEdit?.();
   };
 
-  // Botão reagendar laranja APENAS se foi reagendada para data futura (D+1 em diante)
+  // Botão reagendar laranja se foi reagendada para data futura OU se acabou de ser reagendada
   const shouldShowOrangeRescheduleButton = wasRescheduledToFuture || isRescheduling || justRescheduled;
 
   return (
@@ -332,7 +322,7 @@ export function TaskCardImproved({
                     {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
                   </Button>
                   
-                  {/* Botão reagendar com cor laranja APENAS se foi reagendada para data futura */}
+                  {/* Botão reagendar com cor laranja se foi reagendada para data futura */}
                   <Button
                     size="sm"
                     variant="outline"

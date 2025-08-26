@@ -149,20 +149,12 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
-      // Filtro por reagendadas - NOVA LÓGICA
+      // Filtro por reagendadas - LÓGICA SIMPLES
       if (filters.isForwarded !== undefined) {
-        // Verificar se a tarefa foi reagendada para uma data futura (D+1 em diante)
-        const wasRescheduledToFuture = task.forwardHistory && 
-          task.forwardHistory.length > 0 && 
-          task.scheduledDate > today && 
-          task.forwardHistory.some(forward => 
-            forward.reason && (
-              forward.reason.includes('Reagendada pelo usuário') || 
-              forward.reason.includes('Tarefa reagendada') ||
-              forward.reason.includes('Reagendamento manual') ||
-              forward.reason === 'Reagendada'
-            )
-          );
+        // Lógica simples: tarefa em data futura E tem histórico de reagendamento
+        const wasRescheduledToFuture = task.scheduledDate > today && 
+          task.forwardHistory && 
+          task.forwardHistory.length > 0;
         
         if (filters.isForwarded !== wasRescheduledToFuture) {
           return false;
