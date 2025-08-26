@@ -1,96 +1,79 @@
-import { useState } from "react";
+
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Clock, 
-  CheckCircle, 
-  Calendar,
-  ArrowRight,
-  AlertCircle,
-  User
-} from "lucide-react";
+import { Calendar, TrendingUp, CheckCircle, Clock, Target, BarChart3 } from "lucide-react";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
-import { useSupabasePeople } from "@/hooks/useSupabasePeople";
+import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Task } from "@/types";
-import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 
 const DailyClosePage = () => {
-  const [selectedDate] = useState(getCurrentDateInSaoPaulo());
-  const { tasks, updateTask } = useSupabaseTasks({
-    dateRange: {
-      start: selectedDate,
-      end: selectedDate
-    }
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  
+  // Definir período com base no modo de visualização
+  const today = new Date();
+  const startDate = viewMode === 'week' 
+    ? format(subDays(today, 7), 'yyyy-MM-dd')
+    : format(startOfMonth(today), 'yyyy-MM-dd');
+  const endDate = viewMode === 'month'
+    ? format(endOfMonth(today), 'yyyy-MM-dd')
+    : format(today, 'yyyy-MM-dd');
+
+  const { tasks } = useSupabaseTasks({
+    dateRange: { start: startDate, end: endDate }
   });
-  const { getPersonById } = useSupabasePeople();
 
-  const handleStatusChange = async (taskId: string, status: Task['status']) => {
-    try {
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      const completionRecord = {
-        completedAt: getCurrentDateInSaoPaulo(),
-        status: status as 'completed' | 'not-done',
-        date: task.scheduledDate,
-        wasForwarded: false
-      };
-
-      const updatedCompletionHistory = [
-        ...(task.completionHistory || []),
-        completionRecord
-      ];
-
-      await updateTask(taskId, { 
-        status,
-        completionHistory: updatedCompletionHistory,
-        updatedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar status da tarefa:', error);
-    }
-  };
-
-  const getTaskButtonStyle = (task: Task, status: Task['status']) => {
-    // Uma tarefa foi repassada se tem forwardHistory e a scheduledDate é a originalDate
-    const isForwarded = task.forwardHistory && 
-      task.forwardHistory.length > 0 && 
-      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+  // Agrupar tarefas por data
+  const tasksByDate = useMemo(() => {
+    const grouped: Record<string, Task[]> = {};
+    tasks.forEach(task => {
+      const dateKey = task.scheduledDate;
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(task);
+    });
     
-    const lastCompletion = task.completionHistory && task.completionHistory.length > 0
-      ? task.completionHistory[task.completionHistory.length - 1] 
-      : null;
+    // Ordenar as datas
+    const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+    const sortedGrouped: Record<string, Task[]> = {};
+    sortedDates.forEach(date => {
+      sortedGrouped[date] = grouped[date];
+    });
     
-    const isActive = task.status === status || lastCompletion?.status === status;
+    return sortedGrouped;
+  }, [tasks]);
 
-    if (status === 'completed') {
-      return cn(
-        "h-8 px-3 text-sm transition-all",
-        isActive
-          ? "bg-green-600 hover:bg-green-700 text-white border-green-600" 
-          : "border-green-300 text-green-600 hover:bg-green-50",
-        isForwarded && "ring-2 ring-yellow-400 ring-offset-1"
-      );
-    }
-    
-    if (status === 'not-done') {
-      return cn(
-        "h-8 px-3 text-sm transition-all",
-        isActive
-          ? "bg-red-600 hover:bg-red-700 text-white border-red-600" 
-          : "border-red-300 text-red-600 hover:bg-red-50",
-        isForwarded && "ring-2 ring-yellow-400 ring-offset-1"
-      );
-    }
+  // Calcular estatísticas gerais
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.isConcluded).length;
+  const pendingTasks = totalTasks - completedTasks;
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  
+  const delegatedTasks = tasks.filter(t => t.assignedPersonId).length;
+  const rescheduledTasks = tasks.filter(t => 
+    t.forwardHistory?.some(forward => forward.originalDate === t.scheduledDate)
+  ).length;
 
-    return cn(
-      "h-8 px-3 text-sm transition-all",
-      isForwarded 
-        ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600" 
-        : "border-yellow-300 text-yellow-600 hover:bg-yellow-50"
-    );
+  // Calcular média diária
+  const workingDays = Object.keys(tasksByDate).length;
+  const avgTasksPerDay = workingDays > 0 ? Math.round(totalTasks / workingDays) : 0;
+  const avgCompletionRate = workingDays > 0 
+    ? Math.round(Object.values(tasksByDate).reduce((acc, dayTasks) => {
+        const dayCompleted = dayTasks.filter(t => t.isConcluded).length;
+        const dayTotal = dayTasks.length;
+        return acc + (dayTotal > 0 ? (dayCompleted / dayTotal) * 100 : 0);
+      }, 0) / workingDays)
+    : 0;
+
+  const getDayStats = (dayTasks: Task[]) => {
+    const total = dayTasks.length;
+    const completed = dayTasks.filter(t => t.isConcluded).length;
+    const pending = total - completed;
+    const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, pending, rate };
   };
 
   return (
@@ -100,123 +83,228 @@ const DailyClosePage = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Fechamento Diário</h1>
           <p className="text-muted-foreground">
-            Revise e feche o dia de trabalho - {new Date().toLocaleDateString('pt-BR')}
+            Resumo e estatísticas dos dias trabalhados
           </p>
         </div>
-        <Button className="gap-2">
-          <CheckCircle className="h-4 w-4" />
-          Fechar Dia
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant={viewMode === 'week' ? 'default' : 'outline'}
+            onClick={() => setViewMode('week')}
+          >
+            Última Semana
+          </Button>
+          <Button 
+            variant={viewMode === 'month' ? 'default' : 'outline'}
+            onClick={() => setViewMode('month')}
+          >
+            Este Mês
+          </Button>
+        </div>
       </div>
 
-      {/* Lista de Tarefas do Dia */}
-      <div className="grid gap-4">
-        {tasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <Calendar className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhuma tarefa para hoje
-                </h3>
-                <p className="text-muted-foreground">
-                  Não há tarefas programadas para {new Date().toLocaleDateString('pt-BR')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          tasks.map((task) => {
-            const assignedPerson = task.assignedPersonId ? getPersonById(task.assignedPersonId) : null;
-            const lastCompletion = task.completionHistory && task.completionHistory.length > 0 
-              ? task.completionHistory[task.completionHistory.length - 1] 
-              : null;
-            const isForwarded = task.forwardHistory && 
-              task.forwardHistory.length > 0 && 
-              task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
-            
-            return (
-              <Card key={task.id} className="w-full">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                        {task.order || 0}
-                      </div>
-                      <h3 className="font-semibold text-foreground line-clamp-1 text-base flex-1">
-                        {task.title}
-                      </h3>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {isForwarded && (
-                        <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
-                          Repassada
-                        </Badge>
-                      )}
-                      {assignedPerson && (
-                        <Badge variant="outline" className="text-xs">
-                          <User className="h-3 w-3 mr-1" />
-                          {assignedPerson.name}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
+      {/* Estatísticas Gerais */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Tarefas</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalTasks}</div>
+            <p className="text-xs text-muted-foreground">
+              no período
+            </p>
+          </CardContent>
+        </Card>
 
-                <CardContent className="space-y-3">
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {task.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleStatusChange(task.id, 'completed')}
-                        variant={task.status === 'completed' || lastCompletion?.status === 'completed' ? "default" : "outline"}
-                        className={getTaskButtonStyle(task, 'completed')}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Feito
-                      </Button>
-                      
-                      <Button
-                        size="sm"
-                        onClick={() => handleStatusChange(task.id, 'not-done')}
-                        variant={task.status === 'not-done' || lastCompletion?.status === 'not-done' ? "default" : "outline"}
-                        className={getTaskButtonStyle(task, 'not-done')}
-                      >
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        Não feito
-                      </Button>
-                      
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={getTaskButtonStyle(task, 'forwarded-date')}
-                        disabled
-                      >
-                        <ArrowRight className="h-4 w-4 mr-1" />
-                        Repassar
-                      </Button>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Concluídas</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{completedTasks}</div>
+            <p className="text-xs text-muted-foreground">
+              {completionRate}% do total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{pendingTasks}</div>
+            <p className="text-xs text-muted-foreground">
+              não concluídas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Média/Dia</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{avgTasksPerDay}</div>
+            <p className="text-xs text-muted-foreground">
+              tarefas por dia
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taxa Média</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{avgCompletionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              conclusão média
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Dias Ativos</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-indigo-600">{workingDays}</div>
+            <p className="text-xs text-muted-foreground">
+              com atividades
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Resumo por Dia */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Resumo Diário</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {Object.keys(tasksByDate).length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                Nenhuma atividade encontrada
+              </h3>
+              <p className="text-muted-foreground">
+                Não há registros para o período selecionado
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(tasksByDate).map(([date, dayTasks]) => {
+                const stats = getDayStats(dayTasks);
+                const dateObj = new Date(date + 'T00:00:00');
+                
+                return (
+                  <div key={date} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {format(dateObj, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {format(dateObj, 'yyyy-MM-dd')}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={stats.rate === 100 ? "default" : stats.rate >= 50 ? "secondary" : "destructive"}>
+                          {stats.rate}% concluído
+                        </Badge>
+                      </div>
                     </div>
                     
-                    <div className="text-right text-sm text-muted-foreground">
-                      {lastCompletion && (
-                        <span className={lastCompletion.status === 'completed' ? 'text-green-600' : 'text-red-600'}>
-                          {lastCompletion.status === 'completed' ? '✓ Concluída' : '✗ Não feita'}
-                        </span>
-                      )}
+                    <div className="grid grid-cols-3 gap-4 mb-3">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-foreground">{stats.total}</div>
+                        <div className="text-xs text-muted-foreground">Total</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+                        <div className="text-xs text-muted-foreground">Concluídas</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
+                        <div className="text-xs text-muted-foreground">Pendentes</div>
+                      </div>
+                    </div>
+                    
+                    {/* Barra de progresso */}
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${stats.rate}%` }}
+                      ></div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Insights */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Insights do Período</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Tarefas delegadas:</span>
+              <Badge variant="outline">{delegatedTasks} tarefas</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Reagendamentos:</span>
+              <Badge variant="outline">{rescheduledTasks} tarefas</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Produtividade:</span>
+              <Badge variant={completionRate >= 80 ? "default" : completionRate >= 60 ? "secondary" : "destructive"}>
+                {completionRate >= 80 ? "Excelente" : completionRate >= 60 ? "Boa" : "Precisa melhorar"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Metas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {completionRate >= 90 && (
+              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                <CheckCircle className="h-8 w-8 mx-auto text-green-600 mb-2" />
+                <p className="text-sm font-medium text-green-800">🎉 Meta atingida!</p>
+                <p className="text-xs text-green-600">Excelente produtividade</p>
+              </div>
+            )}
+            {completionRate < 90 && completionRate >= 70 && (
+              <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <Target className="h-8 w-8 mx-auto text-yellow-600 mb-2" />
+                <p className="text-sm font-medium text-yellow-800">Quase lá!</p>
+                <p className="text-xs text-yellow-600">Faltam {90 - completionRate}% para a meta</p>
+              </div>
+            )}
+            {completionRate < 70 && (
+              <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                <TrendingUp className="h-8 w-8 mx-auto text-red-600 mb-2" />
+                <p className="text-sm font-medium text-red-800">Oportunidade de melhoria</p>
+                <p className="text-xs text-red-600">Meta: 90% de conclusão</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

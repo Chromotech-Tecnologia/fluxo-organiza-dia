@@ -1,33 +1,39 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, CheckCircle, Clock, Users, TrendingUp, Target } from "lucide-react";
+import { Plus, Calendar, CheckCircle, Clock, Users, TrendingUp, Target, ArrowRight } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
-import { TaskCard } from "@/components/tasks/TaskCard";
+import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { TaskFilter } from "@/types";
+import { useState } from "react";
+import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
+import { MeetingsCard } from "@/components/dashboard/MeetingsCard";
 
 const Dashboard = () => {
   const { openTaskModal } = useModalStore();
   const today = getCurrentDateInSaoPaulo();
   
-  const todayFilter: TaskFilter = {
+  const [filters, setFilters] = useState<TaskFilter>({
     dateRange: {
       start: today,
       end: today
     }
-  };
+  });
   
-  const { tasks: todayTasks, concludeTask, updateTask, refetch } = useSupabaseTasks(todayFilter);
+  const { tasks: todayTasks, concludeTask, updateTask, refetch } = useSupabaseTasks(filters);
   const { people } = useSupabasePeople();
 
   const totalTasks = todayTasks.length;
   const completedTasks = todayTasks.filter(task => task.isConcluded).length;
   const pendingTasks = todayTasks.filter(task => task.status === 'pending').length;
-  const forwardedTasks = todayTasks.filter(task => task.isForwarded).length;
+  const delegatedTasks = todayTasks.filter(task => task.assignedPersonId).length;
+  const rescheduledTasks = todayTasks.filter(task => 
+    task.forwardHistory?.some(forward => forward.originalDate === task.scheduledDate)
+  ).length;
   
   // Tarefas definitivas: concluídas e que nunca foram reagendadas
   const definitiveTasks = todayTasks.filter(task => 
@@ -61,7 +67,7 @@ const Dashboard = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">
-            Visão geral das suas atividades de hoje
+            Visão geral das suas atividades
           </p>
         </div>
         <Button className="gap-2" onClick={() => openTaskModal()}>
@@ -69,6 +75,9 @@ const Dashboard = () => {
           Nova Tarefa
         </Button>
       </div>
+
+      {/* Filtros */}
+      <DashboardFilters filters={filters} onFiltersChange={setFilters} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
@@ -79,7 +88,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{totalTasks}</div>
             <p className="text-xs text-muted-foreground">
-              para hoje
+              para o período filtrado
             </p>
           </CardContent>
         </Card>
@@ -112,26 +121,26 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Delegadas</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{pendingTasks}</div>
+            <div className="text-2xl font-bold text-blue-600">{delegatedTasks}</div>
             <p className="text-xs text-muted-foreground">
-              aguardando execução
+              com responsáveis
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Repassadas</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Reagendadas</CardTitle>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{forwardedTasks}</div>
+            <div className="text-2xl font-bold text-orange-600">{rescheduledTasks}</div>
             <p className="text-xs text-muted-foreground">
-              delegadas ou adiadas
+              movidas de data
             </p>
           </CardContent>
         </Card>
@@ -141,7 +150,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Tarefas de Hoje</CardTitle>
+              <CardTitle className="text-lg">Tarefas do Período</CardTitle>
               <Link to="/tasks">
                 <Button variant="outline" size="sm">
                   Ver Todas
@@ -153,10 +162,10 @@ const Dashboard = () => {
                 <div className="text-center py-8">
                   <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium text-foreground mb-2">
-                    Nenhuma tarefa para hoje
+                    Nenhuma tarefa encontrada
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Comece criando uma nova tarefa
+                    Não há tarefas para os filtros selecionados
                   </p>
                   <Button onClick={() => openTaskModal()}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -165,18 +174,19 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {todayTasks.slice(0, 5).map((task) => (
-                    <TaskCard 
+                  {todayTasks.slice(0, 8).map((task) => (
+                    <TaskCardImproved 
                       key={task.id}
                       task={task} 
                       onComplete={() => handleConcludeTask(task.id)}
+                      onUncomplete={() => handleUnconcludeTask(task.id)}
                     />
                   ))}
-                  {todayTasks.length > 5 && (
+                  {todayTasks.length > 8 && (
                     <div className="text-center pt-4">
                       <Link to="/tasks">
                         <Button variant="outline" size="sm">
-                          Ver mais {todayTasks.length - 5} tarefas
+                          Ver mais {todayTasks.length - 8} tarefas
                         </Button>
                       </Link>
                     </div>
@@ -190,7 +200,7 @@ const Dashboard = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Resumo do Dia</CardTitle>
+              <CardTitle className="text-lg">Resumo do Período</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
@@ -209,7 +219,7 @@ const Dashboard = () => {
                 <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
                   <CheckCircle className="h-6 w-6 mx-auto text-green-600 mb-2" />
                   <p className="text-sm font-medium text-green-800">
-                    🎉 Dia completo!
+                    🎉 Período completo!
                   </p>
                   <p className="text-xs text-green-600">
                     Todas as tarefas foram concluídas
@@ -218,6 +228,8 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
+
+          <MeetingsCard />
 
           <Card>
             <CardHeader>
