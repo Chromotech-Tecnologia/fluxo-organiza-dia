@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats, SubItem, CompletionRecord } from '@/types';
@@ -33,7 +34,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       console.log(`${data?.length || 0} tarefas carregadas do Supabase`);
 
-      // Converter dados do Supabase para o tipo Task
+      // Converter dados do Supabase para o tipo Task com validação de tipos
       const convertedTasks: Task[] = (data || []).map(task => ({
         id: task.id,
         title: task.title,
@@ -43,13 +44,13 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         type: task.type as Task['type'],
         priority: task.priority as Task['priority'],
         status: task.status as Task['status'],
-        assignedPersonId: task.assigned_person_id, // Mantendo o assignedPersonId
+        assignedPersonId: task.assigned_person_id || undefined,
         timeInvestment: task.time_investment as Task['timeInvestment'],
-        customTimeMinutes: task.custom_time_minutes,
+        customTimeMinutes: task.custom_time_minutes || undefined,
         category: task.category as Task['category'],
-        subItems: (task.sub_items as SubItem[]) || [],
-        completionHistory: (task.completion_history as CompletionRecord[]) || [],
-        forwardHistory: task.forward_history || [],
+        subItems: (task.sub_items as unknown as SubItem[]) || [],
+        completionHistory: (task.completion_history as unknown as CompletionRecord[]) || [],
+        forwardHistory: (task.forward_history as unknown as Task['forwardHistory']) || [],
         forwardCount: task.forward_count || 0,
         order: task.task_order || 0,
         deliveryDates: task.delivery_dates || [],
@@ -181,9 +182,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         type: newTask.type,
         priority: newTask.priority,
         status: newTask.status,
-        assigned_person_id: newTask.assignedPersonId, // Mantendo assignedPersonId
+        assigned_person_id: newTask.assignedPersonId || null,
         time_investment: newTask.timeInvestment,
-        custom_time_minutes: newTask.customTimeMinutes,
+        custom_time_minutes: newTask.customTimeMinutes || null,
         category: newTask.category,
         sub_items: newTask.subItems || [],
         completion_history: newTask.completionHistory || [],
@@ -200,7 +201,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       const { data, error } = await supabase
         .from('tasks')
-        .insert([taskData])
+        .insert(taskData)
         .select()
         .single();
 
@@ -222,7 +223,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
   }, [user?.id, queryClient]);
 
-  // Atualizar tarefa - CORRIGIDO para manter assignedPersonId
+  // Atualizar tarefa - PRESERVANDO assignedPersonId
   const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
     if (!user) return;
     
@@ -262,12 +263,12 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (updates.isConcluded !== undefined) updateData.is_concluded = updates.isConcluded;
       if (updates.concludedAt !== undefined) updateData.concluded_at = updates.concludedAt;
       
-      // IMPORTANTE: Preservar assignedPersonId se não foi fornecido nas atualizações
+      // IMPORTANTE: Preservar assignedPersonId SEMPRE
       if (updates.assignedPersonId !== undefined) {
         updateData.assigned_person_id = updates.assignedPersonId;
       } else {
         // Manter o valor existente
-        updateData.assigned_person_id = currentTask.assignedPersonId;
+        updateData.assigned_person_id = currentTask.assignedPersonId || null;
       }
 
       console.log('Dados de atualização (preservando assignedPersonId):', updateData);
@@ -297,6 +298,29 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       throw error;
     }
   }, [user?.id, queryClient, tasks]);
+
+  // Concluir tarefa - FUNÇÃO ADICIONADA
+  const concludeTask = useCallback(async (taskId: string) => {
+    try {
+      await updateTask(taskId, {
+        isConcluded: true,
+        concludedAt: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Tarefa concluída",
+        description: "Tarefa marcada como concluída com sucesso.",
+      });
+    } catch (error: any) {
+      console.error('Erro ao concluir tarefa:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao concluir tarefa: " + error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  }, [updateTask]);
 
   // Deletar tarefa
   const deleteTask = useCallback(async (taskId: string) => {
@@ -435,6 +459,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     reorderTasks,
     getTasksByDate,
     getStats,
+    concludeTask, // FUNÇÃO ADICIONADA
     refetch
   };
 }
