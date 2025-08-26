@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -180,7 +179,7 @@ export default function TasksPage() {
 
   const handleOpenRescheduleModal = (task: Task) => {
     setSelectedTask(task);
-    setIsRescheduleModal(true);
+    setIsRescheduleModalOpen(true);
   };
 
   const handleCloseRescheduleModal = () => {
@@ -237,14 +236,14 @@ export default function TasksPage() {
 
       // Se não foi concluída hoje, prossegue com a conclusão
       const updatedData = {
-        status: 'completed',
+        status: 'completed' as TaskStatus,
         isConcluded: true,
         concludedAt: new Date().toISOString(),
         completionHistory: [
           ...(task.completionHistory || []),
           {
             completedAt: new Date().toISOString(),
-            status: 'completed',
+            status: 'completed' as const,
             date: getCurrentDateInSaoPaulo(),
             wasForwarded: task.isForwarded || false
           }
@@ -277,14 +276,14 @@ export default function TasksPage() {
 
       // Se não foi marcada como não feita hoje, prossegue com a ação
       const updatedData = {
-        status: 'not-done',
+        status: 'not-done' as TaskStatus,
         isConcluded: false,
         concludedAt: null,
         completionHistory: [
           ...(task.completionHistory || []),
           {
             completedAt: new Date().toISOString(),
-            status: 'not-done',
+            status: 'not-done' as const,
             date: getCurrentDateInSaoPaulo(),
             wasForwarded: task.isForwarded || false
           }
@@ -403,7 +402,7 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
                 onComplete={() => handleTaskComplete(task.id)}
                 onNotDone={() => handleTaskNotDone(task.id)}
@@ -420,7 +419,7 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
                 onComplete={() => handleTaskComplete(task.id)}
                 onNotDone={() => handleTaskNotDone(task.id)}
@@ -437,7 +436,7 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
                 onComplete={() => handleTaskComplete(task.id)}
                 onNotDone={() => handleTaskNotDone(task.id)}
@@ -454,7 +453,7 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
                 onComplete={() => handleTaskComplete(task.id)}
                 onNotDone={() => handleTaskNotDone(task.id)}
@@ -471,7 +470,7 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
-                onUpdate={(newData) => handleTaskUpdate(task.id, newData)}
+                onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
                 onComplete={() => handleTaskComplete(task.id)}
                 onNotDone={() => handleTaskNotDone(task.id)}
@@ -484,14 +483,12 @@ export default function TasksPage() {
         </TabsContent>
         <TabsContent value="stats" className="mt-4">
           <TaskStatsImproved
-            stats={{
-              totalTasks: taskStats?.totalTasks || 0,
-              completedTasks: taskStats?.completedTasks || 0,
-              pendingTasks: taskStats?.pendingTasks || 0,
-              overdueTasks: taskStats?.overdueTasks || 0,
-              completionRate: taskStats?.completionRate || 0,
-              averageForwards: taskStats?.averageForwards || 0
-            }}
+            totalTasks={taskStats?.totalTasks || 0}
+            completedTasks={taskStats?.completedTasks || 0}
+            pendingTasks={taskStats?.pendingTasks || 0}
+            overdueTasks={taskStats?.overdueTasks || 0}
+            completionRate={taskStats?.completionRate || 0}
+            averageForwards={taskStats?.averageForwards || 0}
             totalEstimatedTime={totalEstimatedTime}
             topPersonByTasks={taskStats?.topPersonByTasks}
             mostForwardedTask={taskStats?.mostForwardedTask}
@@ -502,27 +499,7 @@ export default function TasksPage() {
         </TabsContent>
       </Tabs>
 
-      <TaskModal
-        task={initialData}
-        onSubmit={async (data) => {
-          try {
-            if (data.id) {
-              // Atualizar task existente
-              await updateTask(data.id, data);
-              toast.success('Tarefa atualizada com sucesso!');
-            } else {
-              // Criar nova task
-              await addTask(data);
-              toast.success('Tarefa criada com sucesso!');
-            }
-            closeModal();
-          } catch (error) {
-            console.error("Erro ao criar/atualizar a tarefa:", error);
-            toast.error('Erro ao criar/atualizar a tarefa.');
-          }
-        }}
-        onCancel={closeModal}
-      />
+      <TaskModal />
 
       {/* Modais */}
       {selectedTask && (
