@@ -1,18 +1,5 @@
-import { Task } from "@/types";
+import { Task, SortOption } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
-
-// Tipos de ordenação disponíveis
-export type SortOption = 
-  | 'order' 
-  | 'priority' 
-  | 'time' 
-  | 'routine' 
-  | 'status' 
-  | 'forward' 
-  | 'type' 
-  | 'date' 
-  | 'name-asc' 
-  | 'name-desc';
 
 export const SORT_OPTIONS = [
   { value: 'order', label: 'Por Ordem' },
@@ -95,6 +82,7 @@ export function sortTasks(tasks: Task[], sortBy: SortOption): Task[] {
     case 'date':
       return sortedTasks.sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
       
+    case 'title':
     case 'name-asc':
       return sortedTasks.sort((a, b) => a.title.localeCompare(b.title));
       
