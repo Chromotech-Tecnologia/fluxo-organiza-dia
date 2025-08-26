@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -87,82 +88,6 @@ export function TaskCardImproved({
 
   const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
-  
-  // Lógica melhorada para detectar reagendamento do dia atual para data futura
-  const today = getCurrentDateInSaoPaulo();
-  const wasActuallyRescheduledToday = React.useMemo(() => {
-    console.log('=== VERIFICANDO REAGENDAMENTO ===');
-    console.log('Tarefa:', task.title);
-    console.log('Data da tarefa:', task.scheduledDate);
-    console.log('Hoje:', today);
-    console.log('Forward history:', task.forwardHistory);
-    
-    if (!task.forwardHistory || task.forwardHistory.length === 0) {
-      console.log('❌ Sem histórico de reagendamento');
-      return false;
-    }
-    
-    // Verificar se há reagendamento feito hoje
-    const hasReschedulingToday = task.forwardHistory.some(forward => {
-      console.log('--- Analisando forward ---');
-      console.log('Forward completo:', forward);
-      
-      const forwardDate = new Date(forward.forwardedAt).toISOString().split('T')[0];
-      const isToday = forwardDate === today;
-      
-      console.log('Data do forward:', forwardDate);
-      console.log('É hoje?', isToday);
-      
-      if (!isToday) {
-        console.log('❌ Forward não foi feito hoje');
-        return false;
-      }
-      
-      // Verificar se foi reagendamento real (para data diferente da original)
-      const isRealReschedule = forward.originalDate !== forward.newDate;
-      console.log('Data original:', forward.originalDate);
-      console.log('Nova data:', forward.newDate);
-      console.log('É reagendamento real?', isRealReschedule);
-      
-      if (!isRealReschedule) {
-        console.log('❌ Não é reagendamento real');
-        return false;
-      }
-      
-      // Verificar se a nova data é futura em relação à original
-      const isFutureDate = forward.newDate > forward.originalDate;
-      console.log('Nova data é futura?', isFutureDate);
-      
-      if (!isFutureDate) {
-        console.log('❌ Nova data não é futura');
-        return false;
-      }
-      
-      // Verificar se foi ação de reagendamento pelo usuário (não automático)
-      const isUserRescheduleAction = forward.reason && (
-        forward.reason.includes('Reagendada pelo usuário') || 
-        forward.reason.includes('Tarefa reagendada') ||
-        forward.reason.includes('Reagendamento manual') ||
-        forward.reason === 'Reagendada' ||
-        forward.reason.includes('reagenda')
-      );
-      
-      console.log('Razão:', forward.reason);
-      console.log('É ação de reagendamento do usuário?', isUserRescheduleAction);
-      
-      const result = isUserRescheduleAction;
-      console.log('✅ Resultado final para este forward:', result);
-      
-      return result;
-    });
-    
-    console.log('🎯 RESULTADO FINAL para tarefa:', hasReschedulingToday);
-    console.log('=================================');
-    return hasReschedulingToday;
-  }, [task.forwardHistory, today, task.title, task.scheduledDate]);
-
-  // Sempre mostrar o botão reagendar
-  const canShowReschedule = true;
 
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
@@ -225,14 +150,8 @@ export function TaskCardImproved({
     onEdit?.();
   };
 
-  // Determinar se o botão deve estar laranja - lógica melhorada
-  const shouldShowOrangeButton = wasActuallyRescheduledToday || isRescheduling || justRescheduled;
-  
-  console.log('🔶 BOTÃO LARANJA - Tarefa:', task.title);
-  console.log('🔶 wasActuallyRescheduledToday:', wasActuallyRescheduledToday);
-  console.log('🔶 isRescheduling:', isRescheduling);
-  console.log('🔶 justRescheduled:', justRescheduled);
-  console.log('🔶 shouldShowOrangeButton:', shouldShowOrangeButton);
+  // Botão reagendar laranja se tem histórico de reagendamento no banco
+  const shouldShowOrangeRescheduleButton = wasRescheduled || isRescheduling || justRescheduled;
 
   return (
     <Card 
@@ -270,11 +189,6 @@ export function TaskCardImproved({
               
               <div className="font-semibold text-sm truncate flex-1">
                 {task.title}
-                {wasRescheduled && (
-                  <Badge variant="outline" className="ml-2 text-xs bg-orange-100 text-orange-800 border-orange-300">
-                    Reagendada
-                  </Badge>
-                )}
               </div>
             </div>
 
@@ -402,7 +316,7 @@ export function TaskCardImproved({
                     {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
                   </Button>
                   
-                  {/* Botão reagendar com lógica melhorada de coloração */}
+                  {/* Botão reagendar com cor laranja baseada no banco de dados */}
                   <Button
                     size="sm"
                     variant="outline"
@@ -411,12 +325,12 @@ export function TaskCardImproved({
                       handleRescheduleClick();
                     }}
                     className={`h-7 px-2 text-xs min-w-[90px] ${
-                      shouldShowOrangeButton
+                      shouldShowOrangeRescheduleButton
                         ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
                         : 'text-orange-600 border-orange-600 hover:bg-orange-50'
                     }`}
                   >
-                    {shouldShowOrangeButton ? '✓ Reagendada' : 'Reagendar'}
+                    {shouldShowOrangeRescheduleButton ? '✓ Reagendada' : 'Reagendar'}
                   </Button>
                   
                   <Button
@@ -444,12 +358,12 @@ export function TaskCardImproved({
                       handleRescheduleClick();
                     }}
                     className={`h-7 px-2 text-xs min-w-[90px] ${
-                      shouldShowOrangeButton
+                      shouldShowOrangeRescheduleButton
                         ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
                         : 'text-orange-600 border-orange-600 hover:bg-orange-50'
                     }`}
                   >
-                    {shouldShowOrangeButton ? '✓ Reagendada' : 'Reagendar'}
+                    {shouldShowOrangeRescheduleButton ? '✓ Reagendada' : 'Reagendar'}
                   </Button>
 
                   <Button
