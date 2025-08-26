@@ -204,99 +204,110 @@ export default function TasksPage() {
     }
   };
 
-  const handleTaskComplete = async (taskId: string) => {
+  const handleStatusChange = async (taskId: string, status: TaskStatus) => {
     try {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
-      // Verifica se a tarefa já foi concluída hoje
-      const alreadyCompletedToday = task.completionHistory?.some(record => {
-        const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
-        const today = getCurrentDateInSaoPaulo();
-        return recordDate === today && record.status === 'completed';
-      });
+      if (status === 'completed') {
+        // Verifica se a tarefa já foi concluída hoje
+        const alreadyCompletedToday = task.completionHistory?.some(record => {
+          const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
+          const today = getCurrentDateInSaoPaulo();
+          return recordDate === today && record.status === 'completed';
+        });
 
-      if (alreadyCompletedToday) {
-        toast('Esta tarefa já foi concluída hoje!');
-        return;
+        if (alreadyCompletedToday) {
+          toast('Esta tarefa já foi concluída hoje!');
+          return;
+        }
+
+        // Se não foi concluída hoje, prossegue com a conclusão
+        const updatedData = {
+          status: 'completed' as TaskStatus,
+          isConcluded: true,
+          concludedAt: new Date().toISOString(),
+          completionHistory: [
+            ...(task.completionHistory || []),
+            {
+              completedAt: new Date().toISOString(),
+              status: 'completed' as const,
+              date: getCurrentDateInSaoPaulo(),
+              wasForwarded: task.isForwarded || false
+            }
+          ]
+        };
+        await updateTask(taskId, updatedData);
+        toast.success('Tarefa marcada como concluída!');
+      } else if (status === 'not-done') {
+        // Verifica se a tarefa já foi marcada como não feita hoje
+        const alreadyMarkedNotDoneToday = task.completionHistory?.some(record => {
+          const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
+          const today = getCurrentDateInSaoPaulo();
+          return recordDate === today && record.status === 'not-done';
+        });
+
+        if (alreadyMarkedNotDoneToday) {
+          toast('Esta tarefa já foi marcada como não feita hoje!');
+          return;
+        }
+
+        // Se não foi marcada como não feita hoje, prossegue com a ação
+        const updatedData = {
+          status: 'not-done' as TaskStatus,
+          isConcluded: false,
+          concludedAt: null,
+          completionHistory: [
+            ...(task.completionHistory || []),
+            {
+              completedAt: new Date().toISOString(),
+              status: 'not-done' as const,
+              date: getCurrentDateInSaoPaulo(),
+              wasForwarded: task.isForwarded || false
+            }
+          ]
+        };
+        await updateTask(taskId, updatedData);
+        toast.success('Tarefa marcada como não feita!');
+      } else {
+        await updateTask(taskId, { status });
+        toast.success('Status da tarefa atualizado!');
       }
+    } catch (error) {
+      console.error("Erro ao atualizar status da tarefa:", error);
+      toast.error('Erro ao atualizar status da tarefa.');
+    }
+  };
 
-      // Se não foi concluída hoje, prossegue com a conclusão
+  const handleConclude = async (task: Task) => {
+    try {
       const updatedData = {
-        status: 'completed' as TaskStatus,
         isConcluded: true,
         concludedAt: new Date().toISOString(),
-        completionHistory: [
-          ...(task.completionHistory || []),
-          {
-            completedAt: new Date().toISOString(),
-            status: 'completed' as const,
-            date: getCurrentDateInSaoPaulo(),
-            wasForwarded: task.isForwarded || false
-          }
-        ]
+        status: 'completed' as TaskStatus
       };
-      await updateTask(taskId, updatedData);
-      toast.success('Tarefa marcada como concluída!');
+      await updateTask(task.id, updatedData);
+      toast.success('Tarefa concluída!');
     } catch (error) {
-      console.error("Erro ao marcar a tarefa como concluída:", error);
-      toast.error('Erro ao marcar a tarefa como concluída.');
+      console.error("Erro ao concluir tarefa:", error);
+      toast.error('Erro ao concluir tarefa.');
     }
   };
 
-  const handleTaskNotDone = async (taskId: string) => {
+  const handleUnconclude = async (task: Task) => {
     try {
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      // Verifica se a tarefa já foi marcada como não feita hoje
-      const alreadyMarkedNotDoneToday = task.completionHistory?.some(record => {
-        const recordDate = new Date(record.completedAt).toISOString().split('T')[0];
-        const today = getCurrentDateInSaoPaulo();
-        return recordDate === today && record.status === 'not-done';
-      });
-
-      if (alreadyMarkedNotDoneToday) {
-        toast('Esta tarefa já foi marcada como não feita hoje!');
-        return;
-      }
-
-      // Se não foi marcada como não feita hoje, prossegue com a ação
       const updatedData = {
-        status: 'not-done' as TaskStatus,
         isConcluded: false,
         concludedAt: null,
-        completionHistory: [
-          ...(task.completionHistory || []),
-          {
-            completedAt: new Date().toISOString(),
-            status: 'not-done' as const,
-            date: getCurrentDateInSaoPaulo(),
-            wasForwarded: task.isForwarded || false
-          }
-        ]
+        status: 'pending' as TaskStatus
       };
-      await updateTask(taskId, updatedData);
-      toast.success('Tarefa marcada como não feita!');
+      await updateTask(task.id, updatedData);
+      toast.success('Conclusão da tarefa desfeita!');
     } catch (error) {
-      console.error("Erro ao marcar a tarefa como não feita:", error);
-      toast.error('Erro ao marcar a tarefa como não feita.');
+      console.error("Erro ao desfazer conclusão da tarefa:", error);
+      toast.error('Erro ao desfazer conclusão da tarefa.');
     }
   };
-
-  // Agrupar tarefas por status
-  const groupedTasks = useMemo(() => {
-    if (!sortedTasks) return {};
-
-    return sortedTasks.reduce((acc: { [key in TaskStatus]?: Task[] }, task) => {
-      const status = task.status;
-      if (!acc[status]) {
-        acc[status] = [];
-      }
-      acc[status]?.push(task);
-      return acc;
-    }, {});
-  }, [sortedTasks]);
 
   // Tasks para hoje
   const tasksForToday = useMemo(() => {
@@ -389,10 +400,12 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={(status) => handleStatusChange(task.id, status)}
+                onConclude={() => handleConclude(task)}
+                onUnconclude={() => handleUnconclude(task)}
+                onForward={() => handleOpenForwardModal(task)}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onForward={() => handleOpenForwardModal(task)}
-                onReschedule={() => handleOpenRescheduleModal(task)}
               />
             ))}
           </div>
@@ -403,10 +416,12 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={(status) => handleStatusChange(task.id, status)}
+                onConclude={() => handleConclude(task)}
+                onUnconclude={() => handleUnconclude(task)}
+                onForward={() => handleOpenForwardModal(task)}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onForward={() => handleOpenForwardModal(task)}
-                onReschedule={() => handleOpenRescheduleModal(task)}
               />
             ))}
           </div>
@@ -417,10 +432,12 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={(status) => handleStatusChange(task.id, status)}
+                onConclude={() => handleConclude(task)}
+                onUnconclude={() => handleUnconclude(task)}
+                onForward={() => handleOpenForwardModal(task)}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onForward={() => handleOpenForwardModal(task)}
-                onReschedule={() => handleOpenRescheduleModal(task)}
               />
             ))}
           </div>
@@ -431,10 +448,12 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={(status) => handleStatusChange(task.id, status)}
+                onConclude={() => handleConclude(task)}
+                onUnconclude={() => handleUnconclude(task)}
+                onForward={() => handleOpenForwardModal(task)}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onForward={() => handleOpenForwardModal(task)}
-                onReschedule={() => handleOpenRescheduleModal(task)}
               />
             ))}
           </div>
@@ -445,27 +464,49 @@ export default function TasksPage() {
               <TaskCardImproved
                 key={task.id}
                 task={task}
+                onStatusChange={(status) => handleStatusChange(task.id, status)}
+                onConclude={() => handleConclude(task)}
+                onUnconclude={() => handleUnconclude(task)}
+                onForward={() => handleOpenForwardModal(task)}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onForward={() => handleOpenForwardModal(task)}
-                onReschedule={() => handleOpenRescheduleModal(task)}
               />
             ))}
           </div>
         </TabsContent>
         <TabsContent value="stats" className="mt-4">
           {taskStats && (
-            <TaskStatsImproved
-              totalTasks={taskStats.totalTasks}
-              completedTasks={taskStats.completedTasks}
-              pendingTasks={taskStats.pendingTasks}
-              overdueTasks={taskStats.overdueTasks}
-              completionRate={taskStats.completionRate}
-              averageForwards={taskStats.averageForwards}
-              totalEstimatedTime={totalEstimatedTime}
-              topPersonByTasks={taskStats.topPersonByTasks}
-              mostForwardedTask={taskStats.mostForwardedTask}
-            />
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Estatísticas Gerais</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{taskStats.totalTasks}</div>
+                      <div className="text-sm text-muted-foreground">Total</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{taskStats.completedTasks}</div>
+                      <div className="text-sm text-muted-foreground">Concluídas</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-600">{taskStats.pendingTasks}</div>
+                      <div className="text-sm text-muted-foreground">Pendentes</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">{taskStats.overdueTasks}</div>
+                      <div className="text-sm text-muted-foreground">Não Feitas</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="text-center">
+                      <div className="text-lg font-semibold">{taskStats.completionRate.toFixed(1)}%</div>
+                      <div className="text-sm text-muted-foreground">Taxa de Conclusão</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </TabsContent>
         <TabsContent value="team" className="mt-4">
