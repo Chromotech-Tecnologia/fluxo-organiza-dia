@@ -11,7 +11,6 @@ import { TaskStatsImproved } from "@/components/tasks/TaskStatsImproved";
 import { TaskModal } from "@/components/modals/TaskModal";
 import { ForwardTaskModal } from "@/components/modals/ForwardTaskModal";
 import { RescheduleModal } from "@/components/modals/RescheduleModal";
-import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { Task, TaskFilter, Person, TaskStatus, SortOption } from "@/types";
@@ -32,11 +31,10 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = useState<SortOption>('order');
   const { tasks, loading, addTask, updateTask, deleteTask } = useSupabaseTasks();
   const { people } = useSupabasePeople();
-  const { openModal, closeModal, isOpen, initialData } = useModalStore();
+  const { openTaskModal, closeTaskModal, isTaskModalOpen, taskToEdit } = useModalStore();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
-  const [isTaskHistoryModalOpen, setIsTaskHistoryModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("today");
 
   // Filtra as tasks com base na data selecionada
@@ -163,8 +161,7 @@ export default function TasksPage() {
 
   // Handlers
   const handleOpenTaskModal = (task?: Task) => {
-    setSelectedTask(task || null);
-    openModal({ type: 'task', isOpen: true, initialData: task });
+    openTaskModal(task);
   };
 
   const handleOpenForwardModal = (task: Task) => {
@@ -184,16 +181,6 @@ export default function TasksPage() {
 
   const handleCloseRescheduleModal = () => {
     setIsRescheduleModalOpen(false);
-    setSelectedTask(null);
-  };
-
-  const handleOpenTaskHistoryModal = (task: Task) => {
-    setSelectedTask(task);
-    setIsTaskHistoryModalOpen(true);
-  };
-
-  const handleCloseTaskHistoryModal = () => {
-    setIsTaskHistoryModalOpen(false);
     setSelectedTask(null);
   };
 
@@ -230,7 +217,7 @@ export default function TasksPage() {
       });
 
       if (alreadyCompletedToday) {
-        toast.warning('Esta tarefa já foi concluída hoje!');
+        toast('Esta tarefa já foi concluída hoje!');
         return;
       }
 
@@ -270,7 +257,7 @@ export default function TasksPage() {
       });
 
       if (alreadyMarkedNotDoneToday) {
-        toast.warning('Esta tarefa já foi marcada como não feita hoje!');
+        toast('Esta tarefa já foi marcada como não feita hoje!');
         return;
       }
 
@@ -404,11 +391,8 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onComplete={() => handleTaskComplete(task.id)}
-                onNotDone={() => handleTaskNotDone(task.id)}
                 onForward={() => handleOpenForwardModal(task)}
                 onReschedule={() => handleOpenRescheduleModal(task)}
-                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -421,11 +405,8 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onComplete={() => handleTaskComplete(task.id)}
-                onNotDone={() => handleTaskNotDone(task.id)}
                 onForward={() => handleOpenForwardModal(task)}
                 onReschedule={() => handleOpenRescheduleModal(task)}
-                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -438,11 +419,8 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onComplete={() => handleTaskComplete(task.id)}
-                onNotDone={() => handleTaskNotDone(task.id)}
                 onForward={() => handleOpenForwardModal(task)}
                 onReschedule={() => handleOpenRescheduleModal(task)}
-                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -455,11 +433,8 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onComplete={() => handleTaskComplete(task.id)}
-                onNotDone={() => handleTaskNotDone(task.id)}
                 onForward={() => handleOpenForwardModal(task)}
                 onReschedule={() => handleOpenRescheduleModal(task)}
-                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
@@ -472,27 +447,26 @@ export default function TasksPage() {
                 task={task}
                 onEdit={() => handleOpenTaskModal(task)}
                 onDelete={() => handleTaskDelete(task.id)}
-                onComplete={() => handleTaskComplete(task.id)}
-                onNotDone={() => handleTaskNotDone(task.id)}
                 onForward={() => handleOpenForwardModal(task)}
                 onReschedule={() => handleOpenRescheduleModal(task)}
-                onHistory={() => handleOpenTaskHistoryModal(task)}
               />
             ))}
           </div>
         </TabsContent>
         <TabsContent value="stats" className="mt-4">
-          <TaskStatsImproved
-            totalTasks={taskStats?.totalTasks || 0}
-            completedTasks={taskStats?.completedTasks || 0}
-            pendingTasks={taskStats?.pendingTasks || 0}
-            overdueTasks={taskStats?.overdueTasks || 0}
-            completionRate={taskStats?.completionRate || 0}
-            averageForwards={taskStats?.averageForwards || 0}
-            totalEstimatedTime={totalEstimatedTime}
-            topPersonByTasks={taskStats?.topPersonByTasks}
-            mostForwardedTask={taskStats?.mostForwardedTask}
-          />
+          {taskStats && (
+            <TaskStatsImproved
+              totalTasks={taskStats.totalTasks}
+              completedTasks={taskStats.completedTasks}
+              pendingTasks={taskStats.pendingTasks}
+              overdueTasks={taskStats.overdueTasks}
+              completionRate={taskStats.completionRate}
+              averageForwards={taskStats.averageForwards}
+              totalEstimatedTime={totalEstimatedTime}
+              topPersonByTasks={taskStats.topPersonByTasks}
+              mostForwardedTask={taskStats.mostForwardedTask}
+            />
+          )}
         </TabsContent>
         <TabsContent value="team" className="mt-4">
           <p>Gerenciar membros da equipe e suas atribuições.</p>
@@ -516,12 +490,6 @@ export default function TasksPage() {
             onClose={handleCloseRescheduleModal}
             task={selectedTask}
             onTaskUpdate={handleTaskUpdate}
-          />
-
-          <TaskHistoryModal
-            isOpen={isTaskHistoryModalOpen}
-            onClose={handleCloseTaskHistoryModal}
-            task={selectedTask}
           />
         </>
       )}
