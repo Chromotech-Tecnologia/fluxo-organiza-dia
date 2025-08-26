@@ -148,7 +148,6 @@ export interface DailyReport {
 }
 
 export interface TaskFilter {
-  search?: string;
   dateRange?: {
     start: string;
     end: string;
