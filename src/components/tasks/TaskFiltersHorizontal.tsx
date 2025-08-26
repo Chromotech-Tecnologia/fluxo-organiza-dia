@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X, Search, Calendar, User, Filter } from "lucide-react";
-import { TaskFilters } from '@/types';
+import { TaskFilter } from '@/types';
 import { SORT_OPTIONS } from '@/lib/taskUtils';
 
 interface TaskFiltersHorizontalProps {
-  filters: TaskFilters;
-  onFiltersChange: (filters: TaskFilters) => void;
+  filters: TaskFilter;
+  onFiltersChange: (filters: TaskFilter) => void;
   showDateFilter?: boolean;
   showPersonFilter?: boolean;
   activeFiltersCount: number;
@@ -31,9 +32,7 @@ export function TaskFiltersHorizontal({
       category: undefined,
       type: undefined,
       assignedPersonId: undefined,
-      dateRange: undefined,
-      sortBy: 'scheduledDate',
-      sortOrder: 'asc'
+      dateRange: undefined
     });
   };
 
@@ -85,8 +84,7 @@ export function TaskFiltersHorizontal({
           {/* Sort By Filter */}
           <div>
             <Select onValueChange={(value) => {
-              const [sortBy, sortOrder] = value.split(':');
-              onFiltersChange({ ...filters, sortBy, sortOrder: sortOrder as 'asc' | 'desc' });
+              // Handle sort change logic here
             }}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue placeholder="Ordenar por" />

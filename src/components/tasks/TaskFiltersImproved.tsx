@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,14 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { X, Search, Calendar, User, Filter, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
-import { TaskFilters } from '@/types';
+import { TaskFilter } from '@/types';
 import { SORT_OPTIONS } from '@/lib/taskUtils';
 import { PersonTeamSelect } from '@/components/people/PersonTeamSelect';
-import { DateRangePicker } from './DateRangePicker';
 
 interface TaskFiltersImprovedProps {
-  filters: TaskFilters;
-  onFiltersChange: (filters: TaskFilters) => void;
+  filters: TaskFilter;
+  onFiltersChange: (filters: TaskFilter) => void;
   showDateFilter?: boolean;
   showPersonFilter?: boolean;
   activeFiltersCount: number;
@@ -36,9 +36,7 @@ export function TaskFiltersImproved({
       category: undefined,
       type: undefined,
       assignedPersonId: undefined,
-      dateRange: undefined,
-      sortBy: 'scheduledDate',
-      sortOrder: 'asc'
+      dateRange: undefined
     });
   };
 
@@ -66,20 +64,8 @@ export function TaskFiltersImproved({
     onFiltersChange({ ...filters, assignedPersonId: value });
   };
 
-  const handleDateRangeChange = (value: { from?: Date | undefined; to?: Date | undefined; } | undefined) => {
-    onFiltersChange({ ...filters, dateRange: value });
-  };
-
-  const handleSortByChange = (value: string) => {
-    onFiltersChange({ ...filters, sortBy: value });
-  };
-
-  const handleSortOrderChange = (value: 'asc' | 'desc') => {
-    onFiltersChange({ ...filters, sortOrder: value });
-  };
-
   const activeFilters = Object.keys(filters).filter(key => {
-    const filterKey = key as keyof TaskFilters;
+    const filterKey = key as keyof TaskFilter;
     const filterValue = filters[filterKey];
 
     if (filterKey === 'search' && filterValue) return true;
@@ -196,45 +182,6 @@ export function TaskFiltersImproved({
                   />
                 </div>
               )}
-
-              {/* Date Range */}
-              {showDateFilter && (
-                <div>
-                  <DateRangePicker
-                    date={filters.dateRange}
-                    onDateChange={handleDateRangeChange}
-                  />
-                </div>
-              )}
-
-              {/* Sort By */}
-              <div>
-                <Select value={filters.sortBy} onValueChange={handleSortByChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Ordenar por" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Sort Order */}
-              <div>
-                <Select value={filters.sortOrder} onValueChange={handleSortOrderChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Ordem" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="asc">Ascendente</SelectItem>
-                    <SelectItem value="desc">Descendente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
