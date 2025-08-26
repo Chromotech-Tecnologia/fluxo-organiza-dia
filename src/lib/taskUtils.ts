@@ -106,7 +106,7 @@ export function sortTasks(tasks: Task[], sortBy: SortOption): Task[] {
   }
 }
 
-// Função para obter o valor em minutos baseado no timeInvestment
+// Função para obter o valor em minutos baseado no timeInvestment - CORRIGIDA
 export function getTimeInMinutes(timeInvestment: string, customTimeMinutes?: number): number {
   // Se o timeInvestment for 'custom' e tiver customTimeMinutes, usar esse valor
   if (timeInvestment === 'custom' && customTimeMinutes) {
@@ -115,16 +115,14 @@ export function getTimeInMinutes(timeInvestment: string, customTimeMinutes?: num
   }
   
   const timeValues: Record<string, number> = {
-    // Tempos personalizados pré-definidos
-    'custom-5': 5,
-    'custom-30': 30,
-    'custom-1h': 60,
-    'custom-4h': 240,
-    'custom-8h': 480,
-    // Tempos padrão - CORRIGIDOS
-    'low': 30,      // Era 60, agora 30min (0.5h)
-    'medium': 120,  // Era 120, mantém 2 horas
-    'high': 480,    // Era 240, agora 8 horas (não 4h)
+    // Tempos personalizados pré-definidos - CORRIGIDOS PARA CORRESPONDER AO FILTRO
+    'custom-5': 5,      // 5 minutos
+    'custom-30': 30,    // 30 minutos  
+    'low': 60,          // 1 hora (era 30min, agora 1h)
+    'medium': 120,      // 2 horas (mantém)
+    'high': 240,        // 4 horas (era 480min/8h, agora 240min/4h)
+    'custom-4h': 240,   // 4 horas
+    'custom-8h': 480,   // 8 horas
     // Fallback para custom sem valor
     'custom': customTimeMinutes || 0
   };

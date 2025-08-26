@@ -10,13 +10,13 @@ interface TimeInvestmentFilterProps {
 }
 
 const TIME_INVESTMENT_OPTIONS = [
-  { value: 'custom-5', label: '5 minutos' },
-  { value: 'custom-30', label: '30 minutos' },
-  { value: 'low', label: '1 hora' },
-  { value: 'medium', label: '2 horas' },
-  { value: 'high', label: '4 horas' },
-  { value: 'custom-4h', label: '4 horas' },
-  { value: 'custom-8h', label: '8 horas' },
+  { value: 'custom-5', label: '5min' },
+  { value: 'custom-30', label: '30min' },
+  { value: 'low', label: '1h' },
+  { value: 'medium', label: '2h' },
+  { value: 'high', label: '4h' },
+  { value: 'custom-4h', label: '4h' },
+  { value: 'custom-8h', label: '8h' },
   { value: 'custom', label: 'Personalizado' }
 ];
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Task } from '@/types';
 import { Badge } from "@/components/ui/badge";
@@ -90,14 +89,31 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
     }
   };
 
-  const getTimeInvestmentLabel = (timeInvestment: string) => {
+  const getTimeInvestmentLabel = (timeInvestment: string, customTimeMinutes?: number) => {
+    // Se for custom, mostrar o tempo personalizado
+    if (timeInvestment === 'custom' && customTimeMinutes) {
+      if (customTimeMinutes < 60) return `${customTimeMinutes}min`;
+      const hours = Math.floor(customTimeMinutes / 60);
+      const minutes = customTimeMinutes % 60;
+      return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+    }
+    
+    // Usar os valores corretos para cada tipo
     switch (timeInvestment) {
-      case 'low':
+      case 'custom-5':
         return '5min';
-      case 'medium':
+      case 'custom-30':
+        return '30min';
+      case 'low':
         return '1h';
-      case 'high':
+      case 'medium':
         return '2h';
+      case 'high':
+        return '4h';
+      case 'custom-4h':
+        return '4h';
+      case 'custom-8h':
+        return '8h';
       default:
         return '5min';
     }
@@ -178,7 +194,7 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              {getTimeInvestmentLabel(task.timeInvestment)}
+              {getTimeInvestmentLabel(task.timeInvestment, task.customTimeMinutes)}
             </div>
             
             <div className="flex items-center gap-1">
