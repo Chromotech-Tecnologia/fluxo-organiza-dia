@@ -1,456 +1,223 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
-
-import { cn, formatDate } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarIcon, Clock, AlertTriangle, Users, Tag, FileText } from "lucide-react";
+import { TaskFormValues, TaskType, TaskPriority, TaskTimeInvestment, TaskCategory } from "@/types";
 import { taskFormSchema } from "@/lib/validations/task";
-import { TaskFormValues, Task, Person, SubItem } from "@/types";
-import { usePeople } from "@/hooks/usePeople";
-import { useToast } from "@/hooks/use-toast";
-import { ReloadIcon } from "@radix-ui/react-icons";
-import { Label } from "@/components/ui/label";
 import { InteractiveSubItemList } from "./InteractiveSubItemList";
+import { PeopleSelect } from "../people/PeopleSelect";
 
 interface TaskFormProps {
-  task?: Task;
-  onSubmit: (values: TaskFormValues & { subItems: SubItem[] }) => Promise<void>;
-  onCancel: () => void;
+  onSubmit: (data: TaskFormValues) => void;
+  initialData?: Partial<TaskFormValues>;
+  isLoading?: boolean;
 }
 
-export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
-  const [isSaving, setIsSaving] = useState(false);
-  const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
-  const { people, loading: loadingPeople, refetch: refetchPeople } = usePeople();
-  const { toast } = useToast();
-  const navigate = useNavigate();
+const typeOptions: { value: TaskType; label: string; icon: React.ReactNode; color: string }[] = [
+  { value: 'own-task', label: 'Tarefa Própria', icon: <FileText className="h-4 w-4" />, color: 'bg-blue-100 text-blue-800' },
+  { value: 'meeting', label: 'Reunião', icon: <Users className="h-4 w-4" />, color: 'bg-purple-100 text-purple-800' },
+  { value: 'delegated-task', label: 'Tarefa Delegada', icon: <Users className="h-4 w-4" />, color: 'bg-green-100 text-green-800' },
+];
 
+const priorityOptions: { value: TaskPriority; label: string; color: string }[] = [
+  { value: 'none', label: 'Normal', color: 'bg-gray-100 text-gray-800' },
+  { value: 'priority', label: 'Prioridade', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'extreme', label: 'Extrema', color: 'bg-red-100 text-red-800' },
+];
+
+const timeInvestmentOptions: { value: TaskTimeInvestment; label: string }[] = [
+  { value: 'low', label: '5 minutos' },
+  { value: 'medium', label: '1 hora' },
+  { value: 'high', label: '2 horas' },
+  { value: 'custom-4h', label: '4 horas' },
+  { value: 'custom-8h', label: '8 horas' },
+  { value: 'custom', label: 'Personalizado' },
+];
+
+const categoryOptions: { value: TaskCategory; label: string }[] = [
+  { value: 'personal', label: 'Pessoal' },
+  { value: 'business', label: 'Profissional' },
+];
+
+const routineCycleOptions = [
+  { value: 'daily', label: 'Diário' },
+  { value: 'weekly', label: 'Semanal' },
+  { value: 'monthly', label: 'Mensal' },
+  { value: 'quarterly', label: 'Trimestral' },
+  { value: 'biannual', label: 'Semestral' },
+  { value: 'annual', label: 'Anual' },
+];
+
+export function TaskForm({ onSubmit, initialData, isLoading }: TaskFormProps) {
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
-      title: task?.title || "",
-      description: task?.description || "",
-      type: task?.type || "own-task",
-      priority: task?.priority || "none",
-      timeInvestment: task?.timeInvestment || "low",
-      customTimeMinutes: task?.customTimeMinutes || undefined,
-      category: task?.category || "personal",
-      assignedPersonId: task?.assignedPersonId || "",
-      scheduledDate: task?.scheduledDate || formatDate(new Date()),
-      order: task?.order || 0,
-      observations: task?.observations || "",
-      isRoutine: task?.isRoutine || false,
-      routineCycle: task?.routineCycle || undefined,
-      routineStartDate: task?.routineStartDate || undefined,
-      routineEndDate: task?.routineEndDate || undefined,
+      title: '',
+      description: '',
+      type: 'own-task',
+      priority: 'none',
+      timeInvestment: 'low',
+      category: 'business',
+      scheduledDate: new Date().toISOString().split('T')[0],
+      order: 1,
+      observations: '',
+      isRoutine: false,
+      subItems: [],
+      ...initialData,
     },
-    mode: "onChange",
   });
 
+  const watchedType = form.watch('type');
+  const watchedTimeInvestment = form.watch('timeInvestment');
+  const watchedIsRoutine = form.watch('isRoutine');
+  const watchedSubItems = form.watch('subItems');
+
   useEffect(() => {
-    if (task) {
+    if (initialData) {
       form.reset({
-        title: task.title,
-        description: task.description || "",
-        type: task.type,
-        priority: task.priority,
-        timeInvestment: task.timeInvestment,
-        customTimeMinutes: task.customTimeMinutes || undefined,
-        category: task.category,
-        assignedPersonId: task.assignedPersonId || "",
-        scheduledDate: task.scheduledDate,
-        order: task.order || 0,
-        observations: task.observations || "",
-        isRoutine: task.isRoutine || false,
-        routineCycle: task.routineCycle || undefined,
-        routineStartDate: task.routineStartDate || undefined,
-        routineEndDate: task.routineEndDate || undefined,
+        title: '',
+        description: '',
+        type: 'own-task',
+        priority: 'none',
+        timeInvestment: 'low',
+        category: 'business',
+        scheduledDate: new Date().toISOString().split('T')[0],
+        order: 1,
+        observations: '',
+        isRoutine: false,
+        subItems: [],
+        ...initialData,
       });
-      setSubItems(task.subItems || []);
     }
-  }, [task, form]);
+  }, [initialData, form]);
 
-  const handleSave = async (values: TaskFormValues) => {
-    setIsSaving(true);
-    try {
-      await onSubmit({ ...values, subItems });
-      toast({
-        title: "Sucesso",
-        description: "Tarefa salva com sucesso!",
-      });
-    } catch (error) {
-      console.error("Erro ao salvar tarefa:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a tarefa. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSubmit = (data: TaskFormValues) => {
+    onSubmit(data);
   };
-
-  const assignedPersonOptions = () => {
-    if (!people) return null;
-
-    return people.map((person) => ({
-      label: person.name,
-      value: person.id,
-    }));
-  };
-
-  const timeInvestmentOptions = [
-    { label: '5 minutos', value: 'custom-5' },
-    { label: '30 minutos', value: 'custom-30' },
-    { label: 'Baixo (1h)', value: 'low' },
-    { label: 'Médio (2h)', value: 'medium' },
-    { label: 'Alto (4h)', value: 'high' },
-    { label: '4 horas', value: 'custom-4h' },
-    { label: '8 horas', value: 'custom-8h' },
-    { label: 'Personalizado', value: 'custom' },
-  ];
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSave)} className="space-y-8">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Título</FormLabel>
-                <FormControl>
-                  <Input placeholder="Título da tarefa" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="scheduledDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Data</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          formatDate(new Date(field.value))
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
-                      onSelect={(date) => field.onChange(formatDate(date))}
-                      disabled={(date) =>
-                        date > new Date()
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descrição</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Detalhes da tarefa"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="meeting">Reunião</SelectItem>
-                    <SelectItem value="own-task">Tarefa Própria</SelectItem>
-                    <SelectItem value="delegated-task">Tarefa Delegada</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prioridade</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a prioridade" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhuma</SelectItem>
-                    <SelectItem value="priority">Prioridade</SelectItem>
-                    <SelectItem value="extreme">Extrema</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="timeInvestment"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tempo Estimado</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tempo" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {timeInvestmentOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {form.getValues("timeInvestment") === 'custom' && (
-          <FormField
-            control={form.control}
-            name="customTimeMinutes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tempo Personalizado (minutos)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Tempo em minutos"
-                    {...field}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      field.onChange(isNaN(value) ? undefined : value);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Categoria</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a categoria" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="personal">Pessoal</SelectItem>
-                    <SelectItem value="business">Negócios</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="assignedPersonId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Responsável</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  disabled={loadingPeople}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Atribuir a uma pessoa" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="">Ninguém</SelectItem>
-                    {people && people.length > 0 ? (
-                      assignedPersonOptions()?.map((person) => (
-                        <SelectItem key={person.value} value={person.value}>
-                          {person.label}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>
-                        Nenhuma pessoa cadastrada
-                      </SelectItem>
-                    )}
-                    <SelectItem value="new" className="text-blue-500">
-                      <Button
-                        type="button"
-                        variant="link"
-                        size="sm"
-                        onClick={() => {
-                          navigate('/pessoas/novo');
-                        }}
-                      >
-                        Nova Pessoa
-                      </Button>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="observations"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Observações</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Anotações adicionais"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Checklist */}
-        <InteractiveSubItemList
-          subItems={subItems}
-          onSubItemsChange={setSubItems}
-        />
-
-        <FormField
-          control={form.control}
-          name="isRoutine"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Tarefa Rotineira?</FormLabel>
-                <FormDescription>
-                  Marque se esta tarefa se repete regularmente.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
-
-        {form.getValues("isRoutine") && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {/* Informações Básicas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Informações Básicas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <FormField
               control={form.control}
-              name="routineCycle"
+              name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ciclo da Rotina</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel>Título *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Digite o título da tarefa" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Descreva os detalhes da tarefa"
+                      className="min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="scheduledDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4" />
+                      Data Agendada *
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="order"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ordem de Execução</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="1"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Classificação */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Tag className="h-5 w-5" />
+              Classificação
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Tarefa *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o ciclo" />
+                        <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="daily">Diário</SelectItem>
-                      <SelectItem value="weekly">Semanal</SelectItem>
-                      <SelectItem value="monthly">Mensal</SelectItem>
-                      <SelectItem value="quarterly">Trimestral</SelectItem>
-                      <SelectItem value="biannual">Semestral</SelectItem>
-                      <SelectItem value="annual">Anual</SelectItem>
+                      {typeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            {option.icon}
+                            <span>{option.label}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -458,103 +225,284 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               )}
             />
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Prioridade
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {priorityOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <Badge className={option.color}>
+                              {option.label}
+                            </Badge>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categoryOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="routineStartDate"
+              name="timeInvestment"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data de Início da Rotina</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            formatDate(new Date(field.value))
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={(date) => field.onChange(formatDate(date))}
-                        disabled={(date) =>
-                          date < new Date()
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Tempo de Investimento *
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {timeInvestmentOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="routineEndDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data de Término da Rotina</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            formatDate(new Date(field.value))
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={(date) => field.onChange(formatDate(date))}
-                        disabled={(date) =>
-                          date < new Date()
-                        }
-                        initialFocus
+            {watchedTimeInvestment === 'custom' && (
+              <FormField
+                control={form.control}
+                name="customTimeMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tempo Personalizado (minutos)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="1"
+                        placeholder="Ex: 45"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
                       />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Delegação */}
+        {watchedType === 'delegated-task' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Delegação
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="assignedPersonId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pessoa Responsável *</FormLabel>
+                    <FormControl>
+                      <PeopleSelect
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Selecione a pessoa responsável"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
         )}
 
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving ? (
-              <>
-                <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              "Salvar"
+        {/* Checklist */}
+        <Card>
+          <CardContent className="pt-6">
+            <FormField
+              control={form.control}
+              name="subItems"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <InteractiveSubItemList 
+                      subItems={field.value}
+                      onSubItemsChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Rotina */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurações de Rotina</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="isRoutine"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Tarefa de Rotina</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Esta tarefa se repete em intervalos regulares
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {watchedIsRoutine && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="routineCycle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ciclo da Rotina</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o ciclo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {routineCycleOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="routineStartDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Início da Rotina</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="routineEndDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Fim da Rotina (opcional)</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Observações */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Observações Adicionais</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="observations"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Adicione observações, links, ou informações complementares"
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Botões de Ação */}
+        <div className="flex gap-4 pt-4">
+          <Button type="submit" disabled={isLoading} className="flex-1">
+            {isLoading ? 'Salvando...' : (initialData?.title ? 'Atualizar Tarefa' : 'Criar Tarefa')}
           </Button>
         </div>
       </form>

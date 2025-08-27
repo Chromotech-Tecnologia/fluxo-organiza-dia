@@ -15,9 +15,11 @@ interface InteractiveSubItemListProps {
   onSubItemsChange: (subItems: SubItem[]) => void;
 }
 
+type SubItemStatus = 'pending' | 'completed' | 'not-done';
+
 interface SortableSubItemProps {
   subItem: SubItem;
-  onStatusChange: (id: string, status: 'pending' | 'completed' | 'not-done') => void;
+  onStatusChange: (id: string, status: SubItemStatus) => void;
   onUpdate: (id: string, text: string) => void;
   onDelete: (id: string) => void;
 }
@@ -36,17 +38,6 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
-
-  const getStatusIcon = () => {
-    switch (subItem.completed ? 'completed' : 'pending') {
-      case 'completed':
-        return <Check className="h-4 w-4 text-green-600" />;
-      case 'not-done':
-        return <X className="h-4 w-4 text-red-600" />;
-      default:
-        return <Circle className="h-4 w-4 text-gray-400" />;
-    }
   };
 
   const getStatusColor = () => {
@@ -157,7 +148,7 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
     }
   };
 
-  const handleStatusChange = (id: string, status: 'pending' | 'completed' | 'not-done') => {
+  const handleStatusChange = (id: string, status: SubItemStatus) => {
     onSubItemsChange(
       subItems.map(item =>
         item.id === id 
