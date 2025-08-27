@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Task, TaskFormValues, SubItem, TaskType, TaskPriority, TaskTimeInvestment, TaskCategory } from "@/types";
-import { taskSchema } from "@/lib/validations/task";
+import { taskFormSchema } from "@/lib/validations/task";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { InteractiveSubItemList } from "./InteractiveSubItemList";
@@ -25,7 +25,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
 
   const form = useForm<TaskFormValues>({
-    resolver: zodResolver(taskSchema),
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: task?.title || "",
       description: task?.description || "",

@@ -1,7 +1,5 @@
 
-import { Task, TaskPriority, TaskTimeInvestment, TaskType } from "@/types";
-
-export type SortOption = 'order' | 'priority' | 'title' | 'type' | 'timeInvestment';
+import { Task, TaskPriority, TaskTimeInvestment, TaskType, SortOption } from "@/types";
 
 export const SORT_OPTIONS = [
   { value: 'order' as const, label: 'Por Ordem' },
@@ -119,10 +117,14 @@ export const isTaskRescheduledToday = (task: Task): boolean => {
   });
 };
 
-export const debugTotalTime = (tasks: Task[]): void => {
+export const debugTotalTime = (tasks: Task[], label?: string): void => {
   const totalMinutes = tasks.reduce((total, task) => {
     return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
   }, 0);
   
-  console.log(`Total time for ${tasks.length} tasks: ${formatTime(totalMinutes)}`);
+  const logMessage = label 
+    ? `${label}: Total time for ${tasks.length} tasks: ${formatTime(totalMinutes)}`
+    : `Total time for ${tasks.length} tasks: ${formatTime(totalMinutes)}`;
+  
+  console.log(logMessage);
 };

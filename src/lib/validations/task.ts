@@ -27,3 +27,6 @@ export const taskFormSchema = z.object({
   message: "Tempo personalizado é obrigatório quando selecionado",
   path: ["customTimeMinutes"],
 });
+
+// Export the schema with both names for compatibility
+export const taskSchema = taskFormSchema;
