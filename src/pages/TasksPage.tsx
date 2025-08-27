@@ -16,10 +16,10 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useQueryClient } from "@tanstack/react-query";
-import { Task, TaskFilter } from "@/types";
+import { Task, TaskFilter, SortOption } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { searchInTask } from "@/lib/searchUtils";
-import { sortTasks, SortOption } from "@/lib/taskUtils";
+import { sortTasks } from "@/lib/taskUtils";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
