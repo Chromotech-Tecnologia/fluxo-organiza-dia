@@ -50,12 +50,6 @@ export function PersonTeamSelect({ value, onValueChange, placeholder = "Selecion
       <SelectContent>
         {people.length > 0 && (
           <>
-            <SelectItem disabled value="people-header" className="font-semibold text-xs">
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                PESSOAS
-              </div>
-            </SelectItem>
             {people.map((person) => (
               <SelectItem key={`person-${person.id}`} value={person.id}>
                 <div className="flex items-center gap-2">
@@ -70,13 +64,6 @@ export function PersonTeamSelect({ value, onValueChange, placeholder = "Selecion
         
         {teamMembers.length > 0 && (
           <>
-            {people.length > 0 && <SelectItem disabled value="separator-line" className="border-t">---</SelectItem>}
-            <SelectItem disabled value="team-header" className="font-semibold text-xs">
-              <div className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                EQUIPE
-              </div>
-            </SelectItem>
             {teamMembers.map((member) => (
               <SelectItem key={`team-${member.id}`} value={member.id}>
                 <div className="flex items-center gap-2">
@@ -90,7 +77,7 @@ export function PersonTeamSelect({ value, onValueChange, placeholder = "Selecion
         )}
         
         {people.length === 0 && teamMembers.length === 0 && (
-          <SelectItem disabled value="empty-state">
+          <SelectItem value="no-options-available" disabled>
             Nenhuma pessoa ou membro da equipe ativo encontrado
           </SelectItem>
         )}

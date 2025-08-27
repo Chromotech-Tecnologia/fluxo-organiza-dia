@@ -22,7 +22,7 @@ const TIME_INVESTMENT_OPTIONS = [
 
 export function TimeInvestmentFilter({ selectedTimeInvestments, onTimeInvestmentChange }: TimeInvestmentFilterProps) {
   const handleTimeInvestmentSelect = (value: string) => {
-    if (value && !selectedTimeInvestments.includes(value)) {
+    if (value && value !== "placeholder" && !selectedTimeInvestments.includes(value)) {
       onTimeInvestmentChange([...selectedTimeInvestments, value]);
     }
   };
@@ -37,11 +37,14 @@ export function TimeInvestmentFilter({ selectedTimeInvestments, onTimeInvestment
 
   return (
     <div className="space-y-2">
-      <Select onValueChange={handleTimeInvestmentSelect} value="">
+      <Select onValueChange={handleTimeInvestmentSelect} value="placeholder">
         <SelectTrigger>
           <SelectValue placeholder="Filtrar por tempo" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="placeholder" disabled>
+            Selecione um tempo
+          </SelectItem>
           {TIME_INVESTMENT_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
