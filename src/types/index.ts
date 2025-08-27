@@ -1,3 +1,4 @@
+
 // Tipos principais do sistema de controle de tarefas
 
 export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
@@ -70,6 +71,7 @@ export interface SubItem {
   id: string;
   text: string;
   completed: boolean;
+  notDone?: boolean;
   order: number;
 }
 
