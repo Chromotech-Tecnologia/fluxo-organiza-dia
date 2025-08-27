@@ -222,14 +222,14 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Pessoa Responsável</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <Select onValueChange={field.onChange} value={field.value || "unassigned"}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma pessoa" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Nenhuma pessoa</SelectItem>
+                      <SelectItem value="unassigned">Nenhuma pessoa</SelectItem>
                       {teamMembers.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name}
