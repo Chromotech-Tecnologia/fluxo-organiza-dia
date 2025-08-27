@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GripVertical, Check, X, Circle } from "lucide-react";
+import { Plus, GripVertical, Check, X, Circle, Trash2 } from "lucide-react";
 import { SubItem } from "@/types";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -42,6 +42,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
 
   const getStatusColor = () => {
     if (subItem.completed) return 'border-green-200 bg-green-50';
+    if (subItem.notDone) return 'border-red-200 bg-red-50';
     return 'border-gray-200 bg-white';
   };
 
@@ -65,7 +66,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
           variant="ghost"
           size="sm"
           onClick={() => onStatusChange(subItem.id, 'pending')}
-          className={`p-1 h-6 w-6 hover:bg-gray-100 ${!subItem.completed ? 'bg-gray-100' : ''}`}
+          className={`p-1 h-6 w-6 hover:bg-gray-100 ${!subItem.completed && !subItem.notDone ? 'bg-gray-100' : ''}`}
           title="Pendente"
         >
           <Circle className="h-4 w-4 text-gray-500" />
@@ -87,7 +88,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
           variant="ghost"
           size="sm"
           onClick={() => onStatusChange(subItem.id, 'not-done')}
-          className="p-1 h-6 w-6 hover:bg-red-100"
+          className={`p-1 h-6 w-6 hover:bg-red-100 ${subItem.notDone ? 'bg-red-100' : ''}`}
           title="Não Feito"
         >
           <X className="h-4 w-4 text-red-600" />
@@ -112,7 +113,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
         className="p-1 h-6 w-6 text-gray-400 hover:text-red-600 hover:bg-red-50"
         title="Remover item"
       >
-        <X className="h-4 w-4" />
+        <Trash2 className="h-4 w-4" />
       </Button>
     </div>
   );
@@ -154,7 +155,8 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
         item.id === id 
           ? { 
               ...item, 
-              completed: status === 'completed'
+              completed: status === 'completed',
+              notDone: status === 'not-done'
             } 
           : item
       )

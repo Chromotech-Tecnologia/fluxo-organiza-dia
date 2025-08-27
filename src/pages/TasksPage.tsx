@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useQueryClient } from "@tanstack/react-query";
-import { Task, TaskFilter, SortOption } from "@/types";
+import { Task, TaskFilter } from "@/types";
+import { SortOption } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { searchInTask } from "@/lib/searchUtils";
 import { sortTasks } from "@/lib/taskUtils";
@@ -71,6 +73,11 @@ const TasksPage = () => {
   const sortedTasks = sortTasks(filteredTasks, sortBy);
 
   const isMultipleDays = taskFilters.dateRange?.start !== taskFilters.dateRange?.end;
+  const hasFiltersApplied = Object.keys(taskFilters).some(key => {
+    if (key === 'dateRange') return false; // Sempre temos dateRange
+    return taskFilters[key as keyof TaskFilter] !== undefined;
+  }) || searchQuery.trim() !== "";
+
   const displayTasks = isMultipleDays 
     ? filteredTasks.sort((a, b) => {
         if (a.scheduledDate !== b.scheduledDate) {
@@ -164,7 +171,11 @@ const TasksPage = () => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    if (isMultipleDays || sortBy !== 'order') return;
+    // Não permitir drag and drop se há múltiplos dias, ordenação não é por 'order', ou filtros aplicados
+    if (isMultipleDays || sortBy !== 'order' || hasFiltersApplied) {
+      console.log('Drag and drop desabilitado:', { isMultipleDays, sortBy, hasFiltersApplied });
+      return;
+    }
 
     const { active, over } = event;
     if (!active.id || !over?.id || active.id === over.id) return;
@@ -179,31 +190,26 @@ const TasksPage = () => {
 
     if (activeTask.scheduledDate !== overTask.scheduledDate) return;
 
-    const activeOrder = activeTask.order || 0;
-    const overOrder = overTask.order || 0;
-
-    const allTasksForDate = tasks.filter(task => task.scheduledDate === activeTask.scheduledDate);
+    // Criar nova ordem baseada apenas nas tarefas visíveis do mesmo dia
+    const tasksForSameDate = displayTasks.filter(task => task.scheduledDate === activeTask.scheduledDate);
+    const activeIndex = tasksForSameDate.findIndex(task => task.id === activeTaskId);
+    const overIndex = tasksForSameDate.findIndex(task => task.id === overTaskId);
     
-    const updatedTasks = allTasksForDate.map(task => {
-      if (task.id === activeTaskId) {
-        return { ...task, order: overOrder };
-      } else if (activeOrder < overOrder) {
-        if (task.order > activeOrder && task.order <= overOrder) {
-          return { ...task, order: task.order - 1 };
-        }
-      } else if (activeOrder > overOrder) {
-        if (task.order >= overOrder && task.order < activeOrder) {
-          return { ...task, order: task.order + 1 };
-        }
-      }
-      return task;
-    });
+    if (activeIndex === -1 || overIndex === -1) return;
 
-    const taskIds = updatedTasks
-      .sort((a, b) => (a.order || 0) - (b.order || 0))
-      .map(task => task.id);
+    const reorderedTasks = arrayMove(tasksForSameDate, activeIndex, overIndex);
+    
+    // Atualizar ordens sequenciais
+    const taskUpdates = reorderedTasks.map((task, index) => ({
+      id: task.id,
+      newOrder: index + 1
+    }));
 
-    await reorderTasks(taskIds);
+    // Aplicar atualizações
+    for (const update of taskUpdates) {
+      await updateTask(update.id, { order: update.newOrder });
+    }
+
     await refreshData();
   };
 
@@ -304,6 +310,11 @@ const TasksPage = () => {
               />
               <label className="text-sm text-muted-foreground">
                 Selecionar todas ({displayTasks.length} tarefas)
+                {hasFiltersApplied && (
+                  <span className="text-orange-600 ml-2">
+                    ⚠️ Drag & Drop desabilitado (filtros ativos)
+                  </span>
+                )}
               </label>
             </div>
 

@@ -1,8 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { Task, TaskFilter, TaskStats } from '@/types';
 import { taskStorage } from '@/lib/storage';
 import { toast } from '@/hooks/use-toast';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
+import { 
+  calculateInsertReordering, 
+  calculateMoveReordering, 
+  normalizeTaskSequence,
+  getNextAvailableOrder 
+} from '@/lib/taskOrderUtils';
 
 export function useTasks(filters?: TaskFilter) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -137,6 +144,8 @@ export function useTasks(filters?: TaskFilter) {
 
   // Adicionar nova tarefa
   const addTask = (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> | Task) => {
+    const allTasks = taskStorage.getAll();
+    
     const task: Task = 'id' in newTask ? newTask : {
       ...newTask,
       id: crypto.randomUUID(),
@@ -146,12 +155,25 @@ export function useTasks(filters?: TaskFilter) {
       forwardHistory: [],
       forwardCount: 0,
       status: 'pending',
-      order: 0,
+      order: newTask.order || getNextAvailableOrder(allTasks, newTask.scheduledDate),
       deliveryDates: [],
       timeInvestment: newTask.timeInvestment || 'low',
       category: newTask.category || 'personal',
       isRoutine: newTask.isRoutine || false,
     };
+
+    // Se ordem foi especificada, reordenar outras tarefas
+    if (newTask.order && newTask.order > 0) {
+      const reorderResult = calculateInsertReordering(allTasks, task.scheduledDate, task.order);
+      
+      // Aplicar reordenações
+      reorderResult.adjustments.forEach(adjustment => {
+        const taskToUpdate = allTasks.find(t => t.id === adjustment.taskId);
+        if (taskToUpdate) {
+          taskToUpdate.order = adjustment.newOrder;
+        }
+      });
+    }
 
     taskStorage.add(task);
     loadTasks();
@@ -164,6 +186,25 @@ export function useTasks(filters?: TaskFilter) {
 
   // Atualizar tarefa
   const updateTask = (taskId: string, updates: Partial<Task>) => {
+    const allTasks = taskStorage.getAll();
+    const existingTask = allTasks.find(t => t.id === taskId);
+    
+    if (!existingTask) return;
+
+    // Se a ordem foi alterada, recalcular posições
+    if (updates.order && updates.order !== existingTask.order) {
+      const scheduledDate = updates.scheduledDate || existingTask.scheduledDate;
+      const reorderResult = calculateMoveReordering(allTasks, scheduledDate, taskId, updates.order);
+      
+      // Aplicar reordenações
+      reorderResult.adjustments.forEach(adjustment => {
+        const taskToUpdate = allTasks.find(t => t.id === adjustment.taskId);
+        if (taskToUpdate) {
+          taskToUpdate.order = adjustment.newOrder;
+        }
+      });
+    }
+
     taskStorage.update(taskId, updates);
     loadTasks();
     
@@ -184,14 +225,21 @@ export function useTasks(filters?: TaskFilter) {
     });
   };
 
-  // Reordenar tarefas
+  // Reordenar tarefas - versão melhorada
   const reorderTasks = (taskIds: string[]) => {
     const allTasks = taskStorage.getAll();
     
+    // Criar mapa das novas ordens
+    const orderMap = new Map();
     taskIds.forEach((taskId, index) => {
-      const task = allTasks.find(t => t.id === taskId);
-      if (task) {
-        task.order = index;
+      orderMap.set(taskId, index + 1);
+    });
+    
+    // Aplicar novas ordens apenas às tarefas reordenadas
+    allTasks.forEach(task => {
+      if (orderMap.has(task.id)) {
+        task.order = orderMap.get(task.id);
+        task.updatedAt = new Date().toISOString();
       }
     });
     
