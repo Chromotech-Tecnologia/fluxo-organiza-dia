@@ -58,7 +58,7 @@ export function TaskStatsCompact({
     // Usar a mesma lógica do botão laranja
     const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
       task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
-    // Mostrar como concluída se foi clicado em concluir, mesmo que tenha sido "não feita" antes
+    // Contar tarefas reagendadas E que foram concluídas (clicaram em concluir)
     return wasRescheduledFromThisDate && (task.isConcluded === true);
   }).length;
   
@@ -66,9 +66,12 @@ export function TaskStatsCompact({
     // Usar a mesma lógica do botão laranja
     const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
       task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
-    // Mostrar como não concluída apenas se NÃO foi clicado em concluir
+    // Contar tarefas reagendadas mas NÃO concluídas
     return wasRescheduledFromThisDate && (task.isConcluded !== true);
   }).length;
+  
+  // Total de tarefas concluídas (clicaram em concluir) - todas as tarefas da data atual
+  const totalConcludedTasks = tasks.filter(task => task.isConcluded === true).length;
 
   // Tipos de Tarefas - ajustado conforme solicitado
   const personalTasks = tasks.filter(task => task.category === 'personal').length;
@@ -157,7 +160,7 @@ export function TaskStatsCompact({
           <div className="flex justify-between items-center">
             <span className="text-xs text-green-600">Concluídas</span>
             <span className="text-sm font-medium text-green-600">
-              {rescheduledCompletedTasks} ({calculatePercentage(rescheduledCompletedTasks)}%)
+              {totalConcludedTasks} ({calculatePercentage(totalConcludedTasks)}%)
             </span>
           </div>
           <div className="flex justify-between items-center">
