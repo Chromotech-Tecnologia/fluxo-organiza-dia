@@ -344,21 +344,30 @@ export function TaskFiltersHorizontal({
             <div className="space-y-2">
               <label className="text-sm font-medium">Tempo de Investimento</label>
               <div className="flex flex-wrap gap-1">
-                {(['low', 'medium', 'high'] as const).map((time) => (
+                {([
+                  { value: 'custom-5', label: '5min' },
+                  { value: 'custom-30', label: '30min' },
+                  { value: 'low', label: '1h' },
+                  { value: 'medium', label: '2h' },
+                  { value: 'high', label: '4h' },
+                  { value: 'custom-4h', label: '4h' },
+                  { value: 'custom-8h', label: '8h' },
+                  { value: 'custom', label: 'Personalizado' }
+                ] as const).map((timeOption) => (
                   <Button
-                    key={time}
+                    key={timeOption.value}
                     size="sm"
-                    variant={currentFilters.timeInvestment?.includes(time) ? "default" : "outline"}
+                    variant={currentFilters.timeInvestment?.includes(timeOption.value) ? "default" : "outline"}
                     onClick={() => {
                       const current = currentFilters.timeInvestment || [];
-                      const newTimeInvestment = current.includes(time)
-                        ? current.filter(t => t !== time)
-                        : [...current, time];
+                      const newTimeInvestment = current.includes(timeOption.value)
+                        ? current.filter(t => t !== timeOption.value)
+                        : [...current, timeOption.value];
                       handleAdvancedFilterChange('timeInvestment', newTimeInvestment.length > 0 ? newTimeInvestment : undefined);
                     }}
                     className="h-7 px-2 text-xs"
                   >
-                    {time === 'low' ? 'Baixo (5min)' : time === 'medium' ? 'Médio (1h)' : 'Alto (2h)'}
+                    {timeOption.label}
                   </Button>
                 ))}
               </div>
