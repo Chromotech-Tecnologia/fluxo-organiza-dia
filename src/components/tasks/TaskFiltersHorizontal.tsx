@@ -118,6 +118,7 @@ export function TaskFiltersHorizontal({
         end: today
       }
     });
+    onSearchChange(''); // Limpar também a busca
   };
 
   return (
@@ -277,6 +278,13 @@ export function TaskFiltersHorizontal({
       </Select>
 
       {/* Filtros avançados */}
+      {(activeFiltersCount > 0 || searchQuery) && (
+        <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-8 gap-1">
+          <X className="h-3 w-3" />
+          Limpar
+        </Button>
+      )}
+      
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-8 gap-1">
@@ -294,12 +302,6 @@ export function TaskFiltersHorizontal({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-medium">Filtros Avançados</h4>
-              {activeFiltersCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearAllFilters}>
-                  <X className="h-3 w-3 mr-1" />
-                  Limpar
-                </Button>
-              )}
             </div>
 
             {/* Tipo */}
