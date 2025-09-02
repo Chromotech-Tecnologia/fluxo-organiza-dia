@@ -68,11 +68,11 @@ export function TaskStatsCompact({
     return wasRescheduledFromThisDate && task.status !== 'completed';
   }).length;
 
-  // Tipos de Tarefas
-  const personalTasks = tasks.filter(task => task.type === 'own-task').length;
+  // Tipos de Tarefas - ajustado conforme solicitado
+  const personalTasks = tasks.filter(task => task.category === 'personal').length;
   const meetingTasks = tasks.filter(task => task.type === 'meeting').length;
   const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
-  const professionalTasks = tasks.filter(task => task.category === 'business').length;
+  const professionalTasks = tasks.filter(task => task.category !== 'personal').length;
 
   // Tempo Estimado - usando a função correta do taskUtils.ts
   const totalEstimatedMinutes = tasks.reduce((total, task) => {
