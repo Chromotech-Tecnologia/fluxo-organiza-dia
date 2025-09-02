@@ -80,11 +80,16 @@ export function TaskCardImproved({
     const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
     const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
     
+    // Verificar se já foi marcada como "não feita" alguma vez
+    const hasNotDoneCompletion = task.completionHistory?.some(completion => completion.status === 'not-done');
+    
+    // Se já foi marcada como "não feita", manter cor vermelha mesmo se concluída depois
+    if (hasNotDoneCompletion) {
+      return 'border-red-500 bg-red-50';
+    }
+    
     if (lastCompletion?.status === 'completed') {
       return 'border-green-500 bg-green-50';
-    }
-    if (lastCompletion?.status === 'not-done') {
-      return 'border-red-500 bg-red-50';
     }
     
     return 'border-border bg-background';
