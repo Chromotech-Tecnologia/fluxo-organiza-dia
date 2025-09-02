@@ -183,7 +183,7 @@ export function TaskStatsCompact({
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-xs text-teal-600">Delegadas</span>
+            <span className="text-xs text-fuchsia-900">Delegadas</span>
             <span className="text-sm font-medium text-teal-600">
               {delegatedTasks} ({calculatePercentage(delegatedTasks)}%)
             </span>
