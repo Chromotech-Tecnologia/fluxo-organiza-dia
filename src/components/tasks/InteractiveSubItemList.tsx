@@ -50,7 +50,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 p-3 border rounded-lg ${getStatusColor()} transition-colors`}
+      className={`flex items-start gap-2 p-3 border rounded-lg ${getStatusColor()} transition-colors`}
     >
       <div
         {...attributes}
@@ -95,13 +95,23 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
         </Button>
       </div>
       
-      <Input
+      <textarea
         value={subItem.text}
         onChange={(e) => onUpdate(subItem.id, e.target.value)}
-        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-ellipsis-none whitespace-normal overflow-visible"
+        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[1.5rem] leading-relaxed"
         placeholder="Item do checklist"
         onKeyDown={(e) => {
           e.stopPropagation();
+        }}
+        rows={1}
+        style={{
+          height: 'auto',
+          minHeight: '1.5rem'
+        }}
+        onInput={(e) => {
+          const target = e.target as HTMLTextAreaElement;
+          target.style.height = 'auto';
+          target.style.height = target.scrollHeight + 'px';
         }}
       />
       
