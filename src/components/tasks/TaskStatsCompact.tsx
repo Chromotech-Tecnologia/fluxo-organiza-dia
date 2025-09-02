@@ -24,28 +24,18 @@ export function TaskStatsCompact({
   // Tarefas não concluídas = total - concluídas
   const notCompletedTasks = totalTasks - completedTasks;
 
-  // Reagendamentos - tarefas que foram clicadas em reagendar
-  const rescheduledTasks = tasks.filter(task => 
-    task.isForwarded || 
-    task.forwardCount > 0 || 
-    (task.forwardHistory && task.forwardHistory.length > 0)
-  ).length;
+  // Reagendamentos - usando a mesma lógica do filtro
+  const rescheduledTasks = tasks.filter(task => task.isForwarded === true).length;
   
-  // Não reagendadas = tarefas que não foram reagendadas DE hoje para outro dia
-  const today = new Date().toISOString().split('T')[0];
-  const notRescheduledTasks = tasks.filter(task => 
-    // Não tem histórico de reagendamento DE hoje para outro dia
-    !task.forwardHistory.some(forward => forward.originalDate === today)
-  ).length;
+  // Não reagendadas - usando a mesma lógica do filtro
+  const notRescheduledTasks = tasks.filter(task => task.isForwarded === false || !task.isForwarded).length;
   
   const rescheduledCompletedTasks = tasks.filter(task => 
-    (task.isForwarded || task.forwardCount > 0 || (task.forwardHistory && task.forwardHistory.length > 0)) && 
-    task.status === 'completed'
+    task.isForwarded === true && task.status === 'completed'
   ).length;
   
   const rescheduledNotCompletedTasks = tasks.filter(task => 
-    (task.isForwarded || task.forwardCount > 0 || (task.forwardHistory && task.forwardHistory.length > 0)) && 
-    task.status !== 'completed'
+    task.isForwarded === true && task.status !== 'completed'
   ).length;
 
   // Tipos de Tarefas
