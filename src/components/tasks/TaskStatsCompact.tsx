@@ -72,6 +72,9 @@ export function TaskStatsCompact({
   
   // Total de tarefas concluídas (clicaram em concluir) - todas as tarefas da data atual
   const totalConcludedTasks = tasks.filter(task => task.isConcluded === true).length;
+  
+  // Total de tarefas NÃO concluídas (NÃO clicaram em concluir) - todas as tarefas da data atual
+  const totalNotConcludedTasks = tasks.filter(task => task.isConcluded !== true).length;
 
   // Tipos de Tarefas - ajustado conforme solicitado
   const personalTasks = tasks.filter(task => task.category === 'personal').length;
@@ -166,7 +169,7 @@ export function TaskStatsCompact({
           <div className="flex justify-between items-center">
             <span className="text-xs text-red-600">Não Concluídas</span>
             <span className="text-sm font-medium text-red-600">
-              {rescheduledNotCompletedTasks} ({calculatePercentage(rescheduledNotCompletedTasks)}%)
+              {totalNotConcludedTasks} ({calculatePercentage(totalNotConcludedTasks)}%)
             </span>
           </div>
         </CardContent>
