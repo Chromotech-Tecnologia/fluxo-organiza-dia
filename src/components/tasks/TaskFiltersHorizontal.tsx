@@ -53,6 +53,7 @@ export function TaskFiltersHorizontal({
     if (currentFilters.hasChecklist !== undefined) count++;
     if (currentFilters.isForwarded !== undefined) count++;
     if (currentFilters.noOrder !== undefined) count++;
+    if (currentFilters.isConcluded !== undefined) count++;
     
     return count;
   };
@@ -434,6 +435,28 @@ export function TaskFiltersHorizontal({
                   className="h-7 px-2 text-xs"
                 >
                   Pessoal
+                </Button>
+                <Button
+                  size="sm"
+                  variant={currentFilters.isConcluded === true ? "default" : "outline"}
+                  onClick={() => {
+                    const newValue = currentFilters.isConcluded === true ? undefined : true;
+                    handleAdvancedFilterChange('isConcluded', newValue);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Concluído
+                </Button>
+                <Button
+                  size="sm"
+                  variant={currentFilters.isConcluded === false ? "default" : "outline"}
+                  onClick={() => {
+                    const newValue = currentFilters.isConcluded === false ? undefined : false;
+                    handleAdvancedFilterChange('isConcluded', newValue);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Não Concluído
                 </Button>
               </div>
             </div>
