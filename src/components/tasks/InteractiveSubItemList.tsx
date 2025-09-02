@@ -98,7 +98,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
       <textarea
         value={subItem.text}
         onChange={(e) => onUpdate(subItem.id, e.target.value)}
-        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-tight min-w-0 w-full"
+        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-snug min-w-0 w-full"
         placeholder="Item do checklist"
         onKeyDown={(e) => {
           e.stopPropagation();
@@ -106,16 +106,28 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
         rows={1}
         style={{
           height: 'auto',
-          minHeight: '1.2rem',
+          minHeight: '1.25rem',
+          maxHeight: 'none',
           wordWrap: 'break-word',
           whiteSpace: 'pre-wrap',
           overflowWrap: 'break-word',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          lineHeight: '1.25'
         }}
         onInput={(e) => {
           const target = e.target as HTMLTextAreaElement;
-          target.style.height = '1.2rem';
-          target.style.height = Math.max(target.scrollHeight, 20) + 'px';
+          target.style.height = '1.25rem';
+          target.style.height = target.scrollHeight + 'px';
+        }}
+        ref={(textarea) => {
+          if (textarea) {
+            const resizeTextarea = () => {
+              textarea.style.height = '1.25rem';
+              textarea.style.height = textarea.scrollHeight + 'px';
+            };
+            // Resize on mount and when value changes
+            resizeTextarea();
+          }
         }}
       />
       
