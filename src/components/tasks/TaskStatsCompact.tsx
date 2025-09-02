@@ -24,19 +24,39 @@ export function TaskStatsCompact({
   // Tarefas não concluídas = total - concluídas
   const notCompletedTasks = totalTasks - completedTasks;
 
-  // Reagendamentos - usando a mesma lógica do filtro
-  const rescheduledTasks = tasks.filter(task => task.isForwarded === true).length;
+  // Reagendamentos - usando a mesma lógica do botão laranja das tarefas
+  const rescheduledTasks = tasks.filter(task => {
+    if (!task.forwardHistory || task.forwardHistory.length === 0) return false;
+    // Verificar se algum reagendamento tem a data original igual à data agendada atual da tarefa
+    return task.forwardHistory.some(forward => {
+      const originalDate = forward.originalDate; // Data original no histórico
+      return originalDate === task.scheduledDate; // Se corresponde à data atual da tarefa
+    });
+  }).length;
   
-  // Não reagendadas - usando a mesma lógica do filtro
-  const notRescheduledTasks = tasks.filter(task => task.isForwarded === false || !task.isForwarded).length;
+  // Não reagendadas - tarefas que NÃO mostram o botão laranja
+  const notRescheduledTasks = tasks.filter(task => {
+    if (!task.forwardHistory || task.forwardHistory.length === 0) return true;
+    // Se não tem histórico onde a data original é igual à data atual, não está reagendada
+    return !task.forwardHistory.some(forward => {
+      const originalDate = forward.originalDate;
+      return originalDate === task.scheduledDate;
+    });
+  }).length;
   
-  const rescheduledCompletedTasks = tasks.filter(task => 
-    task.isForwarded === true && task.status === 'completed'
-  ).length;
+  const rescheduledCompletedTasks = tasks.filter(task => {
+    // Usar a mesma lógica do botão laranja
+    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
+      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+    return wasRescheduledFromThisDate && task.status === 'completed';
+  }).length;
   
-  const rescheduledNotCompletedTasks = tasks.filter(task => 
-    task.isForwarded === true && task.status !== 'completed'
-  ).length;
+  const rescheduledNotCompletedTasks = tasks.filter(task => {
+    // Usar a mesma lógica do botão laranja
+    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
+      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+    return wasRescheduledFromThisDate && task.status !== 'completed';
+  }).length;
 
   // Tipos de Tarefas
   const personalTasks = tasks.filter(task => task.type === 'own-task').length;
