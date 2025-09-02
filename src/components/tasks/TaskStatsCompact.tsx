@@ -20,6 +20,15 @@ export function TaskStatsCompact({
     task.completionHistory?.some(completion => completion.status === 'not-done')
   ).length;
   
+  // Tarefas definitivas = feitas e não reagendadas (verde sem laranja)
+  const definitiveTasks = tasks.filter(task => {
+    if (task.status !== 'completed') return false;
+    // Verificar se NÃO foi reagendada desta data (não tem botão laranja)
+    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
+      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+    return !wasRescheduledFromThisDate;
+  }).length;
+  
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
 
   // Tarefas não concluídas = total - concluídas
@@ -99,6 +108,12 @@ export function TaskStatsCompact({
             <span className="text-xs text-green-600">Feitas</span>
             <span className="text-sm font-medium text-green-600">
               {completedTasks} ({calculatePercentage(completedTasks)}%)
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-emerald-600">Definitivo</span>
+            <span className="text-sm font-medium text-emerald-600">
+              {definitiveTasks} ({calculatePercentage(definitiveTasks)}%)
             </span>
           </div>
           <div className="flex justify-between items-center">
