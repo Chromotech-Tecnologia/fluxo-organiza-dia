@@ -58,14 +58,16 @@ export function TaskStatsCompact({
     // Usar a mesma lógica do botão laranja
     const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
       task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
-    return wasRescheduledFromThisDate && task.isConcluded === true; // Corrigido: usar isConcluded
+    // Mostrar como concluída se foi clicado em concluir, mesmo que tenha sido "não feita" antes
+    return wasRescheduledFromThisDate && (task.isConcluded === true);
   }).length;
   
   const rescheduledNotCompletedTasks = tasks.filter(task => {
     // Usar a mesma lógica do botão laranja
     const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
       task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
-    return wasRescheduledFromThisDate && task.isConcluded !== true; // Corrigido: usar isConcluded
+    // Mostrar como não concluída apenas se NÃO foi clicado em concluir
+    return wasRescheduledFromThisDate && (task.isConcluded !== true);
   }).length;
 
   // Tipos de Tarefas - ajustado conforme solicitado
