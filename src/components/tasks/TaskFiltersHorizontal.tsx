@@ -130,8 +130,18 @@ export function TaskFiltersHorizontal({
             placeholder="Buscar tarefas..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8 h-9"
+            className="pl-8 pr-8 h-9"
           />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onSearchChange('')}
+              className="absolute right-0 top-0 h-9 w-8 p-0 hover:bg-transparent"
+            >
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </Button>
+          )}
         </div>
       </div>
 
