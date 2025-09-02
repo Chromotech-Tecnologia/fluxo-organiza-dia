@@ -170,6 +170,13 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
+      // Filtro por concluído
+      if (filters.isConcluded !== undefined) {
+        if (filters.isConcluded !== (task.isConcluded || false)) {
+          return false;
+        }
+      }
+
       return true;
     });
   }, [tasks, filters]);
