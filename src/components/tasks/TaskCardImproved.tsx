@@ -75,18 +75,19 @@ export function TaskCardImproved({
   }, [task.forwardHistory, task.scheduledDate]);
 
   const getCardColor = () => {
-    if (task.isConcluded) return 'border-green-500 bg-green-50';
-    
     const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
     const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
     
-    // Verificar se já foi marcada como "não feita" alguma vez
+    // Verificar se já foi marcada como "não feita" alguma vez - PRIORIDADE MÁXIMA
     const hasNotDoneCompletion = task.completionHistory?.some(completion => completion.status === 'not-done');
     
-    // Se já foi marcada como "não feita", manter cor vermelha mesmo se concluída depois
+    // Se já foi marcada como "não feita", manter cor vermelha sempre
     if (hasNotDoneCompletion) {
       return 'border-red-500 bg-red-50';
     }
+    
+    // Só depois verificar outros status
+    if (task.isConcluded) return 'border-green-500 bg-green-50';
     
     if (lastCompletion?.status === 'completed') {
       return 'border-green-500 bg-green-50';
