@@ -106,7 +106,7 @@ export function TaskStatsCompact({
           </div>
           <div className="flex justify-between items-center">
             <span className="text-xs text-blue-900">Definitivo</span>
-            <span className="text-sm font-medium text-emerald-600">
+            <span className="text-sm font-medium text-blue-900">
               {definitiveTasks} ({calculatePercentage(definitiveTasks)}%)
             </span>
           </div>
