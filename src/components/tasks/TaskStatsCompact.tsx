@@ -172,7 +172,7 @@ export function TaskStatsCompact({
         <CardContent className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-xs text-zinc-600">Pessoais</span>
-            <span className="text-sm font-medium text-purple-600">
+            <span className="text-sm font-medium text-gray-600">
               {personalTasks} ({calculatePercentage(personalTasks)}%)
             </span>
           </div>
