@@ -98,7 +98,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
       <textarea
         value={subItem.text}
         onChange={(e) => onUpdate(subItem.id, e.target.value)}
-        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-tight overflow-hidden break-words min-w-0"
+        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-tight min-w-0 w-full"
         placeholder="Item do checklist"
         onKeyDown={(e) => {
           e.stopPropagation();
@@ -109,12 +109,13 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
           minHeight: '1.2rem',
           wordWrap: 'break-word',
           whiteSpace: 'pre-wrap',
-          overflowWrap: 'break-word'
+          overflowWrap: 'break-word',
+          overflow: 'hidden'
         }}
         onInput={(e) => {
           const target = e.target as HTMLTextAreaElement;
-          target.style.height = 'auto';
-          target.style.height = target.scrollHeight + 'px';
+          target.style.height = '1.2rem';
+          target.style.height = Math.max(target.scrollHeight, 20) + 'px';
         }}
       />
       
