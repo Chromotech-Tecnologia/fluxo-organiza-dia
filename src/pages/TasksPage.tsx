@@ -22,6 +22,7 @@ import { SortOption } from "@/types";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { searchInTask } from "@/lib/searchUtils";
 import { sortTasks } from "@/lib/taskUtils";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -367,6 +368,7 @@ const TasksPage = () => {
       />
       <RescheduleModal onRescheduleComplete={refreshData} />
       <TaskModal onTaskSaved={refreshData} />
+      <ScrollToTop />
     </div>
   );
 };
