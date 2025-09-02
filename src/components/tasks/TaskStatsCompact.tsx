@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Task } from "@/types";
 import { Clock, CheckCircle, XCircle, Hourglass, RotateCcw, User, Calendar, Timer, Hash, Building2 } from "lucide-react";
+import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 
 interface TaskStatsCompactProps {
   tasks: Task[];
@@ -64,37 +65,15 @@ export function TaskStatsCompact({
   const delegatedTasks = tasks.filter(task => task.type === 'delegated-task').length;
   const professionalTasks = tasks.filter(task => task.category === 'business').length;
 
-  // Tempo Estimado
-  const getTimeInMinutes = (timeInvestment: string) => {
-    switch (timeInvestment) {
-      case 'low':
-        return 5;
-      case 'medium':
-        return 60;
-      case 'high':
-        return 120;
-      default:
-        return 0;
-    }
-  };
-
+  // Tempo Estimado - usando a função correta do taskUtils.ts
   const totalEstimatedMinutes = tasks.reduce((total, task) => {
-    return total + getTimeInMinutes(task.timeInvestment);
+    return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
   }, 0);
-  const completedEstimatedMinutes = tasks.filter(task => task.status === 'completed').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
+  const completedEstimatedMinutes = tasks.filter(task => task.status === 'completed').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes), 0);
   const notDoneEstimatedMinutes = tasks.filter(task => 
     task.completionHistory?.some(completion => completion.status === 'not-done')
-  ).reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
-  const pendingEstimatedMinutes = tasks.filter(task => task.status === 'pending').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment), 0);
-
-  const formatTime = (minutes: number) => {
-    if (minutes < 60) {
-      return `${minutes}min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
-  };
+  ).reduce((total, task) => total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes), 0);
+  const pendingEstimatedMinutes = tasks.filter(task => task.status === 'pending').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes), 0);
 
   const calculatePercentage = (value: number) => {
     return totalTasks > 0 ? Math.round(value / totalTasks * 100) : 0;
