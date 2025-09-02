@@ -98,7 +98,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
       <Input
         value={subItem.text}
         onChange={(e) => onUpdate(subItem.id, e.target.value)}
-        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-ellipsis-none whitespace-normal overflow-visible"
         placeholder="Item do checklist"
         onKeyDown={(e) => {
           e.stopPropagation();
