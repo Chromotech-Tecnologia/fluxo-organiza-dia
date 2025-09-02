@@ -409,6 +409,20 @@ export function TaskFiltersHorizontal({
                 >
                   Com Checklist
                 </Button>
+                <Button
+                  size="sm"
+                  variant={currentFilters.category?.includes('personal') ? "default" : "outline"}
+                  onClick={() => {
+                    const current = currentFilters.category || [];
+                    const newCategory = current.includes('personal')
+                      ? current.filter(c => c !== 'personal')
+                      : [...current, 'personal'];
+                    handleAdvancedFilterChange('category', newCategory.length > 0 ? newCategory : undefined);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Pessoal
+                </Button>
               </div>
             </div>
           </div>
