@@ -31,11 +31,11 @@ export function TaskStatsCompact({
     (task.forwardHistory && task.forwardHistory.length > 0)
   ).length;
   
-  // Não reagendadas = o contrário das reagendadas
+  // Não reagendadas = tarefas que não foram reagendadas DE hoje para outro dia
+  const today = new Date().toISOString().split('T')[0];
   const notRescheduledTasks = tasks.filter(task => 
-    !task.isForwarded && 
-    task.forwardCount === 0 && 
-    (!task.forwardHistory || task.forwardHistory.length === 0)
+    // Não tem histórico de reagendamento DE hoje para outro dia
+    !task.forwardHistory.some(forward => forward.originalDate === today)
   ).length;
   
   const rescheduledCompletedTasks = tasks.filter(task => 
