@@ -2,11 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Task } from "@/types";
 import { Clock, CheckCircle, XCircle, Hourglass, RotateCcw, User, Calendar, Timer, Hash, Building2 } from "lucide-react";
 import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
-
 interface TaskStatsCompactProps {
   tasks: Task[];
 }
-
 export function TaskStatsCompact({
   tasks
 }: TaskStatsCompactProps) {
@@ -14,21 +12,17 @@ export function TaskStatsCompact({
 
   // Status das Tarefas
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
-  
+
   // Tarefas "não feitas" = tarefas que foram clicadas como "não feitas" (têm histórico de not-done)
-  const notDoneTasks = tasks.filter(task => 
-    task.completionHistory?.some(completion => completion.status === 'not-done')
-  ).length;
-  
+  const notDoneTasks = tasks.filter(task => task.completionHistory?.some(completion => completion.status === 'not-done')).length;
+
   // Tarefas definitivas = feitas e não reagendadas (verde sem laranja)
   const definitiveTasks = tasks.filter(task => {
     if (task.status !== 'completed') return false;
     // Verificar se NÃO foi reagendada desta data (não tem botão laranja)
-    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
-      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
     return !wasRescheduledFromThisDate;
   }).length;
-  
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
 
   // Tarefas não concluídas = total - concluídas
@@ -43,7 +37,7 @@ export function TaskStatsCompact({
       return originalDate === task.scheduledDate; // Se corresponde à data atual da tarefa
     });
   }).length;
-  
+
   // Não reagendadas - tarefas que NÃO mostram o botão laranja
   const notRescheduledTasks = tasks.filter(task => {
     if (!task.forwardHistory || task.forwardHistory.length === 0) return true;
@@ -53,26 +47,22 @@ export function TaskStatsCompact({
       return originalDate === task.scheduledDate;
     });
   }).length;
-  
   const rescheduledCompletedTasks = tasks.filter(task => {
     // Usar a mesma lógica do botão laranja
-    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
-      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
     // Contar tarefas reagendadas E que foram concluídas (clicaram em concluir)
-    return wasRescheduledFromThisDate && (task.isConcluded === true);
+    return wasRescheduledFromThisDate && task.isConcluded === true;
   }).length;
-  
   const rescheduledNotCompletedTasks = tasks.filter(task => {
     // Usar a mesma lógica do botão laranja
-    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && 
-      task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
+    const wasRescheduledFromThisDate = task.forwardHistory && task.forwardHistory.length > 0 && task.forwardHistory.some(forward => forward.originalDate === task.scheduledDate);
     // Contar tarefas reagendadas mas NÃO concluídas
-    return wasRescheduledFromThisDate && (task.isConcluded !== true);
+    return wasRescheduledFromThisDate && task.isConcluded !== true;
   }).length;
-  
+
   // Total de tarefas concluídas (clicaram em concluir) - todas as tarefas da data atual
   const totalConcludedTasks = tasks.filter(task => task.isConcluded === true).length;
-  
+
   // Total de tarefas NÃO concluídas (NÃO clicaram em concluir) - todas as tarefas da data atual
   const totalNotConcludedTasks = tasks.filter(task => task.isConcluded !== true).length;
 
@@ -87,15 +77,11 @@ export function TaskStatsCompact({
     return total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
   }, 0);
   const completedEstimatedMinutes = tasks.filter(task => task.status === 'completed').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes), 0);
-  const notDoneEstimatedMinutes = tasks.filter(task => 
-    task.completionHistory?.some(completion => completion.status === 'not-done')
-  ).reduce((total, task) => total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes), 0);
+  const notDoneEstimatedMinutes = tasks.filter(task => task.completionHistory?.some(completion => completion.status === 'not-done')).reduce((total, task) => total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes), 0);
   const pendingEstimatedMinutes = tasks.filter(task => task.status === 'pending').reduce((total, task) => total + getTimeInMinutes(task.timeInvestment, task.customTimeMinutes), 0);
-
   const calculatePercentage = (value: number) => {
     return totalTasks > 0 ? Math.round(value / totalTasks * 100) : 0;
   };
-
   return <div className="grid grid-cols-4 gap-4">
       {/* Status das Tarefas */}
       <Card className="border-l-4 border-l-blue-500">
@@ -119,7 +105,7 @@ export function TaskStatsCompact({
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-xs text-emerald-600">Definitivo</span>
+            <span className="text-xs text-blue-900">Definitivo</span>
             <span className="text-sm font-medium text-emerald-600">
               {definitiveTasks} ({calculatePercentage(definitiveTasks)}%)
             </span>
