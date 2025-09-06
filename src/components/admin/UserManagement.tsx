@@ -58,20 +58,36 @@ export function UserManagement() {
 
     setIsChangingPassword(true);
     try {
-      const { error } = await supabase.auth.admin.updateUserById(selectedUserId, {
-        password: newPassword
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch('https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/admin-update-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          userId: selectedUserId,
+          password: newPassword
+        })
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao alterar senha');
+      }
 
       toast.success('Senha alterada com sucesso');
       setPasswordChangeOpen(false);
       setNewPassword('');
       setConfirmPassword('');
       setSelectedUserId(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao alterar senha:', error);
-      toast.error('Erro ao alterar senha. Tente novamente.');
+      toast.error(error.message || 'Erro ao alterar senha. Tente novamente.');
     } finally {
       setIsChangingPassword(false);
     }
