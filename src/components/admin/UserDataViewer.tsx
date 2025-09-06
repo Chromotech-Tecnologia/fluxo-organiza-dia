@@ -66,12 +66,35 @@ export function UserDataViewer() {
   const loadUsers = async () => {
     setLoading(true);
     try {
+      // Debug: Check if current user is admin
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        console.log('Current user ID:', user.id);
+        
+        // Check admin status
+        const { data: userRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+          
+        console.log('User roles:', userRoles, 'Error:', rolesError);
+        
+        // Test auth context
+        try {
+          const { data: authDebug, error: debugError } = await supabase.rpc('debug_auth_context');
+          console.log('Auth context debug:', authDebug, 'Error:', debugError);
+        } catch (debugErr) {
+          console.log('Debug RPC not available:', debugErr);
+        }
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email, created_at')
         .order('name');
 
       if (error) throw error;
+      console.log('Usuários carregados:', data?.length);
       setUsers(data || []);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);

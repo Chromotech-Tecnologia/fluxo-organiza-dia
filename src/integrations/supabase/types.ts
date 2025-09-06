@@ -325,6 +325,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      debug_auth_context: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          current_user_id: string
+          has_admin_role: boolean
+          is_admin_result: boolean
+          user_role: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

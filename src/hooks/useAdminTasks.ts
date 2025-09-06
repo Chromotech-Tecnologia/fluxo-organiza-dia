@@ -21,6 +21,18 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
       
       console.log('Carregando tarefas do usuário:', userId);
       
+      // Debug: Check authentication context
+      try {
+        const { data: authDebug, error: debugError } = await supabase.rpc('debug_auth_context');
+        if (debugError) {
+          console.error('Erro ao verificar contexto de auth:', debugError);
+        } else {
+          console.log('Context de auth:', authDebug);
+        }
+      } catch (debugErr) {
+        console.log('Debug auth não disponível:', debugErr);
+      }
+      
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
@@ -34,6 +46,7 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
       }
 
       console.log(`${data?.length || 0} tarefas carregadas do Supabase para usuário ${userId}`);
+      console.log('Primeiras tarefas:', data?.slice(0, 3));
 
       // Converter dados do Supabase para o tipo Task com validação de tipos
       const convertedTasks: Task[] = (data || []).map(task => ({
@@ -65,6 +78,7 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
         isForwarded: task.forward_history ? JSON.parse(task.forward_history as unknown as string)?.length > 0 : false
       }));
 
+      console.log(`Tarefas convertidas: ${convertedTasks.length}`);
       return convertedTasks;
     },
     enabled: !!userId
