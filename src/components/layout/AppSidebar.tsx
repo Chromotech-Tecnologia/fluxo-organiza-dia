@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { supabaseAuthService } from "@/lib/supabaseAuth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { AdminSection } from './AdminSection';
 import {
   Calendar,
   BarChart3,
@@ -170,6 +171,8 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <AdminSection />
 
         {/* Logout Button */}
         <div className="mt-auto p-4 border-t border-border">
