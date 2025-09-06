@@ -16,12 +16,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export function UserManagement() {
-  const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus } = useUserRoles();
+  const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers } = useUserRoles();
   const [selectedRole, setSelectedRole] = useState<AppRole>('user');
   const [passwordChangeOpen, setPasswordChangeOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserRole, setNewUserRole] = useState<AppRole>('user');
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const getRoleBadgeVariant = (role: AppRole) => {
@@ -93,6 +99,59 @@ export function UserManagement() {
     }
   };
 
+  const handleCreateUser = async () => {
+    if (!newUserEmail || !newUserPassword || !newUserName) return;
+
+    if (newUserPassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setIsCreatingUser(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch('https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/admin-create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          email: newUserEmail,
+          password: newUserPassword,
+          name: newUserName,
+          role: newUserRole
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar usuário');
+      }
+
+      toast.success('Usuário criado com sucesso');
+      setCreateUserOpen(false);
+      setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserName('');
+      setNewUserRole('user');
+      loadAllUsers(); // Recarregar lista de usuários
+    } catch (error: any) {
+      console.error('Erro ao criar usuário:', error);
+      toast.error(error.message || 'Erro ao criar usuário. Tente novamente.');
+    } finally {
+      setIsCreatingUser(false);
+    }
+  };
+
+  const openCreateUser = () => {
+    setCreateUserOpen(true);
+  };
+
   const openPasswordChange = (userId: string) => {
     setSelectedUserId(userId);
     setPasswordChangeOpen(true);
@@ -105,7 +164,7 @@ export function UserManagement() {
           <h2 className="text-2xl font-bold text-foreground">Gerenciamento de Usuários</h2>
           <p className="text-muted-foreground">Gerencie usuários e suas permissões</p>
         </div>
-        <Button>
+        <Button onClick={openCreateUser}>
           <UserPlus className="w-4 h-4 mr-2" />
           Criar Usuário
         </Button>
@@ -334,6 +393,74 @@ export function UserManagement() {
               disabled={isChangingPassword || !newPassword || !confirmPassword}
             >
               {isChangingPassword ? 'Alterando...' : 'Alterar Senha'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Criação de Usuário */}
+      <Dialog open={createUserOpen} onOpenChange={setCreateUserOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Criar Novo Usuário</DialogTitle>
+            <DialogDescription>
+              Preencha os dados para criar um novo usuário no sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="user-name">Nome</Label>
+              <Input
+                id="user-name"
+                type="text"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+                placeholder="Digite o nome do usuário"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="user-email">Email</Label>
+              <Input
+                id="user-email"
+                type="email"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+                placeholder="Digite o email do usuário"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="user-password">Senha</Label>
+              <Input
+                id="user-password"
+                type="password"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+                placeholder="Digite a senha do usuário"
+                minLength={6}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="user-role">Papel</Label>
+              <Select value={newUserRole} onValueChange={(value) => setNewUserRole(value as AppRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateUserOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleCreateUser}
+              disabled={isCreatingUser || !newUserEmail || !newUserPassword || !newUserName}
+            >
+              {isCreatingUser ? 'Criando...' : 'Criar Usuário'}
             </Button>
           </DialogFooter>
         </DialogContent>

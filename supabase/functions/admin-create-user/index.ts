@@ -44,23 +44,44 @@ Deno.serve(async (req) => {
     }
 
     // Get request body
-    const { userId, password } = await req.json()
+    const { email, password, name, role = 'user' } = await req.json()
 
-    if (!userId || !password) {
-      throw new Error('Missing userId or password')
+    if (!email || !password || !name) {
+      throw new Error('Missing email, password, or name')
     }
 
-    // Update user password using service role
-    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-      password: password
+    // Create user using service role
+    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: {
+        name,
+        full_name: name
+      },
+      email_confirm: true
     })
 
-    if (updateError) {
-      throw updateError
+    if (createError) {
+      throw createError
+    }
+
+    // Add role to the new user
+    if (newUser.user) {
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: newUser.user.id,
+          role: role
+        })
+
+      if (roleError) {
+        console.error('Error adding role:', roleError)
+        // Don't throw here as user is already created
+      }
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, user: newUser.user }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
