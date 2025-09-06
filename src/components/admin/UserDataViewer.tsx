@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { useModalStore } from '@/stores/useModalStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarDays, CheckCircle, Clock, Users, Target, Briefcase } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Task } from '@/types';
+import { TaskCard } from '@/components/tasks/TaskCard';
+import { TaskModal } from '@/components/modals/TaskModal';
 
 interface UserData {
   tasks: any[];
@@ -20,6 +24,7 @@ interface UserData {
 
 export function UserDataViewer() {
   const { allUsers, isAdmin } = useUserRoles();
+  const { openTaskModal } = useModalStore();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,6 +54,31 @@ export function UserDataViewer() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditTask = (task: any) => {
+    // Converter o task da base de dados para o formato Task esperado
+    const taskForModal = {
+      ...task,
+      timeInvestment: task.time_investment || 'low',
+      scheduledDate: task.scheduled_date,
+      assignedPersonId: task.assigned_person_id,
+      isRoutine: task.is_routine || false,
+      isConcluded: task.is_concluded || false,
+      isForwarded: task.is_forwarded || false,
+      forwardCount: task.forward_count || 0,
+      customTimeMinutes: task.custom_time_minutes,
+      deliveryDates: task.delivery_dates || [],
+      subItems: task.sub_items || [],
+      completionHistory: task.completion_history || [],
+      forwardHistory: task.forward_history || [],
+      routineConfig: task.routine_config,
+      orderIndex: task.order_index || 0,
+      concludedAt: task.concluded_at,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at
+    };
+    openTaskModal(taskForModal as Task);
   };
 
   useEffect(() => {
@@ -183,37 +213,24 @@ export function UserDataViewer() {
               <TabsContent value="tasks">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Tarefas</CardTitle>
+                    <CardTitle>Tarefas ({userData.tasks.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Título</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Prioridade</TableHead>
-                          <TableHead>Data</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                    {userData.tasks.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-4">
+                        Nenhuma tarefa encontrada para este usuário.
+                      </p>
+                    ) : (
+                      <div className="grid gap-4">
                         {userData.tasks.map((task) => (
-                          <TableRow key={task.id}>
-                            <TableCell className="font-medium">{task.title}</TableCell>
-                            <TableCell>
-                              <Badge variant={task.status === 'completed' ? 'default' : 'secondary'}>
-                                {task.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
-                                {task.priority}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{new Date(task.scheduled_date).toLocaleDateString('pt-BR')}</TableCell>
-                          </TableRow>
+                          <TaskCard
+                            key={task.id}
+                            task={task}
+                            onEdit={() => handleEditTask(task)}
+                          />
                         ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -353,6 +370,9 @@ export function UserDataViewer() {
           )}
         </div>
       )}
+
+      {/* Modal de Tarefa */}
+      <TaskModal />
     </div>
   );
 }
