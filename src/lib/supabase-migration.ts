@@ -7,20 +7,26 @@ export class SupabaseMigration {
     try {
       console.log('Iniciando migração de dados para Supabase...');
       
+      // Verificar se o usuário está autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+      
       // Migrar pessoas primeiro (pois tarefas referenciam pessoas)
-      await this.migratePeople();
+      await this.migratePeople(user.id);
       
       // Migrar habilidades
-      await this.migrateSkills();
+      await this.migrateSkills(user.id);
       
       // Migrar membros da equipe
-      await this.migrateTeamMembers();
+      await this.migrateTeamMembers(user.id);
       
       // Migrar tarefas
-      await this.migrateTasks();
+      await this.migrateTasks(user.id);
       
       // Migrar relatórios diários
-      await this.migrateDailyReports();
+      await this.migrateDailyReports(user.id);
       
       console.log('Migração concluída com sucesso!');
       return { success: true };
@@ -30,7 +36,7 @@ export class SupabaseMigration {
     }
   }
 
-  private static async migratePeople() {
+  private static async migratePeople(userId: string) {
     const localPeople = peopleStorage.getAll();
     console.log(`Migrando ${localPeople.length} pessoas...`);
     
@@ -46,7 +52,8 @@ export class SupabaseMigration {
       notes: null, // Person não tem notes no tipo atual
       active: true, // Person não tem active no tipo atual
       created_at: person.createdAt,
-      updated_at: person.updatedAt
+      updated_at: person.updatedAt,
+      user_id: userId
     }));
 
     const { error } = await supabase
@@ -57,7 +64,7 @@ export class SupabaseMigration {
     console.log('Pessoas migradas com sucesso');
   }
 
-  private static async migrateSkills() {
+  private static async migrateSkills(userId: string) {
     const localSkills = skillsStorage.getAll();
     console.log(`Migrando ${localSkills.length} habilidades...`);
     
@@ -70,7 +77,8 @@ export class SupabaseMigration {
       category: skill.area || null, // area mapeado para category
       level: 'beginner', // Skill não tem level no tipo atual
       created_at: skill.createdAt,
-      updated_at: skill.updatedAt
+      updated_at: skill.updatedAt,
+      user_id: userId
     }));
 
     const { error } = await supabase
@@ -81,7 +89,7 @@ export class SupabaseMigration {
     console.log('Habilidades migradas com sucesso');
   }
 
-  private static async migrateTeamMembers() {
+  private static async migrateTeamMembers(userId: string) {
     const localTeamMembers = teamMembersStorage.getAll();
     console.log(`Migrando ${localTeamMembers.length} membros da equipe...`);
     
@@ -100,7 +108,8 @@ export class SupabaseMigration {
       status: member.status || 'ativo',
       notes: null, // TeamMember não tem notes no tipo atual
       created_at: member.createdAt,
-      updated_at: member.updatedAt
+      updated_at: member.updatedAt,
+      user_id: userId
     }));
 
     const { error } = await supabase
@@ -111,7 +120,7 @@ export class SupabaseMigration {
     console.log('Membros da equipe migrados com sucesso');
   }
 
-  private static async migrateTasks() {
+  private static async migrateTasks(userId: string) {
     const localTasks = taskStorage.getAll();
     console.log(`Migrando ${localTasks.length} tarefas...`);
     
@@ -148,7 +157,8 @@ export class SupabaseMigration {
       routine_config: task.recurrence as any || null,
       task_order: task.order || 0,
       created_at: task.createdAt,
-      updated_at: task.updatedAt
+      updated_at: task.updatedAt,
+      user_id: userId
     }));
 
     // Inserir em lotes menores para evitar problemas
@@ -164,7 +174,7 @@ export class SupabaseMigration {
     console.log('Tarefas migradas com sucesso');
   }
 
-  private static async migrateDailyReports() {
+  private static async migrateDailyReports(userId: string) {
     const localReports = dailyReportStorage.getAll();
     console.log(`Migrando ${localReports.length} relatórios diários...`);
     
@@ -179,7 +189,8 @@ export class SupabaseMigration {
       completion_rate: 0, // Não existe no tipo DailyReport atual
       observations: null, // Não existe no tipo DailyReport atual
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      user_id: userId
     }));
 
     const { error } = await supabase
