@@ -28,6 +28,8 @@ import SettingsPage from "./pages/SettingsPage";
 import BackupPage from "./pages/BackupPage";
 import { SkillsPage } from "./pages/SkillsPage";
 import AdminPage from "./pages/AdminPage";
+import { SignInPage } from "./components/auth/SignInPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 // Create QueryClient with better configuration for immediate updates
@@ -52,6 +54,8 @@ const App = () => {
             <AppLayout>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/auth" element={<SignInPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/tasks" element={<TasksPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/people" element={<PeoplePage />} />

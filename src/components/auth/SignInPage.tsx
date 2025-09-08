@@ -1,9 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
+import { ForgotPasswordForm } from './ForgotPasswordForm';
+import { ResetPasswordForm } from './ResetPasswordForm';
 
-export function SignInPage() {
-  const [isLoginMode, setIsLoginMode] = useState(true);
+export const SignInPage = () => {
+  const [currentView, setCurrentView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+    
+    // Verificar se é uma redefinição de senha
+    const accessToken = searchParams.get('access_token');
+    const type = searchParams.get('type');
+    
+    if (accessToken && type === 'recovery') {
+      setCurrentView('reset-password');
+    }
+  }, [user, navigate, searchParams]);
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'login':
+        return (
+          <LoginForm 
+            onToggleMode={() => setCurrentView('register')}
+            onForgotPassword={() => setCurrentView('forgot-password')}
+          />
+        );
+      case 'register':
+        return (
+          <RegisterForm onToggleMode={() => setCurrentView('login')} />
+        );
+      case 'forgot-password':
+        return (
+          <ForgotPasswordForm onBackToLogin={() => setCurrentView('login')} />
+        );
+      case 'reset-password':
+        return <ResetPasswordForm />;
+      default:
+        return (
+          <LoginForm 
+            onToggleMode={() => setCurrentView('register')}
+            onForgotPassword={() => setCurrentView('forgot-password')}
+          />
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -17,12 +67,8 @@ export function SignInPage() {
           />
         </div>
         
-        {isLoginMode ? (
-          <LoginForm onToggleMode={() => setIsLoginMode(false)} />
-        ) : (
-          <RegisterForm onToggleMode={() => setIsLoginMode(true)} />
-        )}
+        {renderCurrentView()}
       </div>
     </div>
   );
-}
+};

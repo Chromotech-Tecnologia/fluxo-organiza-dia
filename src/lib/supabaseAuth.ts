@@ -5,7 +5,7 @@ import { User } from '@supabase/supabase-js';
 export const supabaseAuthService = {
   // Sign up with email and password
   async signUp(email: string, password: string, name: string) {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = 'https://organizese.chromotech.com.br/';
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -20,6 +20,26 @@ export const supabaseAuthService = {
     });
 
     if (error) throw error;
+
+    // Enviar email de boas-vindas personalizado
+    if (data.user && !error) {
+      try {
+        await supabase.functions.invoke('send-auth-emails', {
+          body: {
+            type: 'welcome',
+            email: email,
+            data: {
+              welcomeLink: `https://organizese.chromotech.com.br/auth?confirmed=true`,
+              name: name
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Erro ao enviar email de boas-vindas:', emailError);
+        // Continue mesmo se o email personalizado falhar
+      }
+    }
+
     return data;
   },
 

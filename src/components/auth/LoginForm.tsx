@@ -10,9 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface LoginFormProps {
   onToggleMode: () => void;
+  onForgotPassword: () => void;
 }
 
-export function LoginForm({ onToggleMode }: LoginFormProps) {
+export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -90,6 +91,18 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
+          
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              className="p-0 h-auto font-normal text-sm"
+              onClick={onForgotPassword}
+            >
+              Esqueceu a senha?
+            </Button>
+          </div>
+          
           <Button
             type="button"
             variant="ghost"
