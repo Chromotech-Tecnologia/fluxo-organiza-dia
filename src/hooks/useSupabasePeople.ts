@@ -4,22 +4,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { Person } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useCurrentUserId } from '@/hooks/useCurrentUserId';
 
 export function useSupabasePeople() {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
+  const currentUserId = useCurrentUserId();
 
   // Carregar apenas pessoas ativas do Supabase
   const loadPeople = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
     
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('people')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUserId)
         .eq('active', true) // Filtrar apenas pessoas ativas
         .order('name');
 
@@ -64,7 +66,7 @@ export function useSupabasePeople() {
           department: '',
           notes: '',
           active: true,
-          user_id: user.id
+          user_id: currentUserId
         }])
         .select()
         .single();
@@ -168,7 +170,7 @@ export function useSupabasePeople() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (currentUserId) {
       loadPeople();
       
       // Setup real-time subscription
@@ -180,7 +182,7 @@ export function useSupabasePeople() {
             event: '*',
             schema: 'public',
             table: 'people',
-            filter: `user_id=eq.${user.id}`
+            filter: `user_id=eq.${currentUserId}`
           },
           (payload) => {
             loadPeople();
@@ -192,7 +194,7 @@ export function useSupabasePeople() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user?.id]);
+  }, [currentUserId]);
 
   return {
     people,

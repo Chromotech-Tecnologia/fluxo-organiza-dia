@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { ThemeProvider } from "next-themes";
+import { ImpersonationBar } from "@/components/admin/ImpersonationBar";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           <AppSidebar />
           
           <main className="flex-1 flex flex-col">
+            {/* Impersonation Bar */}
+            <ImpersonationBar />
+            
             {/* Header */}
             <header className="h-14 border-b border-border flex items-center px-4 bg-card">
               <SidebarTrigger className="mr-4" />

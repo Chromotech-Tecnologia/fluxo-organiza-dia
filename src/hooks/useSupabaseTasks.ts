@@ -3,26 +3,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFilter, TaskStats, SubItem, CompletionRecord } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useCurrentUserId } from '@/hooks/useCurrentUserId';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useSupabaseTasks(filters?: TaskFilter) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const { user } = useAuthStore();
+  const currentUserId = useCurrentUserId();
   const queryClient = useQueryClient();
 
   // Query para carregar tarefas
   const { data: tasks = [], isLoading: loading, refetch } = useQuery({
-    queryKey: ['tasks', user?.id],
+    queryKey: ['tasks', currentUserId],
     queryFn: async () => {
-      if (!user) return [];
+      if (!currentUserId) return [];
       
       console.log('Carregando tarefas do Supabase...');
       
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUserId)
         .order('scheduled_date', { ascending: true })
         .order('task_order', { ascending: true });
 
@@ -183,7 +185,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   // Adicionar nova tarefa
   const addTask = useCallback(async (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> | Task) => {
-    if (!user) return;
+    if (!currentUserId) return;
     
     try {
       console.log('Adicionando tarefa no Supabase:', newTask);
@@ -210,7 +212,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         is_forwarded: newTask.isForwarded || false,
         is_concluded: newTask.isConcluded || false,
         concluded_at: newTask.concludedAt || null,
-        user_id: user.id
+        user_id: currentUserId
       };
 
       const { data, error } = await supabase
@@ -234,11 +236,11 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       });
       throw error;
     }
-  }, [user?.id, queryClient]);
+  }, [currentUserId, queryClient]);
 
   // Atualizar tarefa - PRESERVANDO assignedPersonId
   const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
-    if (!user) return;
+    if (!currentUserId) return;
     
     try {
       console.log('Atualizando tarefa no Supabase:', taskId, updates);
@@ -285,7 +287,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         .from('tasks')
         .update(updateData)
         .eq('id', taskId)
-        .eq('user_id', user.id)
+        .eq('user_id', currentUserId)
         .select()
         .single();
 
@@ -331,7 +333,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   // Deletar tarefa
   const deleteTask = useCallback(async (taskId: string) => {
-    if (!user) return;
+    if (!currentUserId) return;
     
     try {
       console.log('Deletando tarefa no Supabase:', taskId);
@@ -340,7 +342,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         .from('tasks')
         .delete()
         .eq('id', taskId)
-        .eq('user_id', user.id);
+        .eq('user_id', currentUserId);
 
       if (error) throw error;
 
@@ -357,11 +359,11 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       });
       throw error;
     }
-  }, [user?.id, queryClient]);
+  }, [currentUserId, queryClient]);
 
   // Reordenar tarefas
   const reorderTasks = useCallback(async (taskIds: string[]) => {
-    if (!user) return;
+    if (!currentUserId) return;
     
     try {
       console.log('Reordenando tarefas no Supabase:', taskIds);
@@ -377,7 +379,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           .from('tasks')
           .update({ task_order: update.task_order, updated_at: update.updated_at })
           .eq('id', update.id)
-          .eq('user_id', user.id);
+          .eq('user_id', currentUserId);
 
         if (error) throw error;
       }
@@ -430,7 +432,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   // Setup real-time subscription
   useEffect(() => {
-    if (!user) return;
+    if (!currentUserId) return;
 
     const channel = supabase
       .channel('tasks-changes')
@@ -440,7 +442,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           event: '*',
           schema: 'public',
           table: 'tasks',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${currentUserId}`
         },
         (payload) => {
           console.log('Mudança em tempo real detectada:', payload);

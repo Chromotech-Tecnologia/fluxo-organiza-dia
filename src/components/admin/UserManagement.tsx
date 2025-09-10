@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useUserRoles, AppRole } from '@/hooks/useUserRoles';
+import { useImpersonation } from '@/hooks/useImpersonation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +18,7 @@ import { toast } from 'sonner';
 
 export function UserManagement() {
   const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers } = useUserRoles();
+  const { startImpersonation } = useImpersonation();
   const [selectedRole, setSelectedRole] = useState<AppRole>('user');
   const [passwordChangeOpen, setPasswordChangeOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -308,6 +310,16 @@ export function UserManagement() {
                         >
                           <Key className="w-3 h-3 mr-1" />
                           Trocar Senha
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startImpersonation(user.id, user.name, user.email)}
+                          className="gap-1"
+                        >
+                          <Eye className="w-3 h-3" />
+                          Impersonar
                         </Button>
 
                         <AlertDialog>
