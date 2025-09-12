@@ -73,7 +73,7 @@ export function useUserRoles() {
           id: profile.id,
           email: profile.email || '',
           name: profile.name || '',
-          roles: userRoles.length > 0 ? userRoles : ['user'],
+          roles: userRoles, // Não adicionar 'user' por default - usuário sem roles está desabilitado
           created_at: profile.created_at || '',
           last_sign_in_at: null
         };

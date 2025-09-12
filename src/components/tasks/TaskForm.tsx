@@ -13,6 +13,7 @@ import { taskFormSchema } from "@/lib/validations/task";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { InteractiveSubItemList } from "./InteractiveSubItemList";
+import { PeopleSelectWithSearch } from "@/components/people/PeopleSelectWithSearch";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -120,6 +121,26 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
             <FormField
               control={form.control}
+              name="assignedPersonId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pessoa Responsável</FormLabel>
+                  <FormControl>
+                    <PeopleSelectWithSearch
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Selecione uma pessoa"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
               name="priority"
               render={({ field }) => (
                 <FormItem>
@@ -134,6 +155,28 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       <SelectItem value="none">Nenhuma</SelectItem>
                       <SelectItem value="priority">Prioridade</SelectItem>
                       <SelectItem value="extreme">Extrema</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a categoria" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="personal">Pessoal</SelectItem>
+                      <SelectItem value="business">Profissional</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -193,55 +236,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Categoria</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a categoria" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="personal">Pessoal</SelectItem>
-                      <SelectItem value="business">Profissional</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="assignedPersonId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pessoa Responsável</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || "unassigned"}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma pessoa" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Nenhuma pessoa</SelectItem>
-                      {teamMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <FormField
