@@ -122,7 +122,7 @@ const SettingsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
+          <h1 className="text-3xl font-bold text-foreground">Configurações de Perfil</h1>
           <p className="text-muted-foreground">
             Gerencie sua conta e preferências do sistema
           </p>
