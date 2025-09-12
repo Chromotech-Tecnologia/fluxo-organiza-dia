@@ -47,7 +47,7 @@ const dailyItems = [
 ];
 
 const settingsItems = [
-  { title: "Configurações", url: "/settings", icon: Settings },
+  { title: "Configurações de Perfil", url: "/settings", icon: Settings },
   { title: "Backup", url: "/backup", icon: FileText },
 ];
 
