@@ -300,21 +300,27 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_permanent: boolean | null
           role: Database["public"]["Enums"]["app_role"]
+          trial_expires_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_permanent?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
+          trial_expires_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_permanent?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
+          trial_expires_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -334,6 +340,10 @@ export type Database = {
           user_role: string
         }[]
       }
+      get_trial_days_remaining: {
+        Args: { _user_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -343,6 +353,10 @@ export type Database = {
       }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_user_in_trial: {
+        Args: { _user_id: string }
         Returns: boolean
       }
     }

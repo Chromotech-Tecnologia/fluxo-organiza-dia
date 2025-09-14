@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserRoles, AppRole } from '@/hooks/useUserRoles';
 import { useImpersonation } from '@/hooks/useImpersonation';
+import { useTrialManagement, TrialStatus } from '@/hooks/useTrialManagement';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye, Clock, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,7 @@ import { toast } from 'sonner';
 export function UserManagement() {
   const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers } = useUserRoles();
   const { startImpersonation } = useImpersonation();
+  const { getTrialStatus, setTrialPeriod, activatePermanent, disableUser, loading: trialLoading } = useTrialManagement();
   const [selectedRole, setSelectedRole] = useState<AppRole>('user');
   const [passwordChangeOpen, setPasswordChangeOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -31,6 +33,9 @@ export function UserManagement() {
   const [newUserRole, setNewUserRole] = useState<AppRole>('user');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [trialModalOpen, setTrialModalOpen] = useState(false);
+  const [trialDays, setTrialDays] = useState('');
+  const [userTrialStatus, setUserTrialStatus] = useState<Record<string, TrialStatus>>({});
 
   const getRoleBadgeVariant = (role: AppRole) => {
     switch (role) {
@@ -49,6 +54,50 @@ export function UserManagement() {
 
   const isUserDisabled = (userRoles: AppRole[]) => {
     return userRoles.length === 0;
+  };
+
+  const getUserStatus = (userRoles: AppRole[], userId: string) => {
+    const trial = userTrialStatus[userId];
+    if (userRoles.length === 0) return 'disabled';
+    if (trial?.isPermanent) return 'permanent';
+    if (trial?.isInTrial) return 'trial';
+    return 'active';
+  };
+
+  const getUserStatusBadge = (userRoles: AppRole[], userId: string) => {
+    const status = getUserStatus(userRoles, userId);
+    const trial = userTrialStatus[userId];
+    
+    switch (status) {
+      case 'disabled':
+        return (
+          <Badge variant="destructive">
+            <ShieldX className="w-3 h-3 mr-1" />
+            Desabilitado
+          </Badge>
+        );
+      case 'permanent':
+        return (
+          <Badge variant="default">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Permanente
+          </Badge>
+        );
+      case 'trial':
+        return (
+          <Badge variant="secondary">
+            <Clock className="w-3 h-3 mr-1" />
+            Teste ({trial?.daysRemaining} dias)
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="default">
+            <Shield className="w-3 h-3 mr-1" />
+            Ativo
+          </Badge>
+        );
+    }
   };
 
   const handlePasswordChange = async () => {
@@ -159,6 +208,58 @@ export function UserManagement() {
     setPasswordChangeOpen(true);
   };
 
+  const openTrialModal = (userId: string) => {
+    setSelectedUserId(userId);
+    setTrialModalOpen(true);
+  };
+
+  const handleSetTrial = async () => {
+    if (!selectedUserId || !trialDays) return;
+    
+    const days = parseInt(trialDays);
+    if (days <= 0) {
+      toast.error('Número de dias deve ser maior que zero');
+      return;
+    }
+
+    await setTrialPeriod(selectedUserId, days);
+    setTrialModalOpen(false);
+    setTrialDays('');
+    setSelectedUserId(null);
+    loadTrialStatuses();
+    loadAllUsers();
+  };
+
+  const handleActivatePermanent = async (userId: string) => {
+    await activatePermanent(userId);
+    loadTrialStatuses();
+    loadAllUsers();
+  };
+
+  const handleDisableUser = async (userId: string) => {
+    await disableUser(userId);
+    loadTrialStatuses();
+    loadAllUsers();
+  };
+
+  const loadTrialStatuses = async () => {
+    const statuses: Record<string, TrialStatus> = {};
+    for (const user of allUsers) {
+      try {
+        statuses[user.id] = await getTrialStatus(user.id);
+      } catch (error) {
+        console.error(`Error loading trial status for user ${user.id}:`, error);
+      }
+    }
+    setUserTrialStatus(statuses);
+  };
+
+  useEffect(() => {
+    if (allUsers.length > 0) {
+      loadTrialStatuses();
+    }
+  }, [allUsers]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -252,17 +353,7 @@ export function UserManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {isUserDisabled(user.roles) ? (
-                        <Badge variant="destructive">
-                          <ShieldX className="w-3 h-3 mr-1" />
-                          Desabilitado
-                        </Badge>
-                      ) : (
-                        <Badge variant="default">
-                          <Shield className="w-3 h-3 mr-1" />
-                          Ativo
-                        </Badge>
-                      )}
+                      {getUserStatusBadge(user.roles, user.id)}
                     </TableCell>
                     <TableCell>
                       {user.created_at && formatDistanceToNow(new Date(user.created_at), {
@@ -322,33 +413,50 @@ export function UserManagement() {
                           Impersonar
                         </Button>
 
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => openTrialModal(user.id)}
+                          disabled={trialLoading}
+                        >
+                          <Clock className="w-3 h-3 mr-1" />
+                          Período Teste
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleActivatePermanent(user.id)}
+                          disabled={trialLoading}
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Ativar Permanente
+                        </Button>
+
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
                               size="sm"
-                              variant={isUserDisabled(user.roles) ? "default" : "destructive"}
+                              variant="destructive"
+                              disabled={trialLoading}
                             >
-                              {isUserDisabled(user.roles) ? 'Habilitar' : 'Desabilitar'}
+                              <ShieldX className="w-3 h-3 mr-1" />
+                              Desabilitar
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                {isUserDisabled(user.roles) ? 'Habilitar' : 'Desabilitar'} usuário?
-                              </AlertDialogTitle>
+                              <AlertDialogTitle>Desabilitar usuário?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                {isUserDisabled(user.roles) 
-                                  ? 'Este usuário será habilitado e poderá acessar o sistema novamente.'
-                                  : 'Este usuário será desabilitado e não poderá mais acessar o sistema.'
-                                }
+                                Este usuário será desabilitado e não poderá mais acessar o sistema.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => toggleUserStatus(user.id, !isUserDisabled(user.roles))}
+                                onClick={() => handleDisableUser(user.id)}
                               >
-                                Confirmar
+                                Desabilitar
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -473,6 +581,43 @@ export function UserManagement() {
               disabled={isCreatingUser || !newUserEmail || !newUserPassword || !newUserName}
             >
               {isCreatingUser ? 'Criando...' : 'Criar Usuário'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Período de Teste */}
+      <Dialog open={trialModalOpen} onOpenChange={setTrialModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Configurar Período de Teste</DialogTitle>
+            <DialogDescription>
+              Defina quantos dias o usuário terá acesso em período de teste.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="trial-days">Dias de Teste</Label>
+              <Input
+                id="trial-days"
+                type="number"
+                value={trialDays}
+                onChange={(e) => setTrialDays(e.target.value)}
+                placeholder="Digite o número de dias"
+                min="1"
+                max="365"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTrialModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSetTrial}
+              disabled={trialLoading || !trialDays}
+            >
+              {trialLoading ? 'Configurando...' : 'Configurar'}
             </Button>
           </DialogFooter>
         </DialogContent>

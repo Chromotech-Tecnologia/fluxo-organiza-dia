@@ -3,6 +3,7 @@ import { AppSidebar } from "./AppSidebar";
 import { ThemeProvider } from "next-themes";
 import { ImpersonationBar } from "@/components/admin/ImpersonationBar";
 import { DisabledUserModal } from "@/components/auth/DisabledUserModal";
+import { TrialBanner } from "@/components/layout/TrialBanner";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { useUserStatus } from "@/hooks/useUserStatus";
@@ -89,6 +90,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             
             {/* Content */}
             <div className="flex-1 p-6 overflow-auto">
+              <TrialBanner />
               {children}
             </div>
           </main>
