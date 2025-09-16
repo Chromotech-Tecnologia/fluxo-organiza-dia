@@ -9,9 +9,10 @@ interface PeopleSelectWithSearchProps {
   value?: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
-export function PeopleSelectWithSearch({ value, onValueChange, placeholder = "Selecione uma pessoa" }: PeopleSelectWithSearchProps) {
+export function PeopleSelectWithSearch({ value, onValueChange, placeholder = "Selecione uma pessoa", disabled = false }: PeopleSelectWithSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const { people, loading: loadingPeople } = useSupabasePeople();
   const { teamMembers, loading: loadingTeamMembers } = useSupabaseTeamMembers({ status: 'ativo' });
@@ -53,9 +54,9 @@ export function PeopleSelectWithSearch({ value, onValueChange, placeholder = "Se
   }
 
   return (
-    <Select value={value || "unassigned"} onValueChange={onValueChange}>
+    <Select value={value || "unassigned"} onValueChange={onValueChange} disabled={disabled}>
       <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={disabled ? "Disponível apenas para tarefas delegadas" : placeholder} />
       </SelectTrigger>
       <SelectContent>
         <div className="p-2">

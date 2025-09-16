@@ -31,7 +31,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       title: task?.title || "",
       description: task?.description || "",
       type: task?.type || "own-task",
-      priority: task?.priority || "none",
+      priority: task?.priority || "priority",
       timeInvestment: task?.timeInvestment || "custom-5",
       customTimeMinutes: task?.customTimeMinutes || undefined,
       category: task?.category || "business",
@@ -56,6 +56,14 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
   const timeInvestment = form.watch("timeInvestment");
   const isRoutine = form.watch("isRoutine");
+  const taskType = form.watch("type");
+
+  // Reset assignedPersonId when type changes to non-delegated
+  useEffect(() => {
+    if (taskType !== 'delegated-task') {
+      form.setValue('assignedPersonId', undefined);
+    }
+  }, [taskType, form]);
 
   useEffect(() => {
     if (task) {
@@ -98,6 +106,41 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
+              name="scheduledDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data Agendada</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="order"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ordem</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      min={1}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
               name="type"
               render={({ field }) => (
                 <FormItem>
@@ -130,6 +173,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder="Selecione uma pessoa"
+                      disabled={taskType !== 'delegated-task'}
                     />
                   </FormControl>
                   <FormMessage />
