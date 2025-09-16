@@ -79,7 +79,9 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
         scheduledDate: calendarDateToString(selectedDate),
         forwardCount: taskToForward.forwardCount + 1,
         order: keepOrder ? taskToForward.order : 0,
-        subItems: keepChecklistStatus ? taskToForward.subItems : taskToForward.subItems.map(item => ({ ...item, completed: false })),
+        subItems: keepChecklistStatus 
+          ? (taskToForward.subItems || []) 
+          : (taskToForward.subItems || []).map(item => ({ ...item, completed: false })),
         forwardHistory: [
           {
             forwardedAt: new Date().toISOString(),

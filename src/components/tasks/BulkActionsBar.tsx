@@ -23,7 +23,7 @@ interface BulkActionsBarProps {
 }
 
 export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsBarProps) {
-  const { updateTask, concludeTask, deleteTask, addTask, refetch } = useSupabaseTasks();
+  const { updateTask, concludeTask, deleteTask, refetch } = useSupabaseTasks();
   const { openForwardTaskModal } = useModalStore();
   const { toast } = useToast();
   
@@ -181,68 +181,70 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
     
     try {
       setIsProcessing(true);
+
+      const selectedDateStr = calendarDateToString(selectedDate);
+      let successCount = 0;
+      const failed: { id: string; title: string; reason?: string }[] = [];
       
       for (const task of selectedTasks) {
-        const forwardRecord = {
-          forwardedAt: new Date().toISOString(),
-          forwardedTo: null,
-          newDate: calendarDateToString(selectedDate),
-          originalDate: task.scheduledDate,
-          statusAtForward: task.status,
-          reason: 'Reagendamento em lote'
-        };
+        try {
+          const forwardRecord = {
+            forwardedAt: new Date().toISOString(),
+            forwardedTo: null,
+            newDate: selectedDateStr,
+            originalDate: task.scheduledDate,
+            statusAtForward: task.status,
+            reason: 'Reagendamento em lote'
+          };
 
-        // Atualizar a tarefa original com histórico de reagendamento e auto-conclusão
-        await updateTask(task.id, {
-          forwardHistory: [...(task.forwardHistory || []), forwardRecord],
-          isConcluded: true,
-          concludedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
+          // Reagendar SEM concluir: atualiza a própria tarefa
+          const safeSubItems = Array.isArray(task.subItems) ? task.subItems : [];
 
-        // Criar nova tarefa duplicada para a nova data
-        const newTask = {
-          ...task,
-          id: crypto.randomUUID(),
-          status: 'pending' as const,
-          scheduledDate: calendarDateToString(selectedDate),
-          forwardCount: task.forwardCount + 1,
-          order: keepOrder ? task.order : 0,
-          subItems: keepChecklistStatus ? task.subItems : task.subItems.map(item => ({ ...item, completed: false })),
-          forwardHistory: [
-            {
-              forwardedAt: new Date().toISOString(),
-              forwardedTo: null,
-              newDate: calendarDateToString(selectedDate),
-              originalDate: task.scheduledDate,
-              statusAtForward: 'pending' as const,
-              reason: `Reagendamento em lote de ${format(new Date(task.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`
-            }
-          ],
-          completionHistory: [],
-          isConcluded: false,
-          concludedAt: undefined,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
+          await updateTask(task.id, {
+            scheduledDate: selectedDateStr,
+            forwardHistory: [...(task.forwardHistory || []), forwardRecord],
+            forwardCount: (task.forwardCount || 0) + 1,
+            order: keepOrder ? (task.order || 0) : 0,
+            subItems: keepChecklistStatus 
+              ? safeSubItems 
+              : safeSubItems.map(item => ({ ...item, completed: false })),
+            isConcluded: false,
+            concludedAt: null,
+            updatedAt: new Date().toISOString()
+          });
 
-        await addTask(newTask);
+          successCount++;
+        } catch (e: any) {
+          console.error('Falha ao reagendar tarefa em lote:', task.id, e);
+          failed.push({ id: task.id, title: task.title, reason: e?.message });
+          // continua para as próximas tarefas
+        }
       }
 
-      toast({
-        title: "Tarefas reagendadas",
-        description: `${selectedTasks.length} tarefa(s) reagendada(s) para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}`,
-      });
+      if (successCount > 0) {
+        toast({
+          title: 'Tarefas reagendadas',
+          description: `${successCount} de ${selectedTasks.length} tarefa(s) reagendada(s) para ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}`,
+        });
+      }
 
-      refetch();
+      if (failed.length > 0) {
+        toast({
+          title: 'Algumas tarefas falharam',
+          description: `Falharam ${failed.length}. Ex.: ${failed.slice(0,3).map(f=>f.title).join(', ')}${failed.length>3?'...':''}`,
+          variant: 'destructive'
+        });
+      }
+
+      await refetch();
       onClearSelection();
       setShowRescheduleModal(false);
       setSelectedDate(undefined);
     } catch (error) {
       toast({
-        title: "Erro",
-        description: "Erro ao reagendar tarefas",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Erro ao reagendar tarefas',
+        variant: 'destructive'
       });
     } finally {
       setIsProcessing(false);
