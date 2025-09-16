@@ -8,13 +8,15 @@ import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { TaskFilter, SortOption, TaskStatus } from "@/types";
+import { TaskFilter, SortOption, TaskStatus, Task } from "@/types";
 import { useState } from "react";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { MeetingsCard } from "@/components/dashboard/MeetingsCard";
+import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
 
 const Dashboard = () => {
-  const { openTaskModal } = useModalStore();
+  const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
+  const [taskForHistory, setTaskForHistory] = useState<Task | null>(null);
   const today = getCurrentDateInSaoPaulo();
   
   const [filters, setFilters] = useState<TaskFilter>({
@@ -72,9 +74,20 @@ const Dashboard = () => {
     }
   };
 
-  const handleForwardTask = async (taskId: string) => {
-    // This would open the forward modal - for now just a placeholder
-    console.log('Forward task:', taskId);
+  const handleForwardTask = (task: Task) => {
+    openForwardTaskModal(task);
+  };
+
+  const handleEditTask = (task: Task) => {
+    openTaskModal(task);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    openDeleteModal('task', task);
+  };
+
+  const handleTaskHistory = (task: Task) => {
+    setTaskForHistory(task);
   };
 
   return (
@@ -204,7 +217,10 @@ const Dashboard = () => {
                       onStatusChange={(status) => handleStatusChange(task.id, status)}
                       onConclude={() => handleConcludeTask(task.id)}
                       onUnconclude={() => handleUnconcludeTask(task.id)}
-                      onForward={() => handleForwardTask(task.id)}
+                      onForward={() => handleForwardTask(task)}
+                      onEdit={() => handleEditTask(task)}
+                      onDelete={() => handleDeleteTask(task)}
+                      onHistory={() => handleTaskHistory(task)}
                     />
                   ))}
                   {todayTasks.length > 8 && (
@@ -318,6 +334,12 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
+
+      <TaskHistoryModal
+        task={taskForHistory}
+        isOpen={!!taskForHistory}
+        onClose={() => setTaskForHistory(null)}
+      />
     </div>
   );
 };
