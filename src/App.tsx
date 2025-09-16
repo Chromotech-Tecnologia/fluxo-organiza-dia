@@ -9,6 +9,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { AuthGuard } from "./components/auth/AuthGuard";
 
 // Modals
+import { TaskModal } from "./components/modals/TaskModal";
 import { PersonModal } from "./components/modals/PersonModal";
 import { DeleteModal } from "./components/modals/DeleteModal";
 import { DailyCloseModal } from "./components/modals/DailyCloseModal";
@@ -70,7 +71,8 @@ const App = () => {
               </Routes>
             </AppLayout>
             
-            {/* Global Modals - TaskModal removido pois está no TasksPage */}
+            {/* Global Modals */}
+            <TaskModal />
             <PersonModal />
             <SkillModal />
             <TeamMemberModal />
