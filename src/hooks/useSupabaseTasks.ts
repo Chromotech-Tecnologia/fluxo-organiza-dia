@@ -19,7 +19,8 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     queryFn: async () => {
       if (!currentUserId) return [];
       
-      console.log('Carregando tarefas do Supabase...');
+      console.log('Carregando tarefas do Supabase para usuário:', currentUserId);
+      console.log('Data atual (São Paulo):', getCurrentDateInSaoPaulo());
       
       const { data, error } = await supabase
         .from('tasks')
@@ -34,6 +35,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       }
 
       console.log(`${data?.length || 0} tarefas carregadas do Supabase`);
+      console.log('Amostra de tarefas de hoje:', data?.filter(t => t.scheduled_date === getCurrentDateInSaoPaulo())?.length);
 
       // Converter dados do Supabase para o tipo Task com validação de tipos
       const convertedTasks: Task[] = (data || []).map(task => ({
@@ -68,8 +70,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       return convertedTasks;
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // 30 segundos
+    staleTime: 0, // Sempre fazer refetch
     gcTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Filtrar tarefas usando useMemo para otimização
@@ -79,13 +83,18 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     const today = getCurrentDateInSaoPaulo();
+    console.log('Aplicando filtros. Data de hoje:', today);
+    console.log('Filtros aplicados:', filters);
+    console.log('Total de tarefas antes do filtro:', tasks.length);
 
-    return tasks.filter(task => {
+    const filtered = tasks.filter(task => {
       // Filtro por data
       if (filters.dateRange) {
         const taskDate = task.scheduledDate;
         const startDate = filters.dateRange.start;
         const endDate = filters.dateRange.end;
+        
+        console.log(`Comparando tarefa "${task.title}": ${taskDate} entre ${startDate} e ${endDate}`);
         
         if (taskDate < startDate || taskDate > endDate) {
           return false;
@@ -181,6 +190,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
       return true;
     });
+    
+    console.log('Total de tarefas após filtros:', filtered.length);
+    return filtered;
   }, [tasks, filters]);
 
   // Adicionar nova tarefa
