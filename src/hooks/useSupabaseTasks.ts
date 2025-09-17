@@ -13,37 +13,58 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   const currentUserId = useCurrentUserId();
   const queryClient = useQueryClient();
 
-  // Query para carregar tarefas
+  // Determinar período para busca no servidor
+  const getDateRange = () => {
+    if (filters?.dateRange) {
+      return {
+        start: filters.dateRange.start,
+        end: filters.dateRange.end
+      };
+    }
+    // Se não há filtros, buscar um período padrão de 30 dias
+    const today = getCurrentDateInSaoPaulo();
+    const thirtyDaysAgo = new Date(new Date(today).getTime() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString().split('T')[0];
+    const thirtyDaysFromNow = new Date(new Date(today).getTime() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString().split('T')[0];
+    
+    return {
+      start: thirtyDaysAgo,
+      end: thirtyDaysFromNow
+    };
+  };
+
+  const dateRange = getDateRange();
+
+  // Query para carregar tarefas com filtro de data no servidor
   const { data: tasks = [], isLoading: loading, refetch } = useQuery({
-    queryKey: ['tasks', currentUserId],
+    queryKey: ['tasks', currentUserId, dateRange.start, dateRange.end],
     queryFn: async () => {
       if (!currentUserId) return [];
       
-      console.log('Carregando tarefas do Supabase para usuário:', currentUserId);
-      console.log('Data atual (São Paulo):', getCurrentDateInSaoPaulo());
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from('tasks')
         .select('*')
         .eq('user_id', currentUserId)
+        .gte('scheduled_date', dateRange.start)
+        .lte('scheduled_date', dateRange.end)
         .order('scheduled_date', { ascending: true })
         .order('task_order', { ascending: true });
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Erro ao carregar tarefas:', error);
         throw error;
       }
 
-      console.log(`${data?.length || 0} tarefas carregadas do Supabase`);
-      console.log('Amostra de tarefas de hoje:', data?.filter(t => t.scheduled_date === getCurrentDateInSaoPaulo())?.length);
-
-      // Converter dados do Supabase para o tipo Task com validação de tipos
+      // Converter dados do Supabase para o tipo Task
       const convertedTasks: Task[] = (data || []).map(task => ({
         id: task.id,
         title: task.title,
         description: task.description || '',
         observations: task.observations || '',
-        scheduledDate: task.scheduled_date,
+        scheduledDate: String(task.scheduled_date).slice(0, 10), // Normalizar para YYYY-MM-DD
         type: task.type as Task['type'],
         priority: task.priority as Task['priority'],
         status: task.status as Task['status'],
@@ -70,10 +91,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       return convertedTasks;
     },
     enabled: !!user,
-    staleTime: 0, // Sempre fazer refetch
+    staleTime: 1000 * 60 * 2, // 2 minutos
     gcTime: 1000 * 60 * 5, // 5 minutos
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Filtrar tarefas usando useMemo para otimização
@@ -83,18 +104,13 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     }
 
     const today = getCurrentDateInSaoPaulo();
-    console.log('Aplicando filtros. Data de hoje:', today);
-    console.log('Filtros aplicados:', filters);
-    console.log('Total de tarefas antes do filtro:', tasks.length);
 
     const filtered = tasks.filter(task => {
-      // Filtro por data
+      // Filtro por data já foi aplicado no servidor, mas pode haver filtros adicionais
       if (filters.dateRange) {
         const taskDate = task.scheduledDate;
         const startDate = filters.dateRange.start;
         const endDate = filters.dateRange.end;
-        
-        console.log(`Comparando tarefa "${task.title}": ${taskDate} entre ${startDate} e ${endDate}`);
         
         if (taskDate < startDate || taskDate > endDate) {
           return false;
@@ -191,7 +207,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       return true;
     });
     
-    console.log('Total de tarefas após filtros:', filtered.length);
     return filtered;
   }, [tasks, filters]);
 
@@ -200,8 +215,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     if (!currentUserId) return;
     
     try {
-      console.log('Adicionando tarefa no Supabase:', newTask);
-      
       const taskData = {
         title: newTask.title,
         description: newTask.description || '',
@@ -234,8 +247,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         .single();
 
       if (error) throw error;
-
-      console.log('Tarefa adicionada com sucesso:', data);
       
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
@@ -255,8 +266,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     if (!currentUserId) return;
     
     try {
-      console.log('Atualizando tarefa no Supabase:', taskId, updates);
-      
       const currentTask = tasks.find(t => t.id === taskId);
       if (!currentTask) {
         throw new Error('Tarefa não encontrada');
@@ -292,8 +301,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       } else {
         updateData.assigned_person_id = currentTask.assignedPersonId || null;
       }
-
-      console.log('Dados de atualização (preservando assignedPersonId):', updateData);
       
       const { data, error } = await supabase
         .from('tasks')
@@ -304,8 +311,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         .single();
 
       if (error) throw error;
-
-      console.log('Tarefa atualizada com sucesso:', data);
       
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
@@ -348,8 +353,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     if (!currentUserId) return;
     
     try {
-      console.log('Deletando tarefa no Supabase:', taskId);
-      
       const { error } = await supabase
         .from('tasks')
         .delete()
@@ -357,8 +360,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         .eq('user_id', currentUserId);
 
       if (error) throw error;
-
-      console.log('Tarefa deletada com sucesso');
       
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
@@ -378,8 +379,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     if (!currentUserId) return;
     
     try {
-      console.log('Reordenando tarefas no Supabase:', taskIds);
-      
       const updates = taskIds.map((taskId, index) => ({
         id: taskId,
         task_order: index + 1,
@@ -395,8 +394,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
         if (error) throw error;
       }
-
-      console.log('Tarefas reordenadas com sucesso');
       
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
@@ -457,7 +454,6 @@ export function useSupabaseTasks(filters?: TaskFilter) {
           filter: `user_id=eq.${currentUserId}`
         },
         (payload) => {
-          console.log('Mudança em tempo real detectada:', payload);
           queryClient.invalidateQueries({ queryKey: ['tasks'] });
         }
       )

@@ -17,7 +17,6 @@ export function getCurrentDateInSaoPaulo(): string {
   });
   
   const result = formatter.format(now);
-  console.log('getCurrentDateInSaoPaulo:', result);
   return result; // formato YYYY-MM-DD
 }
 
@@ -25,7 +24,6 @@ export function getCurrentDateInSaoPaulo(): string {
 export function formatDateForDisplay(dateString: string): string {
   const [year, month, day] = dateString.split('-');
   const result = `${day}/${month}/${year}`;
-  console.log('formatDateForDisplay - Input:', dateString, 'Output:', result);
   return result;
 }
 
@@ -34,14 +32,12 @@ export function createLocalDate(dateString: string): Date {
   const [year, month, day] = dateString.split('-').map(Number);
   // Criar Date local usando o timezone local, não UTC
   const date = new Date(year, month - 1, day, 12, 0, 0, 0);
-  console.log('createLocalDate - Input:', dateString, 'Output:', date);
   return date;
 }
 
 // Função para obter o dia do mês de uma data string - PARA CALENDÁRIO
 export function getDayFromDateString(dateString: string): number {
   const [year, month, day] = dateString.split('-').map(Number);
-  console.log('getDayFromDateString - Input:', dateString, 'Day:', day);
   return day;
 }
 
@@ -49,7 +45,6 @@ export function getDayFromDateString(dateString: string): number {
 export function isDateStringOnDay(dateString: string, targetDay: number, targetMonth: number, targetYear: number): boolean {
   const [year, month, day] = dateString.split('-').map(Number);
   const matches = year === targetYear && month === (targetMonth + 1) && day === targetDay;
-  console.log('isDateStringOnDay - DateString:', dateString, 'Target:', `${targetYear}-${targetMonth + 1}-${targetDay}`, 'Matches:', matches);
   return matches;
 }
 
@@ -60,20 +55,16 @@ export function calendarDateToString(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   
-  console.log('calendarDateToString - Input:', date, 'Output:', `${year}-${month}-${day}`);
   return `${year}-${month}-${day}`;
 }
 
 // Função para converter string YYYY-MM-DD para Date do calendário - CORRIGIDA
 export function stringToCalendarDate(dateString: string): Date {
-  console.log('stringToCalendarDate - Input:', dateString);
-  
   const [year, month, day] = dateString.split('-').map(Number);
   // Criar Date object local sem conversão de timezone
   // Usar meio-dia para evitar problemas de DST
   const date = new Date(year, month - 1, day, 12, 0, 0, 0);
   
-  console.log('stringToCalendarDate - Output:', date);
   return date;
 }
 

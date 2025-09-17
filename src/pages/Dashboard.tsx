@@ -32,11 +32,6 @@ const Dashboard = () => {
   const { tasks: todayTasks, concludeTask, updateTask, refetch } = useSupabaseTasks(filters);
   const { people } = useSupabasePeople();
 
-  // Debug info
-  console.log('Dashboard - Filtros aplicados:', filters);
-  console.log('Dashboard - Tarefas retornadas:', todayTasks.length);
-  console.log('Dashboard - Amostra de tarefas:', todayTasks.slice(0, 3).map(t => ({ title: t.title, date: t.scheduledDate })));
-
   const totalTasks = todayTasks.length;
   const completedTasks = todayTasks.filter(task => task.isConcluded).length;
   const pendingTasks = todayTasks.filter(task => task.status === 'pending').length;
