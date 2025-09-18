@@ -52,8 +52,6 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
     setIsProcessing(true);
 
     try {
-      console.log('Reagendando tarefa...', taskToForward.title);
-      
       const forwardRecord = {
         forwardedAt: new Date().toISOString(),
         forwardedTo: null,
@@ -72,16 +70,17 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
       });
 
       // Criar nova tarefa duplicada para a nova data
+      const safeSubItems = Array.isArray(taskToForward.subItems) ? taskToForward.subItems : [];
       const newTask = {
         ...taskToForward,
         id: crypto.randomUUID(),
         status: 'pending' as const,
         scheduledDate: calendarDateToString(selectedDate),
-        forwardCount: taskToForward.forwardCount + 1,
-        order: keepOrder ? taskToForward.order : 0,
+        forwardCount: (taskToForward.forwardCount || 0) + 1,
+        order: keepOrder ? (taskToForward.order || 0) : 0,
         subItems: keepChecklistStatus 
-          ? (taskToForward.subItems || []) 
-          : (taskToForward.subItems || []).map(item => ({ ...item, completed: false })),
+          ? safeSubItems 
+          : safeSubItems.map(item => ({ ...item, completed: false })),
         forwardHistory: [
           {
             forwardedAt: new Date().toISOString(),
@@ -106,43 +105,21 @@ export function RescheduleModal({ onRescheduleComplete }: RescheduleModalProps) 
         description: `Nova tarefa criada para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })} e tarefa original concluída automaticamente.`,
       });
 
-      console.log('Tarefa reagendada com sucesso');
-
       // Fechar modal e resetar estados
       closeForwardTaskModal();
       setSelectedDate(undefined);
       setKeepOrder(true);
       setKeepChecklistStatus(true);
       
-      // Invalidar cache de forma mais agressiva e forçar re-render
-      console.log('Invalidando cache das tarefas após reagendamento...');
-      await queryClient.invalidateQueries({ 
-        queryKey: ['tasks'],
-        refetchType: 'all'
-      });
+      // Invalidar queries para atualizar a UI
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
-      // Força um refetch imediato
-      await queryClient.refetchQueries({ 
-        queryKey: ['tasks'],
-        type: 'active'
-      });
-      
-      // Executar callback se fornecido para forçar atualização
+      // Executar callback se fornecido
       if (onRescheduleComplete) {
-        console.log('Executando callback de reagendamento...');
-        await onRescheduleComplete();
+        onRescheduleComplete();
       }
 
-      // Aguardar um pouco e invalidar novamente para garantir atualização visual
-      setTimeout(async () => {
-        await queryClient.invalidateQueries({ 
-          queryKey: ['tasks'],
-          refetchType: 'all'
-        });
-      }, 100);
-
     } catch (error) {
-      console.error('Erro ao reagendar tarefa:', error);
       toast({
         title: "Erro",
         description: "Erro ao reagendar tarefa",
