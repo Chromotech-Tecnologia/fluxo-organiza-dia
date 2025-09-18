@@ -23,7 +23,7 @@ interface BulkActionsBarProps {
 }
 
 export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsBarProps) {
-  const { updateTask, concludeTask, deleteTask, refetch } = useSupabaseTasks();
+  const { updateTask, concludeTask, deleteTask, addTask, refetch } = useSupabaseTasks();
   const { openForwardTaskModal } = useModalStore();
   const { toast } = useToast();
   
@@ -197,22 +197,44 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
             reason: 'Reagendamento em lote'
           };
 
-          // Reagendar SEM concluir: atualiza a própria tarefa
-          const safeSubItems = Array.isArray(task.subItems) ? task.subItems : [];
-
+          // Atualizar a tarefa original com histórico de reagendamento e auto-conclusão
           await updateTask(task.id, {
-            scheduledDate: selectedDateStr,
             forwardHistory: [...(task.forwardHistory || []), forwardRecord],
+            isConcluded: true,
+            concludedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+
+          // Criar nova tarefa duplicada para a nova data
+          const safeSubItems = Array.isArray(task.subItems) ? task.subItems : [];
+          const newTask = {
+            ...task,
+            id: crypto.randomUUID(),
+            status: 'pending' as const,
+            scheduledDate: selectedDateStr,
             forwardCount: (task.forwardCount || 0) + 1,
             order: keepOrder ? (task.order || 0) : 0,
             subItems: keepChecklistStatus 
               ? safeSubItems 
               : safeSubItems.map(item => ({ ...item, completed: false })),
+            forwardHistory: [
+              {
+                forwardedAt: new Date().toISOString(),
+                forwardedTo: null,
+                newDate: selectedDateStr,
+                originalDate: task.scheduledDate,
+                statusAtForward: 'pending' as const,
+                reason: `Reagendamento recebido de ${format(new Date(task.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}`
+              }
+            ],
+            completionHistory: [],
             isConcluded: false,
-            concludedAt: null,
+            concludedAt: undefined,
+            createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-          });
+          };
 
+          await addTask(newTask);
           successCount++;
         } catch (e: any) {
           console.error('Falha ao reagendar tarefa em lote:', task.id, e);
