@@ -11,7 +11,7 @@ import { TaskStatsCompact } from "@/components/tasks/TaskStatsCompact";
 import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal";
 import { BulkActionsBar } from "@/components/tasks/BulkActionsBar";
 import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
-import { RescheduleModal } from "@/components/modals/RescheduleModal";
+
 import { TaskModal } from "@/components/modals/TaskModal";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -35,7 +35,7 @@ const TasksPage = () => {
       end: getCurrentDateInSaoPaulo()
     }
   });
-  const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
+  const { openTaskModal, openRescheduleModal, openDeleteModal } = useModalStore();
   const { tasks, updateTask, deleteTask, reorderTasks, concludeTask } = useSupabaseTasks(taskFilters);
   const queryClient = useQueryClient();
 
@@ -156,7 +156,7 @@ const TasksPage = () => {
   };
 
   const handleForwardTask = (task: Task) => {
-    openForwardTaskModal(task);
+    openRescheduleModal(task);
   };
 
   const handleEditTask = (task: Task) => {
@@ -366,7 +366,6 @@ const TasksPage = () => {
         isOpen={!!taskForHistory}
         onClose={() => setTaskForHistory(null)}
       />
-      <RescheduleModal onRescheduleComplete={refreshData} />
       <TaskModal onTaskSaved={refreshData} />
       <ScrollToTop />
     </div>

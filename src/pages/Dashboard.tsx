@@ -15,7 +15,7 @@ import { MeetingsCard } from "@/components/dashboard/MeetingsCard";
 import { TaskHistoryModal } from "@/components/tasks/TaskHistoryModal";
 
 const Dashboard = () => {
-  const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
+  const { openTaskModal, openRescheduleModal, openDeleteModal } = useModalStore();
   const [taskForHistory, setTaskForHistory] = useState<Task | null>(null);
   const today = getCurrentDateInSaoPaulo();
   
@@ -75,7 +75,7 @@ const Dashboard = () => {
   };
 
   const handleForwardTask = (task: Task) => {
-    openForwardTaskModal(task);
+    openRescheduleModal(task);
   };
 
   const handleEditTask = (task: Task) => {

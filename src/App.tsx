@@ -15,7 +15,7 @@ import { DeleteModal } from "./components/modals/DeleteModal";
 import { DailyCloseModal } from "./components/modals/DailyCloseModal";
 import { SkillModal } from "./components/modals/SkillModal";
 import { TeamMemberModal } from "./components/modals/TeamMemberModal";
-import { ForwardTaskModal } from "./components/modals/ForwardTaskModal";
+import { UnifiedRescheduleModal } from "./components/modals/UnifiedRescheduleModal";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -76,7 +76,7 @@ const App = () => {
             <PersonModal />
             <SkillModal />
             <TeamMemberModal />
-            <ForwardTaskModal />
+            <UnifiedRescheduleModal />
             <DeleteModal />
             <DailyCloseModal />
           </AuthGuard>

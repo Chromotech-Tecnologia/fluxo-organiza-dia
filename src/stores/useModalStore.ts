@@ -39,11 +39,11 @@ interface ModalState {
   openTeamMemberModal: (teamMember?: TeamMember) => void;
   closeTeamMemberModal: () => void;
   
-  // Forward Task Modal
-  isForwardTaskModalOpen: boolean;
-  taskToForward: Task | null;
-  openForwardTaskModal: (task: Task) => void;
-  closeForwardTaskModal: () => void;
+  // Unified Reschedule Modal
+  isRescheduleModalOpen: boolean;
+  tasksToReschedule: Task[] | null;
+  openRescheduleModal: (tasks: Task | Task[]) => void;
+  closeRescheduleModal: () => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -98,15 +98,15 @@ export const useModalStore = create<ModalState>((set) => ({
   openTeamMemberModal: (teamMember) => set({ isTeamMemberModalOpen: true, teamMemberToEdit: teamMember || null }),
   closeTeamMemberModal: () => set({ isTeamMemberModalOpen: false, teamMemberToEdit: null }),
   
-  // Forward Task Modal
-  isForwardTaskModalOpen: false,
-  taskToForward: null,
-  openForwardTaskModal: (task) => set({ 
-    isForwardTaskModalOpen: true, 
-    taskToForward: task 
+  // Unified Reschedule Modal
+  isRescheduleModalOpen: false,
+  tasksToReschedule: null,
+  openRescheduleModal: (tasks) => set({ 
+    isRescheduleModalOpen: true, 
+    tasksToReschedule: Array.isArray(tasks) ? tasks : [tasks]
   }),
-  closeForwardTaskModal: () => set({ 
-    isForwardTaskModalOpen: false, 
-    taskToForward: null 
+  closeRescheduleModal: () => set({ 
+    isRescheduleModalOpen: false, 
+    tasksToReschedule: null 
   }),
 }));

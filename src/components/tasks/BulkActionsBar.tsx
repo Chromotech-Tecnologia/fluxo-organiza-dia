@@ -24,7 +24,7 @@ interface BulkActionsBarProps {
 
 export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsBarProps) {
   const { updateTask, concludeTask, deleteTask, addTask, refetch } = useSupabaseTasks();
-  const { openForwardTaskModal } = useModalStore();
+  const { openRescheduleModal } = useModalStore();
   const { toast } = useToast();
   
   // Estados para modais em lote
@@ -342,15 +342,14 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
             Não feito
           </Button>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setSelectedDate(getNextBusinessDay());
-              setShowRescheduleModal(true);
-            }}
-            className="gap-1 text-orange-600 border-orange-600 hover:bg-orange-50"
-          >
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                openRescheduleModal(selectedTasks);
+              }}
+              className="gap-1 text-orange-600 border-orange-600 hover:bg-orange-50"
+            >
             <ArrowRight className="h-4 w-4" />
             Reagendar
           </Button>
@@ -418,125 +417,6 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Modal de reagendamento em lote */}
-      <Dialog open={showRescheduleModal} onOpenChange={setShowRescheduleModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reagendar Tarefas em Lote</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="p-3 bg-muted rounded-lg">
-              <Label className="text-sm font-medium">
-                Reagendando {selectedTasks.length} tarefa{selectedTasks.length > 1 ? 's' : ''}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Tempo total estimado: {formatTime(totalEstimatedTime)}
-              </p>
-            </div>
-
-            <div>
-              <Label>Nova Data de Execução</Label>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => {
-                  if (date) {
-                    setSelectedDate(date);
-                  }
-                }}
-                className="rounded-md border mt-2"
-                disabled={(date) => {
-                  const dateString = calendarDateToString(date);
-                  const today = getCurrentDateInSaoPaulo();
-                  return dateString < today;
-                }}
-              />
-            </div>
-
-            <div className="space-y-3 p-3 bg-muted rounded-lg">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="keep-order-bulk" className="text-sm">Manter ordenação das tarefas?</Label>
-                <Switch
-                  id="keep-order-bulk"
-                  checked={keepOrder}
-                  onCheckedChange={setKeepOrder}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="keep-checklist-bulk" className="text-sm">Manter status dos itens do checklist?</Label>
-                <Switch
-                  id="keep-checklist-bulk"
-                  checked={keepChecklistStatus}
-                  onCheckedChange={setKeepChecklistStatus}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowRescheduleModal(false)}
-                disabled={isProcessing}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleBulkReschedule} 
-                disabled={!selectedDate || isProcessing}
-              >
-                {isProcessing ? "Reagendando..." : "Reagendar Todas"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de delegação em lote */}
-      <Dialog open={showDelegateModal} onOpenChange={setShowDelegateModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delegar Tarefas em Lote</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="p-3 bg-muted rounded-lg">
-              <Label className="text-sm font-medium">
-                Delegando {selectedTasks.length} tarefa{selectedTasks.length > 1 ? 's' : ''}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Tempo total estimado: {formatTime(totalEstimatedTime)}
-              </p>
-            </div>
-
-            <div>
-              <Label>Delegar para</Label>
-              <PeopleSelectWithSearch
-                value={selectedPersonId}
-                onValueChange={setSelectedPersonId}
-                placeholder="Selecione uma pessoa"
-              />
-            </div>
-
-            <div className="flex gap-2 justify-end pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowDelegateModal(false)}
-                disabled={isProcessing}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleBulkDelegate} 
-                disabled={!selectedPersonId || isProcessing}
-              >
-                {isProcessing ? "Delegando..." : "Delegar Todas"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
+      </>
+    );
+  }

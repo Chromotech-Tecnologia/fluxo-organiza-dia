@@ -10,7 +10,6 @@ import { TaskStatsCompact } from '@/components/tasks/TaskStatsCompact';
 import { TaskFiltersHorizontal } from '@/components/tasks/TaskFiltersHorizontal';
 import { BulkActionsBar } from '@/components/tasks/BulkActionsBar';
 import { TaskHistoryModal } from '@/components/tasks/TaskHistoryModal';
-import { RescheduleModal } from '@/components/modals/RescheduleModal';
 import { TaskModal } from '@/components/modals/TaskModal';
 import { useModalStore } from '@/stores/useModalStore';
 import { Task, TaskFilter, SortOption } from '@/types';
@@ -45,7 +44,7 @@ export function UserDataViewer() {
     }
   });
   
-  const { openTaskModal, openForwardTaskModal, openDeleteModal } = useModalStore();
+  const { openTaskModal, openRescheduleModal, openDeleteModal } = useModalStore();
   const queryClient = useQueryClient();
   
   // Carrega tarefas do usuário selecionado com filtros
@@ -203,7 +202,7 @@ export function UserDataViewer() {
   };
 
   const handleForwardTask = (task: Task) => {
-    openForwardTaskModal(task);
+    openRescheduleModal(task);
   };
 
   const handleEditTask = (task: Task) => {
@@ -483,7 +482,6 @@ export function UserDataViewer() {
         isOpen={!!taskForHistory}
         onClose={() => setTaskForHistory(null)}
       />
-      <RescheduleModal onRescheduleComplete={refreshData} />
       <TaskModal onTaskSaved={refreshData} />
     </div>
   );
