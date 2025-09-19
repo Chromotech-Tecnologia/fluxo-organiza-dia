@@ -84,33 +84,6 @@ export function TaskFiltersImproved({
             })}
           />
           
-          <Button 
-            variant={currentFilters.status?.includes('pending') ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              const current = currentFilters.status || [];
-              const newStatus = current.includes('pending') 
-                ? current.filter(s => s !== 'pending')
-                : [...current, 'pending'];
-              handleFilterChange('status', newStatus.length ? newStatus : undefined);
-            }}
-          >
-            Pendente
-          </Button>
-
-          <Button 
-            variant={currentFilters.status?.includes('completed') ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              const current = currentFilters.status || [];
-              const newStatus = current.includes('completed') 
-                ? current.filter(s => s !== 'completed')
-                : [...current, 'completed'];
-              handleFilterChange('status', newStatus.length ? newStatus : undefined);
-            }}
-          >
-            Definitivo
-          </Button>
 
           <Button 
             variant={currentFilters.type?.includes('meeting') ? "default" : "outline"}
@@ -288,6 +261,42 @@ export function TaskFiltersImproved({
                 onClick={() => handleFilterChange('isForwarded', currentFilters.isForwarded === true ? undefined : true)}
               >
                 Reagendadas
+              </Button>
+
+              <Button 
+                variant={currentFilters.isForwarded === false ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterChange('isForwarded', currentFilters.isForwarded === false ? undefined : false)}
+              >
+                Não Reagendadas
+              </Button>
+
+              <Button 
+                variant={currentFilters.status?.includes('completed') ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  const current = currentFilters.status || [];
+                  const newStatus = current.includes('completed') 
+                    ? current.filter(s => s !== 'completed')
+                    : [...current, 'completed'];
+                  handleFilterChange('status', newStatus.length ? newStatus : undefined);
+                }}
+              >
+                Concluído
+              </Button>
+
+              <Button 
+                variant={currentFilters.status?.includes('pending') ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  const current = currentFilters.status || [];
+                  const newStatus = current.includes('pending') 
+                    ? current.filter(s => s !== 'pending')
+                    : [...current, 'pending'];
+                  handleFilterChange('status', newStatus.length ? newStatus : undefined);
+                }}
+              >
+                Não Concluído
               </Button>
 
               <Button 
