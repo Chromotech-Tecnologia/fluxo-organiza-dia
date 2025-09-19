@@ -156,6 +156,7 @@ const CalendarPage = () => {
                           }
                         `}
                         title={task.title}
+                        onClick={() => openTaskModal(task)}
                       >
                         <div className="flex items-center gap-1">
                           <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
