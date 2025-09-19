@@ -105,6 +105,7 @@ export type Database = {
           id: string
           name: string | null
           updated_at: string | null
+          welcome_shown: boolean | null
         }
         Insert: {
           created_at?: string | null
@@ -112,6 +113,7 @@ export type Database = {
           id: string
           name?: string | null
           updated_at?: string | null
+          welcome_shown?: boolean | null
         }
         Update: {
           created_at?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           id?: string
           name?: string | null
           updated_at?: string | null
+          welcome_shown?: boolean | null
         }
         Relationships: []
       }

@@ -28,13 +28,13 @@ export function WelcomeModal() {
         .eq('id', user.id)
         .single();
 
-      if (profile && !profile.welcome_shown) {
+      if (profile && !(profile as any).welcome_shown) {
         setIsOpen(true);
         
         // Marcar como mostrado
         await supabase
           .from('profiles')
-          .update({ welcome_shown: true })
+          .update({ welcome_shown: true } as any)
           .eq('id', user.id);
       }
     } catch (error) {
