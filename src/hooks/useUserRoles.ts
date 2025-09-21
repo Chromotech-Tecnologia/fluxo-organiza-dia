@@ -20,6 +20,10 @@ interface UserWithProfile {
   roles: AppRole[];
   created_at: string;
   last_sign_in_at?: string;
+  email_confirmed_at?: string;
+  email_confirmed?: boolean;
+  phone_confirmed?: boolean;
+  has_profile?: boolean;
 }
 
 export function useUserRoles() {
@@ -44,42 +48,39 @@ export function useUserRoles() {
     }
   };
 
-  // Load all users with their profiles and roles
+  // Load all users from auth system with their profiles and roles
   const loadAllUsers = async () => {
     setLoading(true);
     try {
-      // Get all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('User not authenticated');
+      }
 
-      if (profilesError) throw profilesError;
+      // Call edge function to get all users from auth
+      const response = await fetch('https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/admin-manage-users', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      // Get all user roles
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to load users');
+      }
+
+      const { users } = await response.json();
+      
+      // Get all user roles for local state
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*');
 
       if (rolesError) throw rolesError;
 
-      // Combine profiles with roles
-      const usersWithRoles: UserWithProfile[] = (profiles || []).map(profile => {
-        const userRoles = (roles || [])
-          .filter(role => role.user_id === profile.id)
-          .map(role => role.role as AppRole);
-
-        return {
-          id: profile.id,
-          email: profile.email || '',
-          name: profile.name || '',
-          roles: userRoles, // Não adicionar 'user' por default - usuário sem roles está desabilitado
-          created_at: profile.created_at || '',
-          last_sign_in_at: null
-        };
-      });
-
-      setAllUsers(usersWithRoles);
+      setAllUsers(users || []);
       setUserRoles(roles || []);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -209,6 +210,88 @@ export function useUserRoles() {
     }
   }, [user]);
 
+  // Confirm user email manually
+  const confirmUserEmail = async (userId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('User not authenticated');
+      }
+
+      const response = await fetch('https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/admin-manage-users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'confirm_email',
+          userId: userId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to confirm email');
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Email confirmado com sucesso"
+      });
+
+      loadAllUsers();
+    } catch (error: any) {
+      console.error('Error confirming email:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao confirmar email",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Create missing profile for user
+  const createMissingProfile = async (userId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('User not authenticated');
+      }
+
+      const response = await fetch('https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/admin-manage-users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'create_missing_profile',
+          userId: userId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create profile');
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Perfil criado com sucesso"
+      });
+
+      loadAllUsers();
+    } catch (error: any) {
+      console.error('Error creating profile:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao criar perfil",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
     userRoles,
     allUsers,
@@ -220,6 +303,8 @@ export function useUserRoles() {
     removeRoleFromUser,
     createUser,
     toggleUserStatus,
+    confirmUserEmail,
+    createMissingProfile,
     refetch: loadAllUsers
   };
 }

@@ -11,14 +11,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye, Clock, CheckCircle } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye, Clock, CheckCircle, Mail, MailCheck, UserX } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export function UserManagement() {
-  const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers } = useUserRoles();
+  const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers, confirmUserEmail, createMissingProfile } = useUserRoles();
   const { startImpersonation } = useImpersonation();
   const { getTrialStatus, setTrialPeriod, activatePermanent, disableUser, loading: trialLoading } = useTrialManagement();
   const [selectedRole, setSelectedRole] = useState<AppRole>('user');
@@ -327,6 +327,7 @@ export function UserManagement() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Status Email</TableHead>
                   <TableHead>Roles</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Criado em</TableHead>
@@ -337,9 +338,44 @@ export function UserManagement() {
                 {allUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
-                      {user.name || 'Sem nome'}
+                      <div className="flex items-center gap-2">
+                        {user.name || 'Sem nome'}
+                        {!user.has_profile && (
+                          <Badge variant="outline" className="text-xs">
+                            <UserX className="w-3 h-3 mr-1" />
+                            Sem perfil
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {user.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {user.email_confirmed ? (
+                          <Badge variant="default" className="gap-1">
+                            <MailCheck className="w-3 h-3" />
+                            Confirmado
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="gap-1">
+                            <Mail className="w-3 h-3" />
+                            Pendente
+                          </Badge>
+                        )}
+                        {user.email_confirmed_at && (
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(user.email_confirmed_at), {
+                              addSuffix: true,
+                              locale: ptBR
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         {user.roles.map((role) => (
@@ -362,12 +398,12 @@ export function UserManagement() {
                       })}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 flex-wrap">
                         <Select
                           value={selectedRole}
                           onValueChange={(value) => setSelectedRole(value as AppRole)}
                         >
-                          <SelectTrigger className="w-24">
+                          <SelectTrigger className="w-20 h-8">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -381,8 +417,9 @@ export function UserManagement() {
                           variant="outline"
                           onClick={() => addRoleToUser(user.id, selectedRole)}
                           disabled={hasRole(user.roles, selectedRole)}
+                          className="h-8 px-2"
                         >
-                          Adicionar
+                          +
                         </Button>
 
                         <Button
@@ -390,37 +427,59 @@ export function UserManagement() {
                           variant="outline"
                           onClick={() => removeRoleFromUser(user.id, selectedRole)}
                           disabled={!hasRole(user.roles, selectedRole)}
+                          className="h-8 px-2"
                         >
-                          Remover
+                          -
                         </Button>
 
                         <Button
                           size="sm"
                           variant="secondary"
                           onClick={() => openPasswordChange(user.id)}
+                          className="h-8 px-2"
                         >
-                          <Key className="w-3 h-3 mr-1" />
-                          Trocar Senha
+                          <Key className="w-3 h-3" />
                         </Button>
 
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => startImpersonation(user.id, user.name, user.email)}
-                          className="gap-1"
+                          className="h-8 px-2"
                         >
                           <Eye className="w-3 h-3" />
-                          Impersonar
                         </Button>
+
+                        {!user.email_confirmed && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => confirmUserEmail(user.id)}
+                            className="h-8 px-2"
+                          >
+                            <MailCheck className="w-3 h-3" />
+                          </Button>
+                        )}
+
+                        {!user.has_profile && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => createMissingProfile(user.id)}
+                            className="h-8 px-2"
+                          >
+                            <UserPlus className="w-3 h-3" />
+                          </Button>
+                        )}
 
                         <Button
                           size="sm"
                           variant="default"
                           onClick={() => openTrialModal(user.id)}
                           disabled={trialLoading}
+                          className="h-8 px-2"
                         >
-                          <Clock className="w-3 h-3 mr-1" />
-                          Período Teste
+                          <Clock className="w-3 h-3" />
                         </Button>
 
                         <Button
@@ -428,9 +487,9 @@ export function UserManagement() {
                           variant="outline"
                           onClick={() => handleActivatePermanent(user.id)}
                           disabled={trialLoading}
+                          className="h-8 px-2"
                         >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Ativar Permanente
+                          <CheckCircle className="w-3 h-3" />
                         </Button>
 
                         <AlertDialog>
@@ -439,9 +498,9 @@ export function UserManagement() {
                               size="sm"
                               variant="destructive"
                               disabled={trialLoading}
+                              className="h-8 px-2"
                             >
-                              <ShieldX className="w-3 h-3 mr-1" />
-                              Desabilitar
+                              <ShieldX className="w-3 h-3" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
