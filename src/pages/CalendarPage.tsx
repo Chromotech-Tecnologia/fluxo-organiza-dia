@@ -3,32 +3,71 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucide-react";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useModalStore } from "@/stores/useModalStore";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, startOfDay, endOfDay, addDays, subDays, addWeeks, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Task } from "@/types";
 
+type ViewType = 'day' | 'week' | 'month';
+
 const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewType, setViewType] = useState<ViewType>('month');
   const { openTaskModal } = useModalStore();
 
-  // Buscar todas as tarefas do mês atual
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  
-  const { tasks } = useSupabaseTasks({
-    dateRange: {
-      start: format(monthStart, 'yyyy-MM-dd'),
-      end: format(monthEnd, 'yyyy-MM-dd')
+  // Calculate date ranges based on view type
+  const getDateRange = () => {
+    switch (viewType) {
+      case 'day':
+        return {
+          start: format(startOfDay(currentDate), 'yyyy-MM-dd'),
+          end: format(endOfDay(currentDate), 'yyyy-MM-dd')
+        };
+      case 'week':
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+        const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+        return {
+          start: format(weekStart, 'yyyy-MM-dd'),
+          end: format(weekEnd, 'yyyy-MM-dd')
+        };
+      case 'month':
+      default:
+        const monthStart = startOfMonth(currentDate);
+        const monthEnd = endOfMonth(currentDate);
+        return {
+          start: format(monthStart, 'yyyy-MM-dd'),
+          end: format(monthEnd, 'yyyy-MM-dd')
+        };
     }
+  };
+
+  const { tasks } = useSupabaseTasks({
+    dateRange: getDateRange()
   });
 
-  // Gerar os dias do calendário (incluindo dias das semanas anteriores/próximas para completar a grid)
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 }); // Domingo
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
-  const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  // Gerar os dias do calendário baseado no tipo de visualização
+  const getCalendarDays = () => {
+    switch (viewType) {
+      case 'day':
+        return [currentDate];
+      case 'week':
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+        const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+        return eachDayOfInterval({ start: weekStart, end: weekEnd });
+      case 'month':
+      default:
+        const monthStart = startOfMonth(currentDate);
+        const monthEnd = endOfMonth(currentDate);
+        const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+        const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+        return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+    }
+  };
+
+  const calendarDays = getCalendarDays();
 
   // Agrupar tarefas por data
   const tasksByDate = useMemo(() => {
@@ -43,8 +82,32 @@ const CalendarPage = () => {
     return grouped;
   }, [tasks]);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(prev => direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1));
+  const navigatePeriod = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      switch (viewType) {
+        case 'day':
+          return direction === 'prev' ? subDays(prev, 1) : addDays(prev, 1);
+        case 'week':
+          return direction === 'prev' ? subWeeks(prev, 1) : addWeeks(prev, 1);
+        case 'month':
+        default:
+          return direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1);
+      }
+    });
+  };
+
+  const getViewTitle = () => {
+    switch (viewType) {
+      case 'day':
+        return format(currentDate, 'dd \'de\' MMMM \'de\' yyyy', { locale: ptBR });
+      case 'week':
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+        const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+        return `${format(weekStart, 'dd/MM', { locale: ptBR })} - ${format(weekEnd, 'dd/MM/yyyy', { locale: ptBR })}`;
+      case 'month':
+      default:
+        return format(currentDate, 'MMMM yyyy', { locale: ptBR });
+    }
   };
 
   const getTasksForDate = (date: Date): Task[] => {
@@ -54,9 +117,9 @@ const CalendarPage = () => {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
+      case 'extreme': return 'bg-red-500';
+      case 'priority': return 'bg-yellow-500';
+      case 'none': return 'bg-gray-500';
       default: return 'bg-gray-500';
     }
   };
@@ -84,97 +147,243 @@ const CalendarPage = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl flex items-center gap-2">
               <CalendarIcon className="h-6 w-6" />
-              {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
+              {getViewTitle()}
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-                Hoje
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center gap-4">
+              {/* View Toggle */}
+              <Tabs value={viewType} onValueChange={(value) => setViewType(value as ViewType)}>
+                <TabsList>
+                  <TabsTrigger value="day">Dia</TabsTrigger>
+                  <TabsTrigger value="week">Semana</TabsTrigger>
+                  <TabsTrigger value="month">Mês</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
+              {/* Navigation */}
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => navigatePeriod('prev')}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+                  Hoje
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigatePeriod('next')}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {/* Cabeçalho dos dias da semana */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {weekDays.map(day => (
-              <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Grid do calendário */}
-          <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map(day => {
-              const dayTasks = getTasksForDate(day);
-              const isCurrentMonth = isSameMonth(day, currentDate);
-              const isToday = isSameDay(day, new Date());
-              const completedTasks = dayTasks.filter(task => task.isConcluded).length;
-              const totalTasks = dayTasks.length;
-
-              return (
-                <div
-                  key={day.toString()}
-                  className={`
-                    min-h-[120px] p-2 border border-border rounded-lg
-                    ${isCurrentMonth ? 'bg-background' : 'bg-muted/50'}
-                    ${isToday ? 'ring-2 ring-primary' : ''}
-                  `}
-                >
-                  {/* Número do dia */}
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`
-                      text-sm font-medium
-                      ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}
-                      ${isToday ? 'text-primary font-bold' : ''}
-                    `}>
-                      {format(day, 'd')}
-                    </span>
-                    {totalTasks > 0 && (
-                      <Badge variant="secondary" className="text-xs px-1">
-                        {completedTasks}/{totalTasks}
-                      </Badge>
-                    )}
+          {viewType === 'month' && (
+            <>
+              {/* Cabeçalho dos dias da semana */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {weekDays.map(day => (
+                  <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                    {day}
                   </div>
+                ))}
+              </div>
 
-                  {/* Tarefas do dia */}
-                  <div className="space-y-1">
-                    {dayTasks.slice(0, 3).map(task => (
-                      <div
-                        key={task.id}
-                        className={`
-                          text-xs p-1 rounded truncate cursor-pointer
-                          ${task.isConcluded 
-                            ? 'bg-green-100 text-green-800 line-through' 
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                          }
-                        `}
-                        title={task.title}
-                        onClick={() => openTaskModal(task)}
-                      >
-                        <div className="flex items-center gap-1">
-                          <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
-                          <span className="truncate">{task.title}</span>
+              {/* Grid do calendário mensal */}
+              <div className="grid grid-cols-7 gap-1">
+                {calendarDays.map(day => {
+                  const dayTasks = getTasksForDate(day);
+                  const isCurrentMonth = isSameMonth(day, currentDate);
+                  const isToday = isSameDay(day, new Date());
+                  const completedTasks = dayTasks.filter(task => task.isConcluded).length;
+                  const totalTasks = dayTasks.length;
+
+                  return (
+                    <div
+                      key={day.toString()}
+                      className={`
+                        min-h-[120px] p-2 border border-border rounded-lg
+                        ${isCurrentMonth ? 'bg-background' : 'bg-muted/50'}
+                        ${isToday ? 'ring-2 ring-primary' : ''}
+                      `}
+                    >
+                      {/* Número do dia */}
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`
+                          text-sm font-medium
+                          ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}
+                          ${isToday ? 'text-primary font-bold' : ''}
+                        `}>
+                          {format(day, 'd')}
+                        </span>
+                        {totalTasks > 0 && (
+                          <Badge variant="secondary" className="text-xs px-1">
+                            {completedTasks}/{totalTasks}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Tarefas do dia */}
+                      <div className="space-y-1">
+                        {dayTasks.slice(0, 3).map(task => (
+                          <div
+                            key={task.id}
+                            className={`
+                              text-xs p-1 rounded truncate cursor-pointer
+                              ${task.isConcluded 
+                                ? 'bg-green-100 text-green-800 line-through' 
+                                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                              }
+                            `}
+                            title={task.title}
+                            onClick={() => openTaskModal(task)}
+                          >
+                            <div className="flex items-center gap-1">
+                              <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
+                              <span className="truncate">{task.title}</span>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {dayTasks.length > 3 && (
+                          <div className="text-xs text-muted-foreground p-1">
+                            +{dayTasks.length - 3} mais
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {viewType === 'week' && (
+            <>
+              {/* Cabeçalho da semana */}
+              <div className="grid grid-cols-7 gap-2 mb-4">
+                {calendarDays.map(day => {
+                  const isToday = isSameDay(day, new Date());
+                  return (
+                    <div key={day.toString()} className="text-center p-2">
+                      <div className="text-sm text-muted-foreground">{format(day, 'EEE', { locale: ptBR })}</div>
+                      <div className={`text-lg font-medium ${isToday ? 'text-primary font-bold' : 'text-foreground'}`}>
+                        {format(day, 'd')}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Grid da semana */}
+              <div className="grid grid-cols-7 gap-2">
+                {calendarDays.map(day => {
+                  const dayTasks = getTasksForDate(day);
+                  const isToday = isSameDay(day, new Date());
+                  const completedTasks = dayTasks.filter(task => task.isConcluded).length;
+                  const totalTasks = dayTasks.length;
+
+                  return (
+                    <div
+                      key={day.toString()}
+                      className={`
+                        min-h-[300px] p-3 border border-border rounded-lg bg-background
+                        ${isToday ? 'ring-2 ring-primary' : ''}
+                      `}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-muted-foreground">
+                          {format(day, 'dd/MM')}
+                        </span>
+                        {totalTasks > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {completedTasks}/{totalTasks}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        {dayTasks.map(task => (
+                          <div
+                            key={task.id}
+                            className={`
+                              text-sm p-2 rounded cursor-pointer
+                              ${task.isConcluded 
+                                ? 'bg-green-100 text-green-800 line-through' 
+                                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                              }
+                            `}
+                            onClick={() => openTaskModal(task)}
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className={`w-2 h-2 rounded-full mt-1 ${getPriorityColor(task.priority)}`} />
+                              <span className="flex-1">{task.title}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {viewType === 'day' && (
+            <div className="space-y-4">
+              {/* Cabeçalho do dia */}
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <h3 className="text-2xl font-bold text-foreground">
+                  {format(currentDate, 'EEEE', { locale: ptBR })}
+                </h3>
+                <p className="text-muted-foreground">
+                  {format(currentDate, 'dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })}
+                </p>
+              </div>
+
+              {/* Tarefas do dia */}
+              <div className="space-y-3">
+                {getTasksForDate(currentDate).length === 0 ? (
+                  <div className="text-center p-8 text-muted-foreground">
+                    Nenhuma tarefa para este dia
+                  </div>
+                ) : (
+                  getTasksForDate(currentDate).map(task => (
+                    <div
+                      key={task.id}
+                      className={`
+                        p-4 border border-border rounded-lg cursor-pointer
+                        ${task.isConcluded 
+                          ? 'bg-green-50 border-green-200' 
+                          : 'bg-background hover:bg-muted/50'
+                        }
+                      `}
+                      onClick={() => openTaskModal(task)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-3 h-3 rounded-full mt-1 ${getPriorityColor(task.priority)}`} />
+                        <div className="flex-1">
+                          <h4 className={`font-medium ${task.isConcluded ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                            {task.title}
+                          </h4>
+                          {task.description && (
+                            <p className={`text-sm mt-1 ${task.isConcluded ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                              {task.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant={task.isConcluded ? 'secondary' : 'default'} className="text-xs">
+                              {task.isConcluded ? 'Concluída' : 'Pendente'}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {task.priority === 'extreme' ? 'Extrema' : task.priority === 'priority' ? 'Prioridade' : 'Nenhuma'}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                    
-                    {dayTasks.length > 3 && (
-                      <div className="text-xs text-muted-foreground p-1">
-                        +{dayTasks.length - 3} mais
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
