@@ -26,7 +26,7 @@ export function WelcomeModal() {
         .from('profiles')
         .select('welcome_shown')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile && !(profile as any).welcome_shown) {
         setIsOpen(true);

@@ -14,11 +14,13 @@ export function useTrialManagement() {
 
   const getTrialStatus = async (userId: string): Promise<TrialStatus> => {
     try {
+      // Get the first user role with trial information
       const { data, error } = await supabase
         .from('user_roles')
         .select('trial_expires_at, is_permanent')
         .eq('user_id', userId)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error) throw error;
 
