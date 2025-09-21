@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { useUserRoles, AppRole } from '@/hooks/useUserRoles';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import { useTrialManagement, TrialStatus } from '@/hooks/useTrialManagement';
+import { useUserTaskStats } from '@/hooks/useUserTaskStats';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye, Clock, CheckCircle, Mail, MailCheck, UserX } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye, Clock, CheckCircle, Mail, MailCheck, UserX, MoreHorizontal, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +23,7 @@ export function UserManagement() {
   const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers, confirmUserEmail, createMissingProfile } = useUserRoles();
   const { startImpersonation } = useImpersonation();
   const { getTrialStatus, setTrialPeriod, activatePermanent, disableUser, loading: trialLoading } = useTrialManagement();
+  const { data: taskStats = [] } = useUserTaskStats();
   const [selectedRole, setSelectedRole] = useState<AppRole>('user');
   const [passwordChangeOpen, setPasswordChangeOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -36,6 +39,7 @@ export function UserManagement() {
   const [trialModalOpen, setTrialModalOpen] = useState(false);
   const [trialDays, setTrialDays] = useState('');
   const [userTrialStatus, setUserTrialStatus] = useState<Record<string, TrialStatus>>({});
+  const [disableUserModalOpen, setDisableUserModalOpen] = useState(false);
 
   const getRoleBadgeVariant = (role: AppRole) => {
     switch (role) {
@@ -330,200 +334,183 @@ export function UserManagement() {
                   <TableHead>Status Email</TableHead>
                   <TableHead>Roles</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Total Tarefas</TableHead>
+                  <TableHead>Últimos 7 Dias</TableHead>
                   <TableHead>Criado em</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {user.name || 'Sem nome'}
-                        {!user.has_profile && (
-                          <Badge variant="outline" className="text-xs">
-                            <UserX className="w-3 h-3 mr-1" />
-                            Sem perfil
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {user.email}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {user.email_confirmed ? (
-                          <Badge variant="default" className="gap-1">
-                            <MailCheck className="w-3 h-3" />
-                            Confirmado
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="gap-1">
-                            <Mail className="w-3 h-3" />
-                            Pendente
-                          </Badge>
-                        )}
-                        {user.email_confirmed_at && (
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(user.email_confirmed_at), {
-                              addSuffix: true,
-                              locale: ptBR
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {user.roles.map((role) => (
-                          <Badge key={role} variant={getRoleBadgeVariant(role)}>
-                            {role}
-                          </Badge>
-                        ))}
-                        {user.roles.length === 0 && (
-                          <Badge variant="outline">Desabilitado</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getUserStatusBadge(user.roles, user.id)}
-                    </TableCell>
-                    <TableCell>
-                      {user.created_at && formatDistanceToNow(new Date(user.created_at), {
-                        addSuffix: true,
-                        locale: ptBR
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <Select
-                          value={selectedRole}
-                          onValueChange={(value) => setSelectedRole(value as AppRole)}
-                        >
-                          <SelectTrigger className="w-20 h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => addRoleToUser(user.id, selectedRole)}
-                          disabled={hasRole(user.roles, selectedRole)}
-                          className="h-8 px-2"
-                        >
-                          +
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => removeRoleFromUser(user.id, selectedRole)}
-                          disabled={!hasRole(user.roles, selectedRole)}
-                          className="h-8 px-2"
-                        >
-                          -
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => openPasswordChange(user.id)}
-                          className="h-8 px-2"
-                        >
-                          <Key className="w-3 h-3" />
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => startImpersonation(user.id, user.name, user.email)}
-                          className="h-8 px-2"
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Button>
-
-                        {!user.email_confirmed && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => confirmUserEmail(user.id)}
-                            className="h-8 px-2"
-                          >
-                            <MailCheck className="w-3 h-3" />
-                          </Button>
-                        )}
-
-                        {!user.has_profile && (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => createMissingProfile(user.id)}
-                            className="h-8 px-2"
-                          >
-                            <UserPlus className="w-3 h-3" />
-                          </Button>
-                        )}
-
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => openTrialModal(user.id)}
-                          disabled={trialLoading}
-                          className="h-8 px-2"
-                        >
-                          <Clock className="w-3 h-3" />
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleActivatePermanent(user.id)}
-                          disabled={trialLoading}
-                          className="h-8 px-2"
-                        >
-                          <CheckCircle className="w-3 h-3" />
-                        </Button>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={trialLoading}
-                              className="h-8 px-2"
-                            >
-                              <ShieldX className="w-3 h-3" />
+                {allUsers.map((user) => {
+                  const userStats = taskStats.find(stat => stat.userId === user.id);
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {user.name || 'Sem nome'}
+                          {!user.has_profile && (
+                            <Badge variant="outline" className="text-xs">
+                              <UserX className="w-3 h-3 mr-1" />
+                              Sem perfil
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {user.email}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {user.email_confirmed ? (
+                            <Badge variant="default" className="gap-1">
+                              <MailCheck className="w-3 h-3" />
+                              Confirmado
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="gap-1">
+                              <Mail className="w-3 h-3" />
+                              Pendente
+                            </Badge>
+                          )}
+                          {user.email_confirmed_at && (
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(user.email_confirmed_at), {
+                                addSuffix: true,
+                                locale: ptBR
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {user.roles.map((role) => (
+                            <Badge key={role} variant={getRoleBadgeVariant(role)}>
+                              {role}
+                            </Badge>
+                          ))}
+                          {user.roles.length === 0 && (
+                            <Badge variant="outline">Desabilitado</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getUserStatusBadge(user.roles, user.id)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium">{userStats?.totalTasks || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium">{userStats?.tasksLast7Days || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.created_at && formatDistanceToNow(new Date(user.created_at), {
+                          addSuffix: true,
+                          locale: ptBR
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Desabilitar usuário?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Este usuário será desabilitado e não poderá mais acessar o sistema.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDisableUser(user.id)}
-                              >
-                                Desabilitar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={() => startImpersonation(user.id, user.name, user.email)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Visualizar como usuário
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openPasswordChange(user.id)}>
+                              <Key className="mr-2 h-4 w-4" />
+                              Alterar senha
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem 
+                              onClick={() => addRoleToUser(user.id, selectedRole)}
+                              disabled={hasRole(user.roles, selectedRole)}
+                            >
+                              <ShieldCheck className="mr-2 h-4 w-4" />
+                              Adicionar role: {selectedRole}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => removeRoleFromUser(user.id, selectedRole)}
+                              disabled={!hasRole(user.roles, selectedRole)}
+                            >
+                              <ShieldX className="mr-2 h-4 w-4" />
+                              Remover role: {selectedRole}
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            
+                            {!user.email_confirmed && (
+                              <DropdownMenuItem onClick={() => confirmUserEmail(user.id)}>
+                                <MailCheck className="mr-2 h-4 w-4" />
+                                Confirmar email
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {!user.has_profile && (
+                              <DropdownMenuItem onClick={() => createMissingProfile(user.id)}>
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Criar perfil
+                              </DropdownMenuItem>
+                            )}
+                            
+                            <DropdownMenuItem onClick={() => openTrialModal(user.id)} disabled={trialLoading}>
+                              <Clock className="mr-2 h-4 w-4" />
+                              Configurar período teste
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem onClick={() => handleActivatePermanent(user.id)} disabled={trialLoading}>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Ativar permanente
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedUserId(user.id);
+                                setDisableUserModalOpen(true);
+                              }}
+                              className="text-destructive focus:text-destructive"
+                              disabled={trialLoading}
+                            >
+                              <ShieldX className="mr-2 h-4 w-4" />
+                              Desabilitar usuário
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        
+                        <div className="ml-2 inline-flex">
+                          <Select
+                            value={selectedRole}
+                            onValueChange={(value) => setSelectedRole(value as AppRole)}
+                          >
+                            <SelectTrigger className="w-20 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -681,6 +668,32 @@ export function UserManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Desabilitação de Usuário */}
+      <AlertDialog open={disableUserModalOpen} onOpenChange={setDisableUserModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desabilitar usuário?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este usuário será desabilitado e não poderá mais acessar o sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (selectedUserId) {
+                  handleDisableUser(selectedUserId);
+                  setDisableUserModalOpen(false);
+                  setSelectedUserId(null);
+                }
+              }}
+            >
+              Desabilitar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
