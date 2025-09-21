@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, Users, Clock, Target, Calendar, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
+import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { useState } from "react";
 import { TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo, getDateRange } from "@/lib/utils";
@@ -24,6 +25,7 @@ const StatsPage = () => {
 
   const { tasks } = useSupabaseTasks(filters);
   const { people } = useSupabasePeople();
+  const { teamMembers } = useSupabaseTeamMembers();
 
   // Estatísticas básicas
   const totalTasks = tasks.length;
@@ -54,7 +56,24 @@ const StatsPage = () => {
     { name: '1h', value: tasks.filter(t => t.timeInvestment === 'high').length }
   ];
 
-  // Tarefas por pessoa
+  // Tarefas delegadas por pessoa (people) e equipe (team_members)
+  const delegatedTasks = tasks.filter(t => t.assignedPersonId);
+  
+  const delegatedTasksByAssignee = [...people, ...teamMembers].map(assignee => {
+    const assigneeTasks = delegatedTasks.filter(t => t.assignedPersonId === assignee.id);
+    const completedCount = assigneeTasks.filter(t => t.isConcluded).length;
+    
+    return {
+      name: assignee.name,
+      type: 'name' in assignee && assignee.role ? `Pessoa - ${assignee.role}` : `Equipe - ${assignee.role || 'Membro'}`,
+      total: assigneeTasks.length,
+      completed: completedCount,
+      pending: assigneeTasks.length - completedCount,
+      completionRate: assigneeTasks.length > 0 ? Math.round((completedCount / assigneeTasks.length) * 100) : 0
+    };
+  }).filter(p => p.total > 0).sort((a, b) => b.total - a.total);
+
+  // Tarefas por pessoa (mantendo o original para compatibilidade)
   const tasksByPerson = people.map(person => ({
     name: person.name,
     total: tasks.filter(t => t.assignedPersonId === person.id).length,
@@ -208,47 +227,124 @@ const StatsPage = () => {
       </div>
 
       {/* Análise por pessoa e tempo */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6">
+        {/* Novo gráfico de tarefas delegadas */}
         <Card>
           <CardHeader>
-            <CardTitle>Tarefas por Pessoa</CardTitle>
+            <CardTitle>Tarefas Delegadas - Pessoas e Equipes</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Distribuição das tarefas delegadas entre pessoas e membros da equipe
+            </p>
           </CardHeader>
           <CardContent>
-            {tasksByPerson.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={tasksByPerson}>
+            {delegatedTasksByAssignee.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={delegatedTasksByAssignee} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
+                  <XAxis type="number" />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    width={120}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+                            <p className="font-medium">{label}</p>
+                            <p className="text-sm text-muted-foreground">{data.type}</p>
+                            <div className="space-y-1 mt-2">
+                              <p className="text-sm">
+                                <span className="text-blue-600">Total: {data.total}</span>
+                              </p>
+                              <p className="text-sm">
+                                <span className="text-green-600">Concluídas: {data.completed}</span>
+                              </p>
+                              <p className="text-sm">
+                                <span className="text-orange-600">Pendentes: {data.pending}</span>
+                              </p>
+                              <p className="text-sm">
+                                <span className="text-purple-600">Taxa: {data.completionRate}%</span>
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Bar dataKey="total" fill="#8884d8" name="Total" />
                   <Bar dataKey="completed" fill="#82ca9d" name="Concluídas" />
+                  <Bar dataKey="pending" fill="#ffc658" name="Pendentes" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              <div className="flex items-center justify-center h-[400px] text-muted-foreground">
                 Nenhuma tarefa delegada encontrada
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição por Tempo Estimado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={timeStats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#FFBB28" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Gráficos menores lado a lado */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição por Tempo Estimado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={timeStats}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#FFBB28" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Performers - Delegadas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {delegatedTasksByAssignee.slice(0, 5).map((assignee, index) => (
+                  <div key={assignee.name} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                        index === 1 ? 'bg-gray-100 text-gray-800' :
+                        index === 2 ? 'bg-orange-100 text-orange-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{assignee.name}</p>
+                        <p className="text-xs text-muted-foreground">{assignee.type}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{assignee.total} tarefas</p>
+                      <p className="text-sm text-muted-foreground">{assignee.completionRate}% concluídas</p>
+                    </div>
+                  </div>
+                ))}
+                {delegatedTasksByAssignee.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma tarefa delegada
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Insights e métricas avançadas */}
