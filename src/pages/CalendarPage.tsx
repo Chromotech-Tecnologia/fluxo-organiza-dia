@@ -7,11 +7,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucide-react";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useModalStore } from "@/stores/useModalStore";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, startOfDay, endOfDay, addDays, subDays, addWeeks, subWeeks } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, startOfDay, endOfDay, addDays, subDays, addWeeks, subWeeks, startOfYear, endOfYear, addYears, subYears, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Task } from "@/types";
 
-type ViewType = 'day' | 'week' | 'month';
+type ViewType = 'day' | 'week' | 'month' | 'year';
 
 const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -32,6 +32,13 @@ const CalendarPage = () => {
         return {
           start: format(weekStart, 'yyyy-MM-dd'),
           end: format(weekEnd, 'yyyy-MM-dd')
+        };
+      case 'year':
+        const yearStart = startOfYear(currentDate);
+        const yearEnd = endOfYear(currentDate);
+        return {
+          start: format(yearStart, 'yyyy-MM-dd'),
+          end: format(yearEnd, 'yyyy-MM-dd')
         };
       case 'month':
       default:
@@ -57,6 +64,11 @@ const CalendarPage = () => {
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
         const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
         return eachDayOfInterval({ start: weekStart, end: weekEnd });
+      case 'year':
+        // Para visualização anual, retornamos os meses do ano
+        const yearStart = startOfYear(currentDate);
+        const yearEnd = endOfYear(currentDate);
+        return eachMonthOfInterval({ start: yearStart, end: yearEnd });
       case 'month':
       default:
         const monthStart = startOfMonth(currentDate);
@@ -89,6 +101,8 @@ const CalendarPage = () => {
           return direction === 'prev' ? subDays(prev, 1) : addDays(prev, 1);
         case 'week':
           return direction === 'prev' ? subWeeks(prev, 1) : addWeeks(prev, 1);
+        case 'year':
+          return direction === 'prev' ? subYears(prev, 1) : addYears(prev, 1);
         case 'month':
         default:
           return direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1);
@@ -104,6 +118,8 @@ const CalendarPage = () => {
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
         const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
         return `${format(weekStart, 'dd/MM', { locale: ptBR })} - ${format(weekEnd, 'dd/MM/yyyy', { locale: ptBR })}`;
+      case 'year':
+        return format(currentDate, 'yyyy', { locale: ptBR });
       case 'month':
       default:
         return format(currentDate, 'MMMM yyyy', { locale: ptBR });
@@ -156,6 +172,7 @@ const CalendarPage = () => {
                   <TabsTrigger value="day">Dia</TabsTrigger>
                   <TabsTrigger value="week">Semana</TabsTrigger>
                   <TabsTrigger value="month">Mês</TabsTrigger>
+                  <TabsTrigger value="year">Ano</TabsTrigger>
                 </TabsList>
               </Tabs>
               
@@ -384,10 +401,115 @@ const CalendarPage = () => {
               </div>
             </div>
           )}
+
+          {viewType === 'year' && (
+            <div className="space-y-6">
+              {/* Cabeçalho do ano */}
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <h3 className="text-3xl font-bold text-foreground">
+                  {format(currentDate, 'yyyy')}
+                </h3>
+                <p className="text-muted-foreground">
+                  Visualização anual das tarefas
+                </p>
+              </div>
+
+              {/* Grid dos meses */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {calendarDays.map((month, index) => {
+                  // Obter o range de dias do mês para calcular tarefas
+                  const monthStart = startOfMonth(month);
+                  const monthEnd = endOfMonth(month);
+                  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+                  
+                  // Calcular tarefas do mês
+                  const monthTasks = monthDays.reduce((acc: Task[], day) => {
+                    const dayTasks = getTasksForDate(day);
+                    return [...acc, ...dayTasks];
+                  }, []);
+                  
+                  const completedTasks = monthTasks.filter(task => task.isConcluded).length;
+                  const totalTasks = monthTasks.length;
+                  
+                  return (
+                    <Card 
+                      key={index} 
+                      className={`cursor-pointer hover:shadow-md transition-shadow ${
+                        isSameMonth(month, new Date()) ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => {
+                        setCurrentDate(month);
+                        setViewType('month');
+                      }}
+                    >
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-center">
+                          {format(month, 'MMMM', { locale: ptBR })}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        {/* Mini calendário do mês */}
+                        <div className="space-y-2">
+                          {/* Estatísticas do mês */}
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Tarefas:</span>
+                            <span className="font-medium">{totalTasks}</span>
+                          </div>
+                          {totalTasks > 0 && (
+                            <>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Concluídas:</span>
+                                <span className="text-green-600">{completedTasks}</span>
+                              </div>
+                              <div className="w-full bg-secondary rounded-full h-2">
+                                <div 
+                                  className="bg-primary h-2 rounded-full transition-all" 
+                                  style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
+                                />
+                              </div>
+                              <div className="text-center text-xs text-muted-foreground">
+                                {Math.round((completedTasks / totalTasks) * 100)}% concluído
+                              </div>
+                            </>
+                          )}
+                          {totalTasks === 0 && (
+                            <div className="text-center text-sm text-muted-foreground py-4">
+                              Nenhuma tarefa
+                            </div>
+                          )}
+                          
+                          {/* Preview das tarefas mais prioritárias */}
+                          {monthTasks.length > 0 && (
+                            <div className="space-y-1 mt-3">
+                              <div className="text-xs font-medium text-muted-foreground">Principais:</div>
+                              {monthTasks
+                                .filter(task => !task.isConcluded)
+                                .sort((a, b) => {
+                                  const priorityOrder = { extreme: 3, priority: 2, none: 1 };
+                                  return priorityOrder[b.priority] - priorityOrder[a.priority];
+                                })
+                                .slice(0, 3)
+                                .map(task => (
+                                  <div key={task.id} className="flex items-center gap-1">
+                                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
+                                    <span className="text-xs truncate">{task.title}</span>
+                                  </div>
+                                ))
+                              }
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Resumo do mês */}
+      {/* Resumo do período */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
