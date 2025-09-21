@@ -3,25 +3,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { TrendingUp, Users, Clock, Target, Calendar, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { TrendingUp, Users, Clock, Target, Calendar as CalendarIcon, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useSupabasePeople } from "@/hooks/useSupabasePeople";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TaskFilter } from "@/types";
 import { getCurrentDateInSaoPaulo, getDateRange } from "@/lib/utils";
 import { getTimeInMinutes } from "@/lib/taskUtils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const StatsPage = () => {
   const today = getCurrentDateInSaoPaulo();
-  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [period, setPeriod] = useState<'week' | 'month' | 'year' | 'custom'>('month');
+  const [customStartDate, setCustomStartDate] = useState<Date>();
+  const [customEndDate, setCustomEndDate] = useState<Date>();
   
-  const [filters] = useState<TaskFilter>({
-    dateRange: getDateRange(period)
-  });
+  // Calcular filtros baseado no período selecionado
+  const filters = useMemo((): TaskFilter => {
+    if (period === 'custom' && customStartDate && customEndDate) {
+      return {
+        dateRange: {
+          start: format(customStartDate, 'yyyy-MM-dd'),
+          end: format(customEndDate, 'yyyy-MM-dd')
+        }
+      };
+    }
+    return {
+      dateRange: getDateRange(period === 'custom' ? 'month' : period)
+    };
+  }, [period, customStartDate, customEndDate]);
 
   const { tasks } = useSupabaseTasks(filters);
   const { people } = useSupabasePeople();
@@ -110,18 +128,86 @@ const StatsPage = () => {
           <h1 className="text-3xl font-bold text-foreground">Estatísticas</h1>
           <p className="text-muted-foreground">
             Análise completa do seu desempenho
+            {period === 'custom' && customStartDate && customEndDate && (
+              <span className="ml-2 text-sm">
+                ({format(customStartDate, "dd/MM/yyyy", { locale: ptBR })} - {format(customEndDate, "dd/MM/yyyy", { locale: ptBR })})
+              </span>
+            )}
           </p>
         </div>
-        <Select value={period} onValueChange={(value: 'week' | 'month' | 'year') => setPeriod(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="week">Última Semana</SelectItem>
-            <SelectItem value="month">Último Mês</SelectItem>
-            <SelectItem value="year">Último Ano</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-4">
+          <Select value={period} onValueChange={(value: 'week' | 'month' | 'year' | 'custom') => setPeriod(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">Última Semana</SelectItem>
+              <SelectItem value="month">Último Mês</SelectItem>
+              <SelectItem value="year">Último Ano</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {period === 'custom' && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !customStartDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customStartDate ? format(customStartDate, "dd/MM/yyyy") : "Data inicial"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customStartDate}
+                    onSelect={setCustomStartDate}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <span className="text-muted-foreground">até</span>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !customEndDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customEndDate ? format(customEndDate, "dd/MM/yyyy") : "Data final"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customEndDate}
+                    onSelect={setCustomEndDate}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {(!customStartDate || !customEndDate) && (
+                <Badge variant="outline" className="text-xs">
+                  Selecione as datas
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Cards de métricas principais */}
