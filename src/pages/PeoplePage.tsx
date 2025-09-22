@@ -15,17 +15,53 @@ export default function PeoplePage() {
   const { teamMembers, deleteTeamMember, refetch: refetchTeamMembers } = useSupabaseTeamMembers();
   const { openTeamMemberModal, openDeleteModal } = useModalStore();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<{
+    status?: string;
+    skill?: string;
+    projectStatus?: string;
+    projectName?: string;
+  }>({});
 
-  // Filtrar team members baseado na busca
+  // Filtrar team members baseado na busca e filtros
   const filteredTeamMembers = teamMembers.filter(member => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      member.name.toLowerCase().includes(query) ||
-      member.role?.toLowerCase().includes(query) ||
-      member.email?.toLowerCase().includes(query)
-    );
+    // Filtro por busca
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = (
+        member.name.toLowerCase().includes(query) ||
+        member.role?.toLowerCase().includes(query) ||
+        member.email?.toLowerCase().includes(query)
+      );
+      if (!matchesSearch) return false;
+    }
+
+    // Filtro por status
+    if (filters.status && member.status !== filters.status) {
+      return false;
+    }
+
+    // Filtro por habilidade
+    if (filters.skill && (!member.skillIds || !member.skillIds.includes(filters.skill))) {
+      return false;
+    }
+
+    // Filtro por status do projeto
+    if (filters.projectStatus) {
+      const hasMatchingProjectStatus = member.projects?.some((project: any) => 
+        project.status === filters.projectStatus
+      );
+      if (!hasMatchingProjectStatus) return false;
+    }
+
+    // Filtro por nome do projeto
+    if (filters.projectName) {
+      const hasMatchingProjectName = member.projects?.some((project: any) => 
+        project.name === filters.projectName
+      );
+      if (!hasMatchingProjectName) return false;
+    }
+
+    return true;
   });
 
   const handleEditTeamMember = (teamMember: TeamMember) => {
@@ -59,6 +95,7 @@ export default function PeoplePage() {
           onSearchChange={setSearchQuery}
           filters={filters}
           onFiltersChange={setFilters}
+          teamMembers={teamMembers}
         />
 
         {/* Resultados */}

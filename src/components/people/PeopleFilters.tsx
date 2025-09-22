@@ -13,19 +13,42 @@ interface PeopleFiltersProps {
   filters: {
     status?: string;
     skill?: string;
-    project?: string;
+    projectStatus?: string;
+    projectName?: string;
   };
   onFiltersChange: (filters: any) => void;
+  teamMembers?: any[]; // Para extrair projetos disponíveis
 }
 
 export function PeopleFilters({
   searchQuery,
   onSearchChange,
   filters,
-  onFiltersChange
+  onFiltersChange,
+  teamMembers = []
 }: PeopleFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
   const { skills } = useSupabaseSkills();
+
+  // Extrair dados dos projetos para os filtros
+  const projectData = teamMembers.reduce((acc, member) => {
+    if (member.projects && Array.isArray(member.projects)) {
+      member.projects.forEach((project: any) => {
+        if (project.name && typeof project.name === 'string' && !acc.names.has(project.name)) {
+          acc.names.add(project.name);
+        }
+        if (project.status && typeof project.status === 'string' && !acc.statuses.has(project.status)) {
+          acc.statuses.add(project.status);
+        }
+      });
+    }
+    return acc;
+  }, { names: new Set<string>(), statuses: new Set<string>() });
+
+  const availableProjectNames = [...projectData.names] as string[];
+  const availableProjectStatuses = [...projectData.statuses].filter((status: string) => 
+    !['apresentado', 'cotado', 'iniciado', 'finalizado'].includes(status)
+  ) as string[];
 
   const handleFilterChange = (key: string, value: string | undefined) => {
     onFiltersChange({
@@ -95,7 +118,7 @@ export function PeopleFilters({
 
         {/* Filtros expandidos */}
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
             {/* Filtro por Status */}
             <div>
               <label className="text-sm font-medium mb-2 block">Status</label>
@@ -110,7 +133,6 @@ export function PeopleFilters({
                   <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="ativo">Ativo</SelectItem>
                   <SelectItem value="inativo">Inativo</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -136,21 +158,48 @@ export function PeopleFilters({
               </Select>
             </div>
 
-            {/* Filtro por Projeto */}
+            {/* Filtro por Status do Projeto */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Projeto</label>
+              <label className="text-sm font-medium mb-2 block">Status do Projeto</label>
               <Select
-                value={filters.project || "all"}
-                onValueChange={(value) => handleFilterChange("project", value)}
+                value={filters.projectStatus || "all"}
+                onValueChange={(value) => handleFilterChange("projectStatus", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="apresentado">Apresentado</SelectItem>
+                  <SelectItem value="cotado">Cotado</SelectItem>
+                  <SelectItem value="iniciado">Iniciado</SelectItem>
+                  <SelectItem value="finalizado">Finalizado</SelectItem>
+                  {availableProjectStatuses.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtro por Nome do Projeto */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Nome do Projeto</label>
+              <Select
+                value={filters.projectName || "all"}
+                onValueChange={(value) => handleFilterChange("projectName", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os projetos" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os projetos</SelectItem>
-                  <SelectItem value="projeto-a">Projeto A</SelectItem>
-                  <SelectItem value="projeto-b">Projeto B</SelectItem>
-                  <SelectItem value="projeto-c">Projeto C</SelectItem>
+                  {availableProjectNames.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -186,13 +235,26 @@ export function PeopleFilters({
                 </Button>
               </Badge>
             )}
-            {filters.project && (
+            {filters.projectStatus && (
               <Badge variant="outline" className="gap-1">
-                Projeto: {filters.project}
+                Status: {filters.projectStatus.charAt(0).toUpperCase() + filters.projectStatus.slice(1)}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleFilterChange("project", undefined)}
+                  onClick={() => handleFilterChange("projectStatus", undefined)}
+                  className="h-auto p-0 ml-1 hover:bg-transparent"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            )}
+            {filters.projectName && (
+              <Badge variant="outline" className="gap-1">
+                Projeto: {filters.projectName}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFilterChange("projectName", undefined)}
                   className="h-auto p-0 ml-1 hover:bg-transparent"
                 >
                   <X className="h-3 w-3" />
