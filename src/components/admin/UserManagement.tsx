@@ -13,14 +13,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye, Clock, CheckCircle, Mail, MailCheck, UserX, MoreHorizontal, FileText } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, UserPlus, Users, Key, Eye, Clock, CheckCircle, Mail, MailCheck, UserX, MoreHorizontal, FileText, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export function UserManagement() {
-  const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers, confirmUserEmail, createMissingProfile } = useUserRoles();
+  const { allUsers, loading, addRoleToUser, removeRoleFromUser, toggleUserStatus, loadAllUsers, confirmUserEmail, createMissingProfile, deleteUser } = useUserRoles();
   const { startImpersonation } = useImpersonation();
   const { getTrialStatus, setTrialPeriod, activatePermanent, disableUser, loading: trialLoading } = useTrialManagement();
   const { data: taskStats = [] } = useUserTaskStats();
@@ -40,6 +40,8 @@ export function UserManagement() {
   const [trialDays, setTrialDays] = useState('');
   const [userTrialStatus, setUserTrialStatus] = useState<Record<string, TrialStatus>>({});
   const [disableUserModalOpen, setDisableUserModalOpen] = useState(false);
+  const [deleteUserModalOpen, setDeleteUserModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string; email: string } | null>(null);
 
   const getRoleBadgeVariant = (role: AppRole) => {
     switch (role) {
@@ -242,6 +244,21 @@ export function UserManagement() {
 
   const handleDisableUser = async (userId: string) => {
     await disableUser(userId);
+    loadTrialStatuses();
+    loadAllUsers();
+  };
+
+  const openDeleteUserModal = (user: { id: string; name: string; email: string }) => {
+    setUserToDelete(user);
+    setDeleteUserModalOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    await deleteUser(userToDelete.id);
+    setDeleteUserModalOpen(false);
+    setUserToDelete(null);
     loadTrialStatuses();
     loadAllUsers();
   };
@@ -490,6 +507,14 @@ export function UserManagement() {
                               <ShieldX className="mr-2 h-4 w-4" />
                               Desabilitar usuário
                             </DropdownMenuItem>
+                            
+                            <DropdownMenuItem 
+                              onClick={() => openDeleteUserModal({ id: user.id, name: user.name || 'Usuário', email: user.email })}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir usuário
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                         
@@ -690,6 +715,27 @@ export function UserManagement() {
               }}
             >
               Desabilitar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Modal de Exclusão de Usuário */}
+      <AlertDialog open={deleteUserModalOpen} onOpenChange={setDeleteUserModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir usuário permanentemente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O usuário <strong>{userToDelete?.name || userToDelete?.email}</strong> será excluído permanentemente do sistema, incluindo todos os seus dados associados (tarefas, pessoas, equipe, etc.).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir Permanentemente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -292,6 +292,47 @@ export function useUserRoles() {
     }
   };
 
+  // Delete user completely
+  const deleteUser = async (userId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('User not authenticated');
+      }
+
+      const response = await fetch('https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/admin-manage-users', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'delete_user',
+          userId: userId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário excluído com sucesso"
+      });
+
+      loadAllUsers();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao excluir usuário",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
     userRoles,
     allUsers,
@@ -305,6 +346,7 @@ export function useUserRoles() {
     toggleUserStatus,
     confirmUserEmail,
     createMissingProfile,
+    deleteUser,
     refetch: loadAllUsers
   };
 }

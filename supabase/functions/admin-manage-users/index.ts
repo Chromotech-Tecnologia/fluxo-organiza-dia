@@ -162,6 +162,31 @@ serve(async (req) => {
       )
     }
 
+    if (method === 'DELETE' && body.action === 'delete_user') {
+      const { userId } = body
+      
+      if (!userId) {
+        return new Response(
+          JSON.stringify({ error: 'userId is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Delete user from auth (this will cascade to related data due to foreign keys)
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
+      
+      if (deleteError) {
+        throw deleteError
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          message: 'User deleted successfully'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
