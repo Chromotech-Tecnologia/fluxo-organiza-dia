@@ -53,7 +53,7 @@ export function CTASection() {
                   const message = encodeURIComponent('Olá! Gostaria de falar com um especialista sobre o OrganizeSe.');
                   window.open(`https://wa.me/5511969169869?text=${message}`, '_blank');
                 }}
-                className="text-xl px-10 py-4 h-auto border-2 border-white text-white hover:bg-white hover:text-primary"
+                className="text-xl px-10 py-4 h-auto border-2 border-white text-primary hover:bg-white hover:text-primary"
               >
                 Falar com Especialista
               </Button>
