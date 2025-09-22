@@ -54,6 +54,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
   const { toast } = useToast();
   const [newProject, setNewProject] = useState({ name: '', status: 'apresentado' as const });
   const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [skillAreaFilter, setSkillAreaFilter] = useState('');
 
   const form = useForm<TeamMemberFormValues>({
     resolver: zodResolver(teamMemberFormSchema),
@@ -180,6 +181,12 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
   };
 
   const stats = getProjectStats();
+
+  // Filtrar habilidades por área
+  const availableAreas = [...new Set(skills.map(s => s.area).filter(Boolean))];
+  const filteredSkills = skillAreaFilter 
+    ? skills.filter(skill => skill.area === skillAreaFilter)
+    : skills;
 
   return (
     <Form {...form}>
@@ -433,22 +440,40 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
             </Badge>
           </div>
           
-          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
-            {skills.map((skill) => (
-              <div key={skill.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`skill-${skill.id}`}
-                  checked={watchedSkillIds?.includes(skill.id) || false}
-                  onCheckedChange={() => toggleSkill(skill.id)}
-                />
-                <label htmlFor={`skill-${skill.id}`} className="text-sm font-medium leading-none">
-                  {skill.name}
-                </label>
-              </div>
-            ))}
-            {skills.length === 0 && (
-              <p className="text-sm text-muted-foreground col-span-2">Nenhuma habilidade cadastrada</p>
-            )}
+          <div className="space-y-3">
+            <Select value={skillAreaFilter} onValueChange={setSkillAreaFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filtrar por área da empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as áreas</SelectItem>
+                {availableAreas.map((area) => (
+                  <SelectItem key={area} value={area}>
+                    {area}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
+              {filteredSkills.map((skill) => (
+                <div key={skill.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`skill-${skill.id}`}
+                    checked={watchedSkillIds?.includes(skill.id) || false}
+                    onCheckedChange={() => toggleSkill(skill.id)}
+                  />
+                  <label htmlFor={`skill-${skill.id}`} className="text-sm font-medium leading-none">
+                    {skill.name}
+                  </label>
+                </div>
+              ))}
+              {filteredSkills.length === 0 && (
+                <p className="text-sm text-muted-foreground col-span-2">
+                  {skillAreaFilter ? 'Nenhuma habilidade encontrada para esta área' : 'Nenhuma habilidade cadastrada'}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
