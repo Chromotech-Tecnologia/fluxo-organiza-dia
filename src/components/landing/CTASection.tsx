@@ -107,7 +107,7 @@ export function CTASection() {
               <div className="bg-white/10 p-6 rounded-xl border border-white/20">
                 <h4 className="font-bold text-xl mb-2 text-white">🚀 Oferta de Lançamento</h4>
                 <p className="text-white/90 mb-4">
-                  Primeiros 1000 usuários ganham <strong>3 meses grátis</strong> no plano Profissional
+                  Primeiros 1000 usuários ganham <strong>7 dias grátis</strong> no plano Profissional
                 </p>
                 <div className="flex items-center space-x-2 text-sm">
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>

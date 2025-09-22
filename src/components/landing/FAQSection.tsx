@@ -31,7 +31,7 @@ const faqs = [
   },
   {
     question: "Como funciona o período de teste do plano Profissional?",
-    answer: "Todos os novos usuários podem experimentar o plano Profissional gratuitamente por 30 dias, com acesso a todas as funcionalidades premium. Não é necessário cartão de crédito para começar."
+    answer: "Todos os novos usuários podem experimentar o plano Profissional gratuitamente por 7 dias, com acesso a todas as funcionalidades premium. Não é necessário cartão de crédito para começar."
   },
   {
     question: "Posso cancelar a qualquer momento?",

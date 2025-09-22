@@ -40,7 +40,7 @@ const plans = [
       "Backup automático",
       "Personalização completa"
     ],
-    buttonText: "Experimentar Grátis",
+    buttonText: "7 Dias Grátis",
     highlighted: true,
     icon: Zap,
     badge: "Melhor Valor"
@@ -122,7 +122,7 @@ export function PricingSection() {
           <div className="flex justify-center items-center space-x-8 mt-8 text-sm text-muted-foreground">
             <div className="flex items-center space-x-2">
               <Check className="w-4 h-4 text-primary" />
-              <span>30 dias grátis</span>
+              <span>7 dias grátis</span>
             </div>
             <div className="flex items-center space-x-2">
               <Check className="w-4 h-4 text-primary" />
@@ -197,22 +197,6 @@ export function PricingSection() {
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Money back guarantee */}
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-8 text-center mb-16">
-          <h3 className="text-2xl font-bold text-foreground mb-4">
-            💝 Garantia de 30 dias ou seu dinheiro de volta
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            Experimente todos os recursos premium por 30 dias. Se não ficar 100% satisfeito, 
-            devolvemos seu dinheiro sem perguntas.
-          </p>
-          <div className="flex justify-center items-center space-x-8 text-sm text-muted-foreground">
-            <div>✅ Sem risco</div>
-            <div>✅ Sem pegadinhas</div>
-            <div>✅ Reembolso total</div>
-          </div>
         </div>
 
         {/* FAQ */}

@@ -55,7 +55,7 @@ export function HeroSection() {
               </div>
               <div className="flex items-center space-x-2">
                 <CheckCircle className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium">100% gratuito para começar</span>
+                <span>7 dias grátis para começar</span>
               </div>
             </div>
 
