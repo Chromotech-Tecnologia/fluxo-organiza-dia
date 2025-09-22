@@ -111,7 +111,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
               </Button>
             </div>
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
           

@@ -118,7 +118,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
             {loading ? 'Criando conta...' : 'Criar Conta'}
           </Button>
           <Button

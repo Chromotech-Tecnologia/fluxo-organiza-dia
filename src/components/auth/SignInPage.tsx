@@ -8,6 +8,7 @@ import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
 import { EmailConfirmationModal } from '@/components/modals/EmailConfirmationModal';
 import { useModalStore } from '@/stores/useModalStore';
+import logoVertical from '@/assets/logo-vertical.png';
 
 export const SignInPage = () => {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
@@ -69,25 +70,85 @@ export const SignInPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <img 
-            src="/lovable-uploads/62746c0f-6206-4a0e-9672-06fa744bddf2.png" 
-            alt="Organize-se" 
-            className="h-20 w-auto"
-          />
+    <div className="min-h-screen flex">
+      {/* Left Side - Marketing/Info */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary-dark relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img src={logoVertical} alt="Logo" className="w-64 h-auto opacity-20" />
+          </div>
         </div>
         
-        {renderCurrentView()}
-        
-        <EmailConfirmationModal
-          isOpen={isEmailConfirmationModalOpen}
-          onClose={closeEmailConfirmationModal}
-          email={emailConfirmationData?.email}
-          isRegistration={emailConfirmationData?.isRegistration}
-        />
+        <div className="relative z-10 flex flex-col justify-center px-12 text-white">
+          <div className="max-w-md">
+            <h1 className="text-4xl font-bold mb-6">
+              Organize sua vida e trabalho
+            </h1>
+            <p className="text-xl mb-8 text-white/90">
+              A plataforma completa para gerenciar tarefas, equipes e projetos de forma eficiente.
+            </p>
+            
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <span className="text-lg">Gestão inteligente de tarefas</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <span className="text-lg">Colaboração em equipe</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <span className="text-lg">Relatórios e analytics</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <span className="text-lg">Interface intuitiva</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Auth Forms */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8 bg-background">
+        <div className="w-full max-w-md">
+          {/* Header with Logo and Home Link */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="flex justify-between items-center w-full mb-6">
+              <button
+                onClick={() => navigate('/landing')}
+                className="flex items-center space-x-2 text-muted-foreground hover:text-primary transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Voltar para home</span>
+              </button>
+            </div>
+            
+            <img 
+              src="/lovable-uploads/62746c0f-6206-4a0e-9672-06fa744bddf2.png" 
+              alt="Organize-se" 
+              className="h-16 w-auto mb-2"
+            />
+            <h2 className="text-2xl font-semibold text-center">
+              {currentView === 'login' ? 'Bem-vindo de volta!' : 
+               currentView === 'register' ? 'Crie sua conta' :
+               currentView === 'forgot-password' ? 'Recuperar senha' : 'Redefinir senha'}
+            </h2>
+          </div>
+          
+          {renderCurrentView()}
+          
+          <EmailConfirmationModal
+            isOpen={isEmailConfirmationModalOpen}
+            onClose={closeEmailConfirmationModal}
+            email={emailConfirmationData?.email}
+            isRegistration={emailConfirmationData?.isRegistration}
+          />
+        </div>
       </div>
     </div>
   );
