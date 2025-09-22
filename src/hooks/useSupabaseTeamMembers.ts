@@ -227,7 +227,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
     if (user) {
       loadTeamMembers();
       
-      // Setup real-time subscription
+      // Setup real-time subscription  
       const channel = supabase
         .channel('team-members-changes')
         .on(
@@ -239,6 +239,8 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
+            console.log('Real-time update received:', payload);
+            // Reload data quando há mudanças via real-time
             loadTeamMembers();
           }
         )

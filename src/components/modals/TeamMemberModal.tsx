@@ -25,8 +25,6 @@ export function TeamMemberModal() {
           description: "O novo membro foi adicionado com sucesso.",
         });
       }
-      // Forçar atualização da lista
-      setTimeout(() => refetch(), 100);
       closeTeamMemberModal();
     } catch (error) {
       toast({
