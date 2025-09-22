@@ -328,15 +328,16 @@ const StatsPage = () => {
           <CardContent>
             {delegatedTasksByAssignee.length > 0 ? (
               <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={delegatedTasksByAssignee} layout="horizontal">
+                <BarChart data={delegatedTasksByAssignee}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis 
-                    type="category" 
+                  <XAxis 
                     dataKey="name" 
-                    width={120}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
                     tick={{ fontSize: 12 }}
                   />
+                  <YAxis />
                   <Tooltip 
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
@@ -365,9 +366,9 @@ const StatsPage = () => {
                       return null;
                     }}
                   />
-                  <Bar dataKey="feitas" fill="#22c55e" name="Feitas" />
-                  <Bar dataKey="não feitas" fill="#ef4444" name="Não feitas" />
-                  <Bar dataKey="pendentes" fill="#f59e0b" name="Pendentes" />
+                  <Bar dataKey="feitas" stackId="a" fill="#22c55e" name="Feitas" />
+                  <Bar dataKey="não feitas" stackId="a" fill="#ef4444" name="Não feitas" />
+                  <Bar dataKey="pendentes" stackId="a" fill="#f59e0b" name="Pendentes" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
