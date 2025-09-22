@@ -72,7 +72,7 @@ export const SignInPage = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Marketing/Info */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary-dark relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/20 to-primary/40 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 flex items-center justify-center">
@@ -80,31 +80,31 @@ export const SignInPage = () => {
           </div>
         </div>
         
-        <div className="relative z-10 flex flex-col justify-center px-12 text-white">
+        <div className="relative z-10 flex flex-col justify-center px-12 text-primary-foreground">
           <div className="max-w-md">
-            <h1 className="text-4xl font-bold mb-6">
+            <h1 className="text-4xl font-bold mb-6 text-foreground">
               Organize sua vida e trabalho
             </h1>
-            <p className="text-xl mb-8 text-white/90">
+            <p className="text-xl mb-8 text-muted-foreground">
               A plataforma completa para gerenciar tarefas, equipes e projetos de forma eficiente.
             </p>
             
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-lg">Gestão inteligente de tarefas</span>
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-lg text-foreground">Gestão inteligente de tarefas</span>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-lg">Colaboração em equipe</span>
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-lg text-foreground">Colaboração em equipe</span>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-lg">Relatórios e analytics</span>
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-lg text-foreground">Relatórios e analytics</span>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-lg">Interface intuitiva</span>
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-lg text-foreground">Interface intuitiva</span>
               </div>
             </div>
           </div>
