@@ -159,7 +159,13 @@ export function AppSidebar() {
             <SidebarGroupLabel>Sistema</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {settingsItems.map((item) => (
+                {settingsItems.filter(item => {
+                  // Apenas administradores podem ver configurações de perfil
+                  if (item.url === '/settings') {
+                    return isAdmin;
+                  }
+                  return true;
+                }).map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink 
