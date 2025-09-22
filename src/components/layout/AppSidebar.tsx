@@ -83,10 +83,10 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path;
 
-  const getNavClass = ({ isActive }: { isActive: boolean }) =>
+  const getNavClass = (isActive: boolean) =>
     isActive 
-      ? "bg-primary/20 text-primary font-medium border-l-4 border-primary" 
-      : "hover:bg-primary/10 text-slate-700 hover:text-primary transition-all duration-200";
+      ? "bg-green-100 text-primary font-medium border-l-4 border-primary" 
+      : "hover:bg-green-100 text-slate-700 hover:text-primary transition-all duration-200";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"}>
@@ -120,7 +120,7 @@ export function AppSidebar() {
                     <NavLink 
                       to={item.url} 
                       end 
-                      className={getNavClass}
+                      className={({ isActive }) => getNavClass(isActive)}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {!collapsed && <span>{item.title}</span>}
@@ -142,7 +142,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink 
                       to={item.url} 
-                      className={getNavClass}
+                      className={({ isActive }) => getNavClass(isActive)}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {!collapsed && <span>{item.title}</span>}
@@ -167,7 +167,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink 
                       to={item.url} 
-                      className={getNavClass}
+                      className={({ isActive }) => getNavClass(isActive)}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {!collapsed && <span>{item.title}</span>}
