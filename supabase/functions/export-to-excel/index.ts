@@ -1,8 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.53.0';
-import * as XLSX from 'https://cdn.skypack.dev/xlsx@0.18.5';
 import { corsHeaders } from '../_shared/cors.ts';
 
-// Tipos para o request
 interface ExportRequest {
   table: string;
   fields: string[];
@@ -10,123 +8,78 @@ interface ExportRequest {
   endDate?: string;
 }
 
-// Configuração das tabelas e campos válidos
-const TABLE_CONFIGS = {
-  profiles: {
-    table: 'profiles',
-    dateField: 'created_at',
-    allowedFields: ['id', 'name', 'email', 'welcome_shown', 'created_at', 'updated_at'],
-    displayName: 'Usuários'
-  },
-  people: {
-    table: 'people', 
-    dateField: 'created_at',
-    allowedFields: ['id', 'name', 'role', 'phone', 'email', 'department', 'active', 'notes', 'created_at', 'updated_at'],
-    displayName: 'Pessoas'
-  },
-  team_members: {
-    table: 'team_members',
-    dateField: 'created_at', 
-    allowedFields: ['id', 'name', 'email', 'phone', 'role', 'department', 'status', 'hire_date', 'notes', 'created_at', 'updated_at'],
-    displayName: 'Membros da Equipe'
-  },
-  tasks: {
-    table: 'tasks',
-    dateField: 'scheduled_date',
-    allowedFields: ['id', 'title', 'description', 'type', 'priority', 'time_investment', 'category', 'status', 'scheduled_date', 'is_concluded', 'concluded_at', 'is_routine', 'is_forwarded', 'forward_count', 'observations', 'created_at', 'updated_at'],
-    displayName: 'Tarefas'
-  },
-  skills: {
-    table: 'skills',
-    dateField: 'created_at',
-    allowedFields: ['id', 'name', 'description', 'category', 'level', 'created_at', 'updated_at'],
-    displayName: 'Habilidades'
-  }
-};
-
-// Mapeamento de nomes de campos para português
-const FIELD_NAMES = {
-  id: 'ID',
-  name: 'Nome',
-  email: 'Email',
-  welcome_shown: 'Boas-vindas Exibidas',
-  created_at: 'Data de Criação',
-  updated_at: 'Última Atualização',
-  role: 'Função',
-  phone: 'Telefone',
-  department: 'Departamento',
-  active: 'Ativo',
-  notes: 'Observações',
-  status: 'Status',
-  hire_date: 'Data de Contratação',
-  title: 'Título',
-  description: 'Descrição',
-  type: 'Tipo',
-  priority: 'Prioridade',
-  time_investment: 'Tempo Estimado',
-  category: 'Categoria',
-  scheduled_date: 'Data Agendada',
-  is_concluded: 'Concluída',
-  concluded_at: 'Data de Conclusão',
-  is_routine: 'É Rotina',
-  is_forwarded: 'Reagendada',
-  forward_count: 'Qtd. Reagendamentos',
-  observations: 'Observações',
-  level: 'Nível'
-};
-
-// Função para formatar valores para exibição
-function formatValue(value: any, fieldType?: string): any {
+// Função para formatar valores
+function formatValue(value: any): string {
   if (value === null || value === undefined) return '';
   
-  // Formatar booleanos
   if (typeof value === 'boolean') {
     return value ? 'Sim' : 'Não';
   }
   
-  // Formatar datas
-  if (fieldType === 'date' || value instanceof Date) {
+  if (value instanceof Date || (typeof value === 'string' && value.includes('T') && value.includes('Z'))) {
     try {
       const date = new Date(value);
       return date.toLocaleDateString('pt-BR');
     } catch {
-      return value;
+      return String(value);
     }
   }
   
-  return value;
+  return String(value);
 }
 
-// Função para gerar Excel
-function generateExcel(data: any[], fields: string[], tableName: string): Uint8Array {
-  // Preparar cabeçalhos em português
-  const headers = fields.map(field => FIELD_NAMES[field as keyof typeof FIELD_NAMES] || field);
-  
-  // Preparar dados formatados
-  const formattedData = data.map(item => {
-    const row: any = {};
-    fields.forEach((field, index) => {
-      const headerName = headers[index];
-      row[headerName] = formatValue(item[field], field.includes('date') ? 'date' : undefined);
-    });
-    return row;
-  });
+// Função para gerar TSV (Tab-Separated Values) que pode ser aberto no Excel
+function generateTSV(data: any[], fields: string[]): Uint8Array {
+  if (!data || data.length === 0) {
+    return new TextEncoder().encode('Nenhum dado encontrado');
+  }
 
-  // Criar workbook
-  const ws = XLSX.utils.json_to_sheet(formattedData);
+  // Mapeamento de nomes de campos para português
+  const fieldNames: Record<string, string> = {
+    id: 'ID',
+    name: 'Nome',
+    email: 'Email',
+    welcome_shown: 'Boas-vindas Exibidas',
+    created_at: 'Data de Criação',
+    updated_at: 'Última Atualização',
+    role: 'Função',
+    phone: 'Telefone',
+    department: 'Departamento',
+    active: 'Ativo',
+    notes: 'Observações',
+    status: 'Status',
+    hire_date: 'Data de Contratação',
+    title: 'Título',
+    description: 'Descrição',
+    type: 'Tipo',
+    priority: 'Prioridade',
+    time_investment: 'Tempo Estimado',
+    category: 'Categoria',
+    scheduled_date: 'Data Agendada',
+    is_concluded: 'Concluída',
+    concluded_at: 'Data de Conclusão',
+    is_routine: 'É Rotina',
+    is_forwarded: 'Reagendada',
+    forward_count: 'Qtd. Reagendamentos',
+    observations: 'Observações',
+    level: 'Nível'
+  };
+
+  // Cabeçalhos em português
+  const headers = fields.map(field => fieldNames[field] || field);
+  let content = headers.join('\t') + '\n';
   
-  // Definir largura das colunas
-  const columnWidths = headers.map(header => ({ wch: Math.max(header.length, 15) }));
-  ws['!cols'] = columnWidths;
-  
-  // Criar workbook
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, tableName);
-  
-  // Gerar buffer
-  const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-  
-  return new Uint8Array(excelBuffer);
+  // Dados
+  for (const item of data) {
+    const values = fields.map(field => {
+      const value = formatValue(item[field]);
+      // Remover tabs e quebras de linha que podem quebrar o formato
+      return String(value).replace(/\t/g, ' ').replace(/\n/g, ' ').replace(/\r/g, '');
+    });
+    content += values.join('\t') + '\n';
+  }
+
+  return new TextEncoder().encode(content);
 }
 
 Deno.serve(async (req) => {
@@ -169,9 +122,9 @@ Deno.serve(async (req) => {
     // Parse request body
     const { table, fields, startDate, endDate }: ExportRequest = await req.json();
 
-    console.log('Export request:', { table, fields, startDate, endDate, userId: user.id });
+    console.log('Excel export request:', { table, fields: fields.length, userId: user.id });
 
-    // Validar entrada
+    // Validar parâmetros
     if (!table || !fields || fields.length === 0) {
       return new Response(
         JSON.stringify({ error: 'Table and fields are required' }),
@@ -182,52 +135,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validar tabela
-    const tableConfig = TABLE_CONFIGS[table as keyof typeof TABLE_CONFIGS];
-    if (!tableConfig) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid table' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Validar campos
-    const invalidFields = fields.filter(field => !tableConfig.allowedFields.includes(field));
-    if (invalidFields.length > 0) {
-      return new Response(
-        JSON.stringify({ error: `Invalid fields: ${invalidFields.join(', ')}` }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
     // Construir query
     let query = supabase
-      .from(tableConfig.table)
+      .from(table)
       .select(fields.join(', '))
-      .eq('user_id', user.id); // Filtrar por usuário
+      .eq('user_id', user.id);
 
     // Aplicar filtros de data se fornecidos
-    if (startDate && endDate) {
-      query = query
-        .gte(tableConfig.dateField, startDate)
-        .lte(tableConfig.dateField, endDate);
-    } else if (startDate) {
-      query = query.gte(tableConfig.dateField, startDate);
-    } else if (endDate) {
-      query = query.lte(tableConfig.dateField, endDate);
+    if (startDate) {
+      query = query.gte('created_at', startDate);
+    }
+    if (endDate) {
+      query = query.lte('created_at', endDate);
     }
 
-    // Executar query
-    const { data, error } = await query;
+    // Buscar dados
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Database error:', error);
+      console.error('Database query error:', error);
       return new Response(
         JSON.stringify({ error: 'Database query failed' }),
         { 
@@ -237,20 +163,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Found ${data?.length || 0} records for export`);
-
-    // Gerar arquivo Excel
-    const excelBuffer = generateExcel(data || [], fields, tableConfig.displayName);
-
-    // Gerar nome do arquivo
+    // Gerar arquivo TSV
+    const fileData = generateTSV(data || [], fields);
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `${tableConfig.displayName}_${timestamp}.xlsx`;
+    const filename = `export_${table}_${timestamp}.xls`; // .xls extension for Excel compatibility
+
+    console.log(`Export generated: ${filename}, records: ${(data || []).length}`);
 
     return new Response(
       JSON.stringify({
-        fileData: Array.from(excelBuffer), // Converter para array para JSON
+        fileData: Array.from(fileData),
         filename: filename,
-        recordCount: data?.length || 0
+        recordCount: (data || []).length,
+        format: 'excel'
       }),
       {
         headers: {
@@ -261,7 +186,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Export error:', error);
+    console.error('Excel export error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { 

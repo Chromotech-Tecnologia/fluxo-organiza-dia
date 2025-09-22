@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
         
       case 'excel':
         fileData = generateExcel(allData);
-        filename = `database_backup_${timestamp}.xlsx`;
+        filename = `database_backup_${timestamp}.xls`; // Changed extension for compatibility
         break;
         
       case 'csv':

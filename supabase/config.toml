@@ -69,3 +69,9 @@ inspector_port = 54330
 
 [functions.send-auth-emails]
 verify_jwt = false
+
+[functions.export-database]
+verify_jwt = true
+
+[functions.export-to-excel]
+verify_jwt = true
