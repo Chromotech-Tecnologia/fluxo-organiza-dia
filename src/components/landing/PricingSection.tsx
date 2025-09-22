@@ -84,7 +84,7 @@ const faqs = [
   },
   {
     question: "Há desconto para pagamento anual?",
-    answer: "Sim! Oferecemos 2 meses gratuitos para quem opta pelo pagamento anual. Entre em contato para mais detalhes."
+    answer: "Sim! Oferecemos 2 meses gratuitos para quem opta pelo pagamento anual. Entre em contato via WhatsApp para mais detalhes."
   }
 ];
 
@@ -94,8 +94,9 @@ export function PricingSection() {
 
   const handlePlanSelect = (planName: string) => {
     if (planName === "Enterprise") {
-      // Scroll to contact or open contact modal
-      window.open("mailto:contato@organizese.chromotech.com.br?subject=Interesse no Plano Enterprise", "_blank");
+      // Abrir WhatsApp para contato sobre plano Enterprise
+      const message = encodeURIComponent('Olá! Tenho interesse no plano Enterprise do OrganizeSe.');
+      window.open(`https://wa.me/5511969169869?text=${message}`, "_blank");
     } else {
       if (isAuthenticated) {
         navigate('/dashboard');

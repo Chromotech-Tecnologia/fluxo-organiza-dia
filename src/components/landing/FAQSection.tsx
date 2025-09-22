@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     question: "Como funciona o suporte ao cliente?",
-    answer: "Oferecemos suporte por email para todos os planos. Usuários do plano Profissional têm suporte prioritário, e clientes Enterprise contam with suporte dedicado com SLA garantido."
+    answer: "Oferecemos suporte via WhatsApp para todos os planos. É rápido, prático e em português! Nosso time está sempre pronto para ajudar."
   },
   {
     question: "Posso personalizar o sistema para minha empresa?",
@@ -85,18 +85,12 @@ export function FAQSection() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
-                href="mailto:suporte@organizese.chromotech.com.br" 
+                href="https://wa.me/5511969169869?text=Olá! Preciso de ajuda com o OrganizeSe."
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
               >
-                📧 Enviar Email
-              </a>
-              <a 
-                href="https://wa.me/5511999999999" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-6 py-3 border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
-              >
-                📱 WhatsApp
+                💬 Falar no WhatsApp
               </a>
             </div>
           </div>
