@@ -80,13 +80,16 @@ const StatsPage = () => {
   const delegatedTasksByAssignee = [...people, ...teamMembers].map(assignee => {
     const assigneeTasks = delegatedTasks.filter(t => t.assignedPersonId === assignee.id);
     const completedCount = assigneeTasks.filter(t => t.isConcluded).length;
+    const pendingCount = assigneeTasks.filter(t => t.status === 'pending').length;
+    const notDoneCount = assigneeTasks.filter(t => !t.isConcluded && t.status !== 'pending').length;
     
     return {
       name: assignee.name,
       type: 'name' in assignee && assignee.role ? `Pessoa - ${assignee.role}` : `Equipe - ${assignee.role || 'Membro'}`,
       total: assigneeTasks.length,
-      completed: completedCount,
-      pending: assigneeTasks.length - completedCount,
+      feitas: completedCount,
+      'não feitas': notDoneCount,
+      pendentes: pendingCount,
       completionRate: assigneeTasks.length > 0 ? Math.round((completedCount / assigneeTasks.length) * 100) : 0
     };
   }).filter(p => p.total > 0).sort((a, b) => b.total - a.total);
@@ -317,9 +320,9 @@ const StatsPage = () => {
         {/* Novo gráfico de tarefas delegadas */}
         <Card>
           <CardHeader>
-            <CardTitle>Tarefas Delegadas - Pessoas e Equipes</CardTitle>
+            <CardTitle>Tarefas por Equipe</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Distribuição das tarefas delegadas entre pessoas e membros da equipe
+              Quantidade de tarefas feitas, não feitas e pendentes por pessoa e equipe
             </p>
           </CardHeader>
           <CardContent>
@@ -344,16 +347,16 @@ const StatsPage = () => {
                             <p className="text-sm text-muted-foreground">{data.type}</p>
                             <div className="space-y-1 mt-2">
                               <p className="text-sm">
+                                <span className="text-green-600">Feitas: {data.feitas}</span>
+                              </p>
+                              <p className="text-sm">
+                                <span className="text-red-600">Não feitas: {data['não feitas']}</span>
+                              </p>
+                              <p className="text-sm">
+                                <span className="text-orange-600">Pendentes: {data.pendentes}</span>
+                              </p>
+                              <p className="text-sm">
                                 <span className="text-blue-600">Total: {data.total}</span>
-                              </p>
-                              <p className="text-sm">
-                                <span className="text-green-600">Concluídas: {data.completed}</span>
-                              </p>
-                              <p className="text-sm">
-                                <span className="text-orange-600">Pendentes: {data.pending}</span>
-                              </p>
-                              <p className="text-sm">
-                                <span className="text-purple-600">Taxa: {data.completionRate}%</span>
                               </p>
                             </div>
                           </div>
@@ -362,9 +365,9 @@ const StatsPage = () => {
                       return null;
                     }}
                   />
-                  <Bar dataKey="total" fill="#8884d8" name="Total" />
-                  <Bar dataKey="completed" fill="#82ca9d" name="Concluídas" />
-                  <Bar dataKey="pending" fill="#ffc658" name="Pendentes" />
+                  <Bar dataKey="feitas" fill="#22c55e" name="Feitas" />
+                  <Bar dataKey="não feitas" fill="#ef4444" name="Não feitas" />
+                  <Bar dataKey="pendentes" fill="#f59e0b" name="Pendentes" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
