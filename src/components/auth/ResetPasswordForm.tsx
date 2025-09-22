@@ -72,7 +72,7 @@ export const ResetPasswordForm = () => {
       
       // Redirecionar para login após 2 segundos
       setTimeout(() => {
-        navigate('/auth');
+        navigate('/');
       }, 2000);
     } catch (error: any) {
       console.error('Erro ao redefinir senha:', error);

@@ -4,6 +4,7 @@ import React from 'npm:react@18.3.1';
 import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import { ForgotPasswordEmail } from './_templates/forgot-password.tsx';
 import { WelcomeEmail } from './_templates/welcome.tsx';
+import { AccountConfirmationEmail } from './_templates/account-confirmation.tsx';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -13,11 +14,12 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'forgot-password' | 'welcome';
+  type: 'forgot-password' | 'welcome' | 'account-confirmation';
   email: string;
   data: {
     resetLink?: string;
     welcomeLink?: string;
+    confirmLink?: string;
     name?: string;
   };
 }
@@ -55,12 +57,22 @@ const handler = async (req: Request): Promise<Response> => {
         subject = 'Bem-vindo ao OrganizeSe! Confirme sua conta';
         break;
 
+      case 'account-confirmation':
+        html = await renderAsync(
+          React.createElement(AccountConfirmationEmail, {
+            confirmLink: data.confirmLink || '',
+            email: email
+          })
+        );
+        subject = 'Confirme sua conta - OrganizeSe';
+        break;
+
       default:
         throw new Error('Tipo de email inválido');
     }
 
     const emailResponse = await resend.emails.send({
-      from: "OrganizeSe <noreply@resend.dev>",
+      from: "OrganizeSe <noreply@organizese.chromotech.com.br>",
       to: [email],
       subject: subject,
       html: html,
