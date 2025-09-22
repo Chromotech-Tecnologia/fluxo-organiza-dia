@@ -17,6 +17,7 @@ export const taskFormSchema = z.object({
   routineCycle: z.enum(['daily', 'weekly', 'monthly', 'quarterly', 'biannual', 'annual']).optional(),
   routineStartDate: z.string().optional(),
   routineEndDate: z.string().optional(),
+  includeWeekends: z.boolean().default(true),
 }).refine((data) => {
   // Se timeInvestment for 'custom', customTimeMinutes é obrigatório
   if (data.timeInvestment === 'custom' && !data.customTimeMinutes) {

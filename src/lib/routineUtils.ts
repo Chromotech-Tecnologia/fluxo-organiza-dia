@@ -1,5 +1,5 @@
 import { TaskFormValues, SubItem, Task } from "@/types";
-import { format, addDays, addWeeks, addMonths, addQuarters, addYears, startOfDay, endOfDay } from "date-fns";
+import { format, addDays, addWeeks, addMonths, addQuarters, addYears, startOfDay, endOfDay, getDay } from "date-fns";
 
 export interface RoutineTaskData extends TaskFormValues {
   subItems: SubItem[];
@@ -11,7 +11,8 @@ export interface RoutineTaskData extends TaskFormValues {
 export function generateRoutineDates(
   startDate: string,
   endDate: string | undefined,
-  cycle: string
+  cycle: string,
+  includeWeekends: boolean = true
 ): string[] {
   const dates: string[] = [];
   const start = new Date(startDate);
@@ -24,7 +25,13 @@ export function generateRoutineDates(
   let count = 0;
   
   while (currentDate <= end && count < maxOccurrences) {
-    dates.push(format(currentDate, 'yyyy-MM-dd'));
+    const dayOfWeek = getDay(currentDate); // 0 = Sunday, 6 = Saturday
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    // Adicionar data apenas se incluir finais de semana OU se não for final de semana
+    if (includeWeekends || !isWeekend) {
+      dates.push(format(currentDate, 'yyyy-MM-dd'));
+    }
     
     switch (cycle) {
       case 'daily':
@@ -81,7 +88,8 @@ export function generateRoutineTasks(taskData: RoutineTaskData): Omit<Task, 'id'
   const routineDates = generateRoutineDates(
     taskData.routineStartDate,
     taskData.routineEndDate,
-    taskData.routineCycle
+    taskData.routineCycle,
+    taskData.includeWeekends
   );
 
   return routineDates.map((date, index) => ({

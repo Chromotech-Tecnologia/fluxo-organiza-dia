@@ -43,6 +43,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       routineCycle: task?.routineCycle || undefined,
       routineStartDate: task?.routineStartDate || undefined,
       routineEndDate: task?.routineEndDate || undefined,
+      includeWeekends: task?.includeWeekends || true,
       subItems: task?.subItems || [],
     },
   });
@@ -362,6 +363,24 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="includeWeekends"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Incluir sábados e domingos?</FormLabel>
+                      <div className="text-xs text-muted-foreground">
+                        Marque para incluir finais de semana na rotina
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
           )}
 

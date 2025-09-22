@@ -121,6 +121,7 @@ export interface Task {
   routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
   routineStartDate?: string;
   routineEndDate?: string;
+  includeWeekends?: boolean;
   recurrence?: RecurrenceConfig;
   forwardHistory: ForwardRecord[];
   forwardCount: number;
@@ -198,6 +199,7 @@ export interface TaskFormValues {
   routineCycle?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'biannual' | 'annual';
   routineStartDate?: string;
   routineEndDate?: string;
+  includeWeekends?: boolean;
   subItems: SubItem[];
 }
 
