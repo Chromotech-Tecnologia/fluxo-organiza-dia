@@ -443,6 +443,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
               <Button
+                type="button"
                 variant={skillAreaFilter === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSkillAreaFilter('all')}
@@ -452,6 +453,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
               {availableAreas.map((area) => (
                 <Button
                   key={area}
+                  type="button"
                   variant={skillAreaFilter === area ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setSkillAreaFilter(area)}
