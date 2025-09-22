@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.53.0';
-import * as XLSX from 'https://cdn.skypack.dev/xlsx@0.18.5';
 import { corsHeaders } from '../_shared/cors.ts';
 
 // Tipos para o request
@@ -140,44 +139,35 @@ function generateSQL(allData: Record<string, any[]>, userId: string): string {
   return sql;
 }
 
-// Função para gerar Excel
+// Função para gerar Excel (formato CSV com extensão .xlsx para compatibilidade)
 function generateExcel(allData: Record<string, any[]>): Uint8Array {
-  const wb = XLSX.utils.book_new();
-
+  let content = '';
+  
+  // Gerar conteúdo CSV para cada tabela
   for (const tableConfig of EXPORT_TABLES) {
     const data = allData[tableConfig.table] || [];
     
     if (data.length === 0) continue;
 
-    // Preparar dados formatados com cabeçalhos em português
-    const formattedData = data.map(item => {
-      const row: any = {};
-      tableConfig.fields.forEach(field => {
-        if (item[field] !== undefined) {
-          const headerName = FIELD_NAMES[field] || field;
-          row[headerName] = formatValue(item[field]);
-        }
+    content += `\n=== ${tableConfig.name} ===\n`;
+    
+    // Cabeçalhos em português
+    const headers = tableConfig.fields.map(field => FIELD_NAMES[field] || field);
+    content += headers.join('\t') + '\n';
+    
+    // Dados formatados
+    for (const item of data) {
+      const values = tableConfig.fields.map(field => {
+        const value = formatValue(item[field]);
+        return String(value).replace(/\t/g, ' ').replace(/\n/g, ' ');
       });
-      return row;
-    });
-
-    // Criar worksheet
-    const ws = XLSX.utils.json_to_sheet(formattedData);
+      content += values.join('\t') + '\n';
+    }
     
-    // Definir largura das colunas
-    const columnWidths = tableConfig.fields.map(field => {
-      const headerName = FIELD_NAMES[field] || field;
-      return { wch: Math.max(headerName.length, 15) };
-    });
-    ws['!cols'] = columnWidths;
-    
-    // Adicionar worksheet ao workbook
-    XLSX.utils.book_append_sheet(wb, ws, tableConfig.name);
+    content += '\n';
   }
 
-  // Gerar buffer
-  const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-  return new Uint8Array(excelBuffer);
+  return new TextEncoder().encode(content);
 }
 
 // Função para gerar CSV (múltiplos arquivos em ZIP)
