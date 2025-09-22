@@ -49,8 +49,8 @@ const dailyItems = [
 ];
 
 const settingsItems = [
-  { title: "Configurações de Perfil", url: "/settings", icon: Settings },
-  { title: "Backup", url: "/backup", icon: FileText },
+  { title: "Configurações de Perfil", url: "/settings", icon: Settings, adminOnly: false },
+  { title: "Backup", url: "/backup", icon: FileText, adminOnly: true },
 ];
 
 export function AppSidebar() {
@@ -153,35 +153,30 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Sistema - Apenas para administradores */}
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Sistema</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {settingsItems.filter(item => {
-                  // Apenas administradores podem ver configurações de perfil
-                  if (item.url === '/settings') {
-                    return isAdmin;
-                  }
-                  return true;
-                }).map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url} 
-                        className={getNavClass}
-                      >
-                        <item.icon className="h-4 w-4 mr-2" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        {/* Sistema */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsItems.filter(item => {
+                // Filtra baseado no adminOnly
+                return !item.adminOnly || isAdmin;
+              }).map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url} 
+                      className={getNavClass}
+                    >
+                      <item.icon className="h-4 w-4 mr-2" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         <AdminSection />
         
