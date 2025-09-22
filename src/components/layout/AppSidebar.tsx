@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { AdminSection } from './AdminSection';
 import { SupportLink } from './SupportLink';
+import logoHorizontal from '@/assets/logo-horizontal.png';
 import {
   Calendar,
   BarChart3,
@@ -93,13 +94,13 @@ export function AppSidebar() {
         <div className="flex items-center gap-2">
           {!collapsed ? (
             <img 
-              src="/lovable-uploads/62746c0f-6206-4a0e-9672-06fa744bddf2.png" 
+              src={logoHorizontal} 
               alt="Organize-se" 
               className="h-8 w-auto"
             />
           ) : (
             <img 
-              src="/lovable-uploads/55aa042d-8f18-4c5e-9998-7723c0ce9a12.png" 
+              src="/logo-favicon.png" 
               alt="Organize-se" 
               className="h-6 w-6"
             />

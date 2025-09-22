@@ -6,6 +6,7 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { NavigationBar } from "@/components/landing/NavigationBar";
+import logoHorizontal from '@/assets/logo-horizontal.png';
 
 const LandingPage = () => {
   const { isAuthenticated } = useAuthStore();
@@ -29,11 +30,10 @@ const LandingPage = () => {
             <div className="mb-4 md:mb-0">
               <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
                 <img 
-                  src="/logo-favicon.png" 
+                  src={logoHorizontal} 
                   alt="OrganizeSe" 
-                  className="w-8 h-8"
+                  className="h-8 w-auto"
                 />
-                <h3 className="text-lg font-semibold text-gradient">OrganizeSe</h3>
               </div>
               <p className="text-white/80">Organize sua equipe e multiplique sua produtividade</p>
             </div>

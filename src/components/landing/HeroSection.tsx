@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Users, Clock, TrendingUp } from "lucide-react";
-import logoVertical from "@/assets/logo-vertical.png";
+import logoHorizontal from "@/assets/logo-horizontal.png";
 
 export function HeroSection() {
   const { isAuthenticated } = useAuthStore();
@@ -25,9 +25,9 @@ export function HeroSection() {
             {/* Logo */}
             <div className="flex justify-center lg:justify-start mb-8">
               <img 
-                src={logoVertical} 
+                src={logoHorizontal} 
                 alt="OrganizeSe" 
-                className="h-16 object-contain"
+                className="h-12 w-auto object-contain"
               />
             </div>
             

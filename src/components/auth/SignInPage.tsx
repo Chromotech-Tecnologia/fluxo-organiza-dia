@@ -8,7 +8,7 @@ import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
 import { EmailConfirmationModal } from '@/components/modals/EmailConfirmationModal';
 import { useModalStore } from '@/stores/useModalStore';
-import logoVertical from '@/assets/logo-vertical.png';
+import logoHorizontal from '@/assets/logo-horizontal.png';
 
 export const SignInPage = () => {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
@@ -76,7 +76,7 @@ export const SignInPage = () => {
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 flex items-center justify-center">
-            <img src={logoVertical} alt="Logo" className="w-64 h-auto opacity-20" />
+            <img src={logoHorizontal} alt="Logo" className="w-80 h-auto opacity-20" />
           </div>
         </div>
         
@@ -129,7 +129,7 @@ export const SignInPage = () => {
             </div>
             
             <img 
-              src="/lovable-uploads/62746c0f-6206-4a0e-9672-06fa744bddf2.png" 
+              src={logoHorizontal} 
               alt="Organize-se" 
               className="h-16 w-auto mb-2"
             />

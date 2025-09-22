@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import { LogIn, User, LayoutDashboard } from "lucide-react";
+import logoHorizontal from '@/assets/logo-horizontal.png';
 
 export function NavigationBar() {
   const { isAuthenticated, user } = useAuthStore();
@@ -19,11 +20,10 @@ export function NavigationBar() {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <img 
-            src="/logo-favicon.png" 
+            src={logoHorizontal} 
             alt="OrganizeSe" 
-            className="w-8 h-8"
+            className="h-8 w-auto"
           />
-          <span className="text-xl font-bold text-gradient">OrganizeSe</span>
         </div>
 
         <div className="hidden md:flex items-center space-x-6">
