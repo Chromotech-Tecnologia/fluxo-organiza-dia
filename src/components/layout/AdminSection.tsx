@@ -23,7 +23,9 @@ export function AdminSection() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={location.pathname === '/admin'}>
-              <Link to="/admin">
+              <Link to="/admin" className={location.pathname === '/admin' ? 
+                "bg-green-100 text-primary font-medium border-l-4 border-primary" : 
+                "hover:bg-gray-50 text-black transition-all duration-200"}>
                 <Shield />
                 <span>Painel Admin</span>
               </Link>

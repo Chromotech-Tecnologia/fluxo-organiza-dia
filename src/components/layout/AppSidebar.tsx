@@ -84,8 +84,8 @@ export function AppSidebar() {
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-gradient-primary text-white font-medium shadow-lg" 
-      : "hover:bg-accent/50 text-foreground transition-all duration-200";
+      ? "bg-green-100 text-primary font-medium border-l-4 border-primary" 
+      : "hover:bg-gray-50 text-black transition-all duration-200";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"}>
@@ -187,14 +187,14 @@ export function AppSidebar() {
 
         {/* Logout Button */}
         <div className="mt-auto p-4 border-t border-border">
-          <div className="mb-2 text-xs text-muted-foreground">
+          <div className="mb-2 text-xs text-black">
             {!collapsed && user && <span>Olá, {user.user_metadata?.name || user.email}</span>}
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="w-full justify-start gap-2"
+            className="w-full justify-start gap-2 text-black hover:bg-gray-50"
           >
             <LogOut className="h-4 w-4" />
             {!collapsed && <span>Sair</span>}
