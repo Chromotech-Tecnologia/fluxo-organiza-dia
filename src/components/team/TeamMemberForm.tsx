@@ -441,19 +441,25 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
           </div>
           
           <div className="space-y-3">
-            <Select value={skillAreaFilter} onValueChange={setSkillAreaFilter}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Filtrar por área da empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as áreas</SelectItem>
-                {availableAreas.map((area) => (
-                  <SelectItem key={area} value={area}>
-                    {area}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={skillAreaFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSkillAreaFilter('all')}
+              >
+                Todas as áreas
+              </Button>
+              {availableAreas.map((area) => (
+                <Button
+                  key={area}
+                  variant={skillAreaFilter === area ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSkillAreaFilter(area)}
+                >
+                  {area}
+                </Button>
+              ))}
+            </div>
             
             <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
               {filteredSkills.map((skill) => (
