@@ -135,11 +135,55 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Construir query
-    let query = supabase
-      .from(table)
-      .select(fields.join(', '))
-      .eq('user_id', user.id);
+    // Validar campos da tabela e construir query
+    const tableFieldsMap: Record<string, string[]> = {
+      'profiles': ['id', 'name', 'email', 'welcome_shown', 'created_at', 'updated_at'],
+      'skills': ['id', 'name', 'description', 'category', 'level', 'user_id', 'created_at', 'updated_at'],
+      'people': ['id', 'name', 'email', 'phone', 'role', 'department', 'active', 'notes', 'user_id', 'created_at', 'updated_at'],
+      'tasks': ['id', 'title', 'description', 'type', 'priority', 'time_investment', 'category', 'status', 'scheduled_date', 'is_concluded', 'concluded_at', 'is_routine', 'is_forwarded', 'forward_count', 'observations', 'user_id', 'created_at', 'updated_at'],
+      'team_members': ['id', 'name', 'email', 'phone', 'role', 'department', 'status', 'hire_date', 'notes', 'user_id', 'created_at', 'updated_at'],
+      'daily_reports': ['id', 'date', 'total_tasks', 'completed_tasks', 'pending_tasks', 'forwarded_tasks', 'completion_rate', 'observations', 'user_id', 'created_at', 'updated_at']
+    };
+
+    const availableFields = tableFieldsMap[table];
+    if (!availableFields) {
+      return new Response(
+        JSON.stringify({ error: `Tabela '${table}' não é suportada para exportação` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Filtrar apenas campos válidos
+    const validFields = fields.filter(field => availableFields.includes(field));
+    
+    if (validFields.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Nenhum campo válido foi selecionado' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Construir query baseado na tabela
+    let query;
+    if (table === 'profiles') {
+      // Para profiles, usar id ao invés de user_id
+      query = supabase
+        .from(table)
+        .select(validFields.join(', '))
+        .eq('id', user.id);
+    } else {
+      // Para outras tabelas, usar user_id
+      query = supabase
+        .from(table)
+        .select(validFields.join(', '))
+        .eq('user_id', user.id);
+    }
 
     // Aplicar filtros de data se fornecidos
     if (startDate) {
@@ -163,8 +207,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Gerar arquivo TSV
-    const fileData = generateTSV(data || [], fields);
+    // Gerar arquivo TSV com campos válidos
+    const fileData = generateTSV(data || [], validFields);
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `export_${table}_${timestamp}.xls`; // .xls extension for Excel compatibility
 
