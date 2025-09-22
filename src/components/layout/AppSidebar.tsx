@@ -84,8 +84,8 @@ export function AppSidebar() {
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-green-50 text-primary font-medium border-l-4 border-primary" 
-      : "hover:bg-gray-50 text-black transition-all duration-200";
+      ? "bg-green-100 text-primary font-medium border-l-4 border-primary" 
+      : "hover:bg-green-100 text-black transition-all duration-200";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"}>
@@ -194,7 +194,7 @@ export function AppSidebar() {
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="w-full justify-start gap-2 text-black hover:bg-gray-50"
+            className="w-full justify-start gap-2 text-black hover:bg-green-100"
           >
             <LogOut className="h-4 w-4" />
             {!collapsed && <span>Sair</span>}
