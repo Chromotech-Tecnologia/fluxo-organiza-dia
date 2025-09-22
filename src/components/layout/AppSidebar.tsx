@@ -84,7 +84,7 @@ export function AppSidebar() {
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-green-100 text-primary font-medium border-l-4 border-primary" 
+      ? "bg-green-50 text-primary font-medium border-l-4 border-primary" 
       : "hover:bg-gray-50 text-black transition-all duration-200";
 
   return (
