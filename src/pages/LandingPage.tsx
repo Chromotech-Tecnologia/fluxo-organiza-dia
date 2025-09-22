@@ -1,0 +1,43 @@
+import { useAuthStore } from "@/stores/useAuthStore";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { BenefitsSection } from "@/components/landing/BenefitsSection";
+import { PricingSection } from "@/components/landing/PricingSection";
+import { FAQSection } from "@/components/landing/FAQSection";
+import { CTASection } from "@/components/landing/CTASection";
+import { NavigationBar } from "@/components/landing/NavigationBar";
+
+const LandingPage = () => {
+  const { isAuthenticated } = useAuthStore();
+
+  return (
+    <div className="min-h-screen bg-background">
+      <NavigationBar />
+      
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <BenefitsSection />
+        <PricingSection />
+        <FAQSection />
+        <CTASection />
+      </main>
+
+      <footer className="bg-muted py-12">
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-4 md:mb-0">
+              <h3 className="text-lg font-semibold text-primary">OrganizeSe</h3>
+              <p className="text-muted-foreground">Organize sua equipe e multiplique sua produtividade</p>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              © 2024 OrganizeSe. Todos os direitos reservados.
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default LandingPage;

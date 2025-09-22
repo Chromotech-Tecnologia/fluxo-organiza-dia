@@ -32,6 +32,7 @@ import { SkillsPage } from "./pages/SkillsPage";
 import AdminPage from "./pages/AdminPage";
 import { SignInPage } from "./components/auth/SignInPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 
 // Create QueryClient with better configuration for immediate updates
@@ -52,36 +53,45 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthGuard>
-            <AppLayout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/auth" element={<SignInPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/tasks" element={<TasksPage />} />
-                <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/people" element={<PeoplePage />} />
-                <Route path="/skills" element={<SkillsPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/daily-close" element={<DailyClosePage />} />
-                <Route path="/stats" element={<StatsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/backup" element={<BackupPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AppLayout>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/auth" element={<SignInPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             
-            {/* Global Modals */}
-            <TaskModal />
-            <PersonModal />
-            <SkillModal />
-            <TeamMemberModal />
-            <UnifiedRescheduleModal />
-            <DeleteModal />
-            <DailyCloseModal />
-            <WelcomeModal />
-          </AuthGuard>
+            {/* Protected routes */}
+            <Route path="/*" element={
+              <AuthGuard>
+                <AppLayout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/tasks" element={<TasksPage />} />
+                    <Route path="/calendar" element={<CalendarPage />} />
+                    <Route path="/people" element={<PeoplePage />} />
+                    <Route path="/skills" element={<SkillsPage />} />
+                    <Route path="/reports" element={<ReportsPage />} />
+                    <Route path="/daily-close" element={<DailyClosePage />} />
+                    <Route path="/stats" element={<StatsPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/backup" element={<BackupPage />} />
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </AppLayout>
+                
+                {/* Global Modals */}
+                <TaskModal />
+                <PersonModal />
+                <SkillModal />
+                <TeamMemberModal />
+                <UnifiedRescheduleModal />
+                <DeleteModal />
+                <DailyCloseModal />
+                <WelcomeModal />
+              </AuthGuard>
+            } />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
