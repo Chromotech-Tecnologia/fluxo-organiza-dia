@@ -6,6 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skill, SkillFormValues } from '@/types';
+import { useSupabaseSkills } from '@/hooks/useSupabaseSkills';
 
 const skillFormSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -20,6 +21,9 @@ interface SkillFormProps {
 }
 
 export function SkillForm({ skill, onSubmit, onCancel }: SkillFormProps) {
+  const { skills } = useSupabaseSkills();
+  const existingAreas = [...new Set(skills.map(s => s.area).filter(Boolean))];
+  
   const form = useForm<SkillFormValues>({
     resolver: zodResolver(skillFormSchema),
     defaultValues: {
@@ -53,7 +57,18 @@ export function SkillForm({ skill, onSubmit, onCancel }: SkillFormProps) {
             <FormItem>
               <FormLabel>Área da Empresa</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <div className="relative">
+                  <Input 
+                    {...field} 
+                    list="areas-list"
+                    placeholder="Digite ou selecione uma área"
+                  />
+                  <datalist id="areas-list">
+                    {existingAreas.map((area) => (
+                      <option key={area} value={area} />
+                    ))}
+                  </datalist>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

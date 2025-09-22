@@ -1,23 +1,30 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useSupabaseSkills } from '@/hooks/useSupabaseSkills';
 import { useModalStore } from '@/stores/useModalStore';
 import { SkillCard } from '@/components/skills/SkillCard';
 import { SkillModal } from '@/components/modals/SkillModal';
+import { SkillFilters } from '@/components/skills/SkillFilters';
 
 export function SkillsPage() {
   const [search, setSearch] = useState('');
+  const [selectedArea, setSelectedArea] = useState('');
   const { skills, loading } = useSupabaseSkills();
   const { openSkillModal } = useModalStore();
 
-  const filteredSkills = skills.filter(skill =>
-    skill.name.toLowerCase().includes(search.toLowerCase()) ||
-    skill.area.toLowerCase().includes(search.toLowerCase()) ||
-    skill.observation.toLowerCase().includes(search.toLowerCase())
-  );
+  const availableAreas = [...new Set(skills.map(s => s.area).filter(Boolean))];
+
+  const filteredSkills = skills.filter(skill => {
+    const matchesSearch = skill.name.toLowerCase().includes(search.toLowerCase()) ||
+      skill.area.toLowerCase().includes(search.toLowerCase()) ||
+      skill.observation.toLowerCase().includes(search.toLowerCase());
+    
+    const matchesArea = selectedArea === '' || skill.area === selectedArea;
+    
+    return matchesSearch && matchesArea;
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -42,15 +49,13 @@ export function SkillsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar habilidades..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
+          <SkillFilters
+            searchQuery={search}
+            onSearchChange={setSearch}
+            selectedArea={selectedArea}
+            onAreaChange={setSelectedArea}
+            availableAreas={availableAreas}
+          />
 
           {loading ? (
             <div className="text-center py-8">
@@ -59,7 +64,7 @@ export function SkillsPage() {
           ) : filteredSkills.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
-                {search ? 'Nenhuma habilidade encontrada para a busca.' : 'Nenhuma habilidade cadastrada ainda.'}
+                {search || selectedArea ? 'Nenhuma habilidade encontrada para os filtros aplicados.' : 'Nenhuma habilidade cadastrada ainda.'}
               </p>
             </div>
           ) : (
