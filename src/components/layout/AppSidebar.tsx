@@ -83,10 +83,10 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path;
 
-  const getNavClass = (isActive: boolean) =>
+  const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-gray-100 text-gray-800 font-medium border-l-4 border-green-500" 
-      : "hover:bg-gray-50 text-slate-700 hover:text-gray-800 transition-all duration-200";
+      ? "bg-primary/20 text-primary font-medium border-l-4 border-primary" 
+      : "hover:bg-primary/10 text-slate-700 hover:text-primary transition-all duration-200";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"}>
@@ -120,7 +120,7 @@ export function AppSidebar() {
                     <NavLink 
                       to={item.url} 
                       end 
-                      className={({ isActive }) => getNavClass(isActive)}
+                      className={getNavClass}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {!collapsed && <span>{item.title}</span>}
@@ -142,7 +142,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink 
                       to={item.url} 
-                      className={({ isActive }) => getNavClass(isActive)}
+                      className={getNavClass}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {!collapsed && <span>{item.title}</span>}
@@ -167,7 +167,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink 
                       to={item.url} 
-                      className={({ isActive }) => getNavClass(isActive)}
+                      className={getNavClass}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {!collapsed && <span>{item.title}</span>}
@@ -195,7 +195,7 @@ export function AppSidebar() {
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="w-full justify-start gap-2 text-slate-700 hover:bg-gray-50 hover:text-gray-800"
+            className="w-full justify-start gap-2 text-slate-700 hover:bg-primary/10 hover:text-primary"
           >
             <LogOut className="h-4 w-4" />
             {!collapsed && <span>Sair</span>}
