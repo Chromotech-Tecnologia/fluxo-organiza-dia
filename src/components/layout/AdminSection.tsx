@@ -22,10 +22,12 @@ export function AdminSection() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/admin" className={({ isActive }) => 
-                isActive ? 
-                "bg-green-100 text-primary font-medium border-l-4 border-primary" : 
-                "hover:bg-green-100 text-black transition-all duration-200"}>
+              <NavLink 
+                to="/admin" 
+                className={({ isActive }) => 
+                  isActive ? 
+                  "bg-green-100 text-primary font-medium border-l-4 border-primary" : 
+                  "hover:bg-green-100 text-black transition-all duration-200"}>
                 <Shield />
                 <span>Painel Admin</span>
               </NavLink>

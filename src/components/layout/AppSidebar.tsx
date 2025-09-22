@@ -117,11 +117,11 @@ export function AppSidebar() {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      end 
-                      className={getNavClass}
-                    >
+                     <NavLink 
+                       to={item.url} 
+                       end={item.url === '/'}
+                       className={getNavClass}
+                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
