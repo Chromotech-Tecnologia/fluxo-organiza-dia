@@ -21,24 +21,9 @@ export const supabaseAuthService = {
 
     if (error) throw error;
 
-    // Enviar email de confirmação de conta personalizado
-    if (data.user && !error) {
-      try {
-        await supabase.functions.invoke('send-auth-emails', {
-          body: {
-            type: 'account-confirmation',
-            email: email,
-            data: {
-              confirmLink: `https://organizese.chromotech.com.br/`,
-              name: name
-            }
-          }
-        });
-      } catch (emailError) {
-        console.error('Erro ao enviar email de confirmação:', emailError);
-        // Continue mesmo se o email personalizado falhar
-      }
-    }
+    // Como os emails padrão do Supabase foram desabilitados no config.toml,
+    // nossa edge function será chamada automaticamente via webhook
+    // Não precisamos chamar manualmente aqui
 
     return data;
   },

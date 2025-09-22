@@ -54,7 +54,7 @@ security_update_password_require_reauthentication = true
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
-enable_confirmations = true
+enable_confirmations = false
 secure_email_change_enabled = true
 secure_password_change_enabled = true
 
@@ -75,3 +75,11 @@ verify_jwt = true
 
 [functions.export-to-excel]
 verify_jwt = true
+
+# Webhook configuration for auth emails
+[auth.hook.send_sms]
+enabled = false
+
+[auth.hook.send_email]
+enabled = true
+uri = "https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/send-auth-emails"

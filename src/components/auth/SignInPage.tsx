@@ -31,12 +31,16 @@ export const SignInPage = () => {
       });
     }
     
-    // Verificar se é uma redefinição de senha
+    // Verificar se é uma redefinição de senha ou confirmação de conta
     const accessToken = searchParams.get('access_token');
     const type = searchParams.get('type');
     
     if (accessToken && type === 'recovery') {
       setCurrentView('reset-password');
+    } else if (accessToken && type === 'signup') {
+      // Processar confirmação de conta automaticamente
+      // O Supabase já processou o token na URL, então apenas redirecionar
+      navigate('/', { replace: true });
     }
   }, [user, navigate, searchParams, checkIsAdmin]);
 
