@@ -461,7 +461,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
               ))}
             </div>
             
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
+            <div className="grid grid-cols-2 gap-2 h-24 overflow-y-auto border rounded-md p-3">
               {filteredSkills.map((skill) => (
                 <div key={skill.id} className="flex items-center space-x-2">
                   <Checkbox
