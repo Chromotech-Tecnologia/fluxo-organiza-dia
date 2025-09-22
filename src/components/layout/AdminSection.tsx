@@ -18,8 +18,8 @@ export function AdminSection() {
 
   const getNavClass = (isActive: boolean) =>
     isActive 
-      ? "bg-green-100 text-primary font-medium border-l-4 border-primary" 
-      : "hover:bg-green-100 text-slate-700 hover:text-primary transition-all duration-200";
+      ? "bg-gray-100 text-gray-800 font-medium border-l-4 border-green-500" 
+      : "hover:bg-gray-50 text-slate-700 hover:text-gray-800 transition-all duration-200";
 
   if (!isAdmin) return null;
 
