@@ -25,7 +25,8 @@ export const SignInPage = () => {
     if (user) {
       // Check if user is admin to determine redirect
       checkIsAdmin().then((adminStatus) => {
-        navigate(adminStatus ? '/admin' : '/dashboard');
+        // Use replace instead of navigate to avoid back button issues
+        navigate(adminStatus ? '/admin' : '/dashboard', { replace: true });
       });
     }
     
@@ -36,7 +37,7 @@ export const SignInPage = () => {
     if (accessToken && type === 'recovery') {
       setCurrentView('reset-password');
     }
-  }, [user, navigate, searchParams]);
+  }, [user, navigate, searchParams, checkIsAdmin]);
 
   const renderCurrentView = () => {
     switch (currentView) {

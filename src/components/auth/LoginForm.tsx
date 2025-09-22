@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { supabaseAuthService } from '@/lib/supabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useModalStore } from '@/stores/useModalStore';
+import { useUserRoles } from '@/hooks/useUserRoles';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -19,8 +21,10 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { openEmailConfirmationModal } = useModalStore();
+  const { checkIsAdmin } = useUserRoles();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,10 +32,17 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
 
     try {
       await supabaseAuthService.signIn(email, password);
+      
+      // Verificar se é admin e redirecionar
+      const isAdmin = await checkIsAdmin();
+      
       toast({
         title: 'Sucesso',
         description: 'Login realizado com sucesso!',
       });
+      
+      // Redirecionar após login bem-sucedido
+      navigate(isAdmin ? '/admin' : '/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
       
