@@ -54,7 +54,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
   const { toast } = useToast();
   const [newProject, setNewProject] = useState({ name: '', status: 'apresentado' as const });
   const [isLoadingCep, setIsLoadingCep] = useState(false);
-  const [skillAreaFilter, setSkillAreaFilter] = useState('');
+  const [skillAreaFilter, setSkillAreaFilter] = useState('all');
 
   const form = useForm<TeamMemberFormValues>({
     resolver: zodResolver(teamMemberFormSchema),
@@ -184,9 +184,9 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
 
   // Filtrar habilidades por área
   const availableAreas = [...new Set(skills.map(s => s.area).filter(Boolean))];
-  const filteredSkills = skillAreaFilter 
-    ? skills.filter(skill => skill.area === skillAreaFilter)
-    : skills;
+  const filteredSkills = skillAreaFilter === 'all' || !skillAreaFilter
+    ? skills
+    : skills.filter(skill => skill.area === skillAreaFilter);
 
   return (
     <Form {...form}>
@@ -446,7 +446,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
                 <SelectValue placeholder="Filtrar por área da empresa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as áreas</SelectItem>
+                <SelectItem value="all">Todas as áreas</SelectItem>
                 {availableAreas.map((area) => (
                   <SelectItem key={area} value={area}>
                     {area}
@@ -470,7 +470,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
               ))}
               {filteredSkills.length === 0 && (
                 <p className="text-sm text-muted-foreground col-span-2">
-                  {skillAreaFilter ? 'Nenhuma habilidade encontrada para esta área' : 'Nenhuma habilidade cadastrada'}
+                  {skillAreaFilter !== 'all' && skillAreaFilter ? 'Nenhuma habilidade encontrada para esta área' : 'Nenhuma habilidade cadastrada'}
                 </p>
               )}
             </div>
