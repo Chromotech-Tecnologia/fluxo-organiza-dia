@@ -161,6 +161,7 @@ export type Database = {
       tasks: {
         Row: {
           assigned_person_id: string | null
+          assigned_team_member_id: string | null
           category: string | null
           completion_history: Json | null
           concluded_at: string | null
@@ -190,6 +191,7 @@ export type Database = {
         }
         Insert: {
           assigned_person_id?: string | null
+          assigned_team_member_id?: string | null
           category?: string | null
           completion_history?: Json | null
           concluded_at?: string | null
@@ -219,6 +221,7 @@ export type Database = {
         }
         Update: {
           assigned_person_id?: string | null
+          assigned_team_member_id?: string | null
           category?: string | null
           completion_history?: Json | null
           concluded_at?: string | null
@@ -246,7 +249,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_team_member_id_fkey"
+            columns: ["assigned_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_members: {
         Row: {

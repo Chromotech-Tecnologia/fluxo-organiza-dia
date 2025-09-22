@@ -110,7 +110,8 @@ export interface Task {
   customTimeMinutes?: number; // Novo campo para tempo personalizado
   category: TaskCategory;
   status: TaskStatus;
-  assignedPersonId?: string;
+  assignedPersonId?: string; // DEPRECATED: Use assignedTeamMemberId
+  assignedTeamMemberId?: string; // Nova referência para team_members
   subItems: SubItem[];
   deliveryDates: string[];
   observations: string;
@@ -157,7 +158,8 @@ export interface TaskFilter {
   type?: TaskType[];
   priority?: TaskPriority[];
   status?: TaskStatus[];
-  assignedPersonId?: string;
+  assignedPersonId?: string; // DEPRECATED: Use assignedTeamMemberId
+  assignedTeamMemberId?: string; // Nova referência para team_members
   timeInvestment?: TaskTimeInvestment[];
   category?: ('personal' | 'business')[];
   hasChecklist?: boolean;
@@ -187,7 +189,8 @@ export interface TaskFormValues {
   timeInvestment: TaskTimeInvestment;
   customTimeMinutes?: number; // Novo campo para tempo personalizado
   category: TaskCategory;
-  assignedPersonId?: string;
+  assignedPersonId?: string; // DEPRECATED: Use assignedTeamMemberId
+  assignedTeamMemberId?: string; // Nova referência para team_members
   scheduledDate: string;
   order: number;
   observations?: string;

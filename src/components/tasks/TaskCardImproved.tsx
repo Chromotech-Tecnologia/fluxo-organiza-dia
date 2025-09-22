@@ -59,9 +59,20 @@ export function TaskCardImproved({
     transition,
   };
 
-  const assignedTeam = task.assignedPersonId 
-    ? teamMembers.find(team => team.id === task.assignedPersonId)
-    : null;
+  // Buscar informações da pessoa/equipe atribuída
+  const getAssignedTeam = () => {
+    // Primeiro verifica no novo campo assignedTeamMemberId
+    if (task.assignedTeamMemberId) {
+      return teamMembers.find(team => team.id === task.assignedTeamMemberId);
+    }
+    // Fallback para assignedPersonId (compatibilidade)
+    if (task.assignedPersonId) {
+      return teamMembers.find(team => team.id === task.assignedPersonId);
+    }
+    return null;
+  };
+
+  const assignedTeam = getAssignedTeam();
 
   // Nova lógica: verificar se a tarefa foi reagendada usando o histórico
   const wasRescheduledFromThisDate = React.useMemo(() => {
