@@ -3,23 +3,40 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, CheckCircle, Clock, Target, BarChart3 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon, TrendingUp, CheckCircle, Clock, Target, BarChart3 } from "lucide-react";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Task } from "@/types";
+import { cn } from "@/lib/utils";
 
 const DailyClosePage = () => {
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [viewMode, setViewMode] = useState<'week' | 'month' | 'custom'>('week');
+  const [customStartDate, setCustomStartDate] = useState<Date>();
+  const [customEndDate, setCustomEndDate] = useState<Date>();
   
   // Definir período com base no modo de visualização
   const today = new Date();
-  const startDate = viewMode === 'week' 
-    ? format(subDays(today, 7), 'yyyy-MM-dd')
-    : format(startOfMonth(today), 'yyyy-MM-dd');
-  const endDate = viewMode === 'month'
-    ? format(endOfMonth(today), 'yyyy-MM-dd')
-    : format(today, 'yyyy-MM-dd');
+  
+  const { startDate, endDate } = useMemo(() => {
+    if (viewMode === 'custom' && customStartDate && customEndDate) {
+      return {
+        startDate: format(customStartDate, 'yyyy-MM-dd'),
+        endDate: format(customEndDate, 'yyyy-MM-dd')
+      };
+    }
+    
+    const start = viewMode === 'week' 
+      ? format(subDays(today, 7), 'yyyy-MM-dd')
+      : format(startOfMonth(today), 'yyyy-MM-dd');
+    const end = viewMode === 'month'
+      ? format(endOfMonth(today), 'yyyy-MM-dd')
+      : format(today, 'yyyy-MM-dd');
+      
+    return { startDate: start, endDate: end };
+  }, [viewMode, customStartDate, customEndDate, today]);
 
   const { tasks } = useSupabaseTasks({
     dateRange: { start: startDate, end: endDate }
@@ -84,21 +101,94 @@ const DailyClosePage = () => {
           <h1 className="text-3xl font-bold text-foreground">Fechamento Diário</h1>
           <p className="text-muted-foreground">
             Resumo e estatísticas dos dias trabalhados
+            {viewMode === 'custom' && customStartDate && customEndDate && (
+              <span className="ml-2 text-sm">
+                ({format(customStartDate, "dd/MM/yyyy", { locale: ptBR })} - {format(customEndDate, "dd/MM/yyyy", { locale: ptBR })})
+              </span>
+            )}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant={viewMode === 'week' ? 'default' : 'outline'}
-            onClick={() => setViewMode('week')}
-          >
-            Última Semana
-          </Button>
-          <Button 
-            variant={viewMode === 'month' ? 'default' : 'outline'}
-            onClick={() => setViewMode('month')}
-          >
-            Este Mês
-          </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Button 
+              variant={viewMode === 'week' ? 'default' : 'outline'}
+              onClick={() => setViewMode('week')}
+            >
+              Última Semana
+            </Button>
+            <Button 
+              variant={viewMode === 'month' ? 'default' : 'outline'}
+              onClick={() => setViewMode('month')}
+            >
+              Este Mês
+            </Button>
+            <Button 
+              variant={viewMode === 'custom' ? 'default' : 'outline'}
+              onClick={() => setViewMode('custom')}
+            >
+              Personalizado
+            </Button>
+          </div>
+
+          {viewMode === 'custom' && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !customStartDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customStartDate ? format(customStartDate, "dd/MM/yyyy") : "Data inicial"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customStartDate}
+                    onSelect={setCustomStartDate}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <span className="text-muted-foreground">até</span>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !customEndDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customEndDate ? format(customEndDate, "dd/MM/yyyy") : "Data final"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customEndDate}
+                    onSelect={setCustomEndDate}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {(!customStartDate || !customEndDate) && (
+                <Badge variant="outline" className="text-xs">
+                  Selecione as datas
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
