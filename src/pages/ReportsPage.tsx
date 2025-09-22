@@ -40,23 +40,6 @@ const tableConfigs: TableConfig[] = [
     ]
   },
   {
-    id: 'people',
-    name: 'Pessoas',
-    icon: <UserCheck className="h-4 w-4" />,
-    fields: [
-      { id: 'id', name: 'ID', type: 'text' },
-      { id: 'name', name: 'Nome', type: 'text' },
-      { id: 'role', name: 'Função', type: 'text' },
-      { id: 'phone', name: 'Telefone', type: 'text' },
-      { id: 'email', name: 'Email', type: 'text' },
-      { id: 'department', name: 'Departamento', type: 'text' },
-      { id: 'active', name: 'Ativo', type: 'boolean' },
-      { id: 'notes', name: 'Observações', type: 'text' },
-      { id: 'created_at', name: 'Data de criação', type: 'date' },
-      { id: 'updated_at', name: 'Última atualização', type: 'date' },
-    ]
-  },
-  {
     id: 'team_members',
     name: 'Membros da Equipe',
     icon: <Briefcase className="h-4 w-4" />,
