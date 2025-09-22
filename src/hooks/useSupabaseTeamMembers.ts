@@ -45,7 +45,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         status: member.status as 'ativo' | 'inativo',
         isPartner: false,
         origin: '',
-        projects: (member.project_ids || []).map(id => ({
+        projects: (member as any).projects || (member.project_ids || []).map((id: string) => ({
           id,
           name: 'Projeto sem nome',
           status: 'apresentado' as const
@@ -122,6 +122,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           phone: newTeamMember.phone,
           department: '',
           skill_ids: newTeamMember.skillIds,
+          projects: newTeamMember.projects || [],
           project_ids: (newTeamMember.projects || []).map(p => p.id),
           hire_date: null,
           status: newTeamMember.status,
@@ -162,6 +163,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           phone: updates.phone,
           department: '',
           skill_ids: updates.skillIds,
+          projects: updates.projects || [],
           project_ids: (updates.projects || []).map(p => p.id),
           hire_date: null,
           status: updates.status,
