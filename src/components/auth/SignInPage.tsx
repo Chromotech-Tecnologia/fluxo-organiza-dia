@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
@@ -12,6 +13,7 @@ export const SignInPage = () => {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { isAdmin, checkIsAdmin } = useUserRoles();
   const [searchParams] = useSearchParams();
   const { 
     isEmailConfirmationModalOpen, 
@@ -21,7 +23,10 @@ export const SignInPage = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      // Check if user is admin to determine redirect
+      checkIsAdmin().then((adminStatus) => {
+        navigate(adminStatus ? '/admin' : '/dashboard');
+      });
     }
     
     // Verificar se é uma redefinição de senha

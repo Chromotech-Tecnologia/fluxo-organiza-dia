@@ -23,7 +23,7 @@ const LandingPage = () => {
         <CTASection />
       </main>
 
-      <footer className="bg-muted py-12">
+      <footer className="bg-gradient-footer py-12">
         <div className="container mx-auto px-4 text-center">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
@@ -35,9 +35,9 @@ const LandingPage = () => {
                 />
                 <h3 className="text-lg font-semibold text-gradient">OrganizeSe</h3>
               </div>
-              <p className="text-muted-foreground">Organize sua equipe e multiplique sua produtividade</p>
+              <p className="text-white/80">Organize sua equipe e multiplique sua produtividade</p>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-white/70">
               © 2024 OrganizeSe. Todos os direitos reservados.
             </div>
           </div>

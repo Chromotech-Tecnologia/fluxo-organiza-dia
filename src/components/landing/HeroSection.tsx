@@ -64,7 +64,7 @@ export function HeroSection() {
               <Button 
                 size="lg" 
                 onClick={handleCTA} 
-                className="bg-gradient-primary hover:opacity-90 flex items-center space-x-2 text-lg px-8 py-3 shadow-lg"
+                className="bg-gradient-button hover:opacity-90 flex items-center space-x-2 text-lg px-8 py-3 shadow-lg text-white"
               >
                 <span>{isAuthenticated ? 'Ir para Dashboard' : 'Comece Grátis Agora'}</span>
                 <ArrowRight className="w-5 h-5" />

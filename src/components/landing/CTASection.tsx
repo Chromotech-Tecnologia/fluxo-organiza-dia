@@ -23,7 +23,7 @@ export function CTASection() {
   ];
 
   return (
-    <section className="py-20 bg-gradient-primary text-white">
+    <section className="py-20 bg-gradient-footer text-white">
       <div className="container mx-auto px-4">
         {/* Main CTA */}
         <div className="text-center mb-16">
