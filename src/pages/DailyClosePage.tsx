@@ -131,7 +131,7 @@ const DailyClosePage = () => {
           </div>
 
           {viewMode === 'custom' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -145,13 +145,13 @@ const DailyClosePage = () => {
                     {customStartDate ? format(customStartDate, "dd/MM/yyyy") : "Data inicial"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-50" align="end" side="bottom">
                   <Calendar
                     mode="single"
                     selected={customStartDate}
                     onSelect={setCustomStartDate}
                     initialFocus
-                    className="pointer-events-auto"
+                    className="pointer-events-auto p-3"
                   />
                 </PopoverContent>
               </Popover>
@@ -171,13 +171,13 @@ const DailyClosePage = () => {
                     {customEndDate ? format(customEndDate, "dd/MM/yyyy") : "Data final"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-50" align="end" side="bottom">
                   <Calendar
                     mode="single"
                     selected={customEndDate}
                     onSelect={setCustomEndDate}
                     initialFocus
-                    className="pointer-events-auto"
+                    className="pointer-events-auto p-3"
                   />
                 </PopoverContent>
               </Popover>
