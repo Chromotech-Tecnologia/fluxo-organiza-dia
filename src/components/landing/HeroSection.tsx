@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Users, Clock, TrendingUp } from "lucide-react";
+import logoVertical from "@/assets/logo-vertical.png";
 
 export function HeroSection() {
   const { isAuthenticated } = useAuthStore();
@@ -16,15 +17,25 @@ export function HeroSection() {
   };
 
   return (
-    <section className="py-20 lg:py-32 bg-gradient-to-br from-background via-background to-muted/20">
+    <section className="py-20 lg:py-32 bg-gradient-subtle">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="space-y-8">
+            {/* Logo */}
+            <div className="flex justify-center lg:justify-start mb-8">
+              <img 
+                src={logoVertical} 
+                alt="OrganizeSe" 
+                className="h-16 object-contain"
+              />
+            </div>
+            
             <div className="space-y-4">
               <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
-                Organize sua equipe e 
-                <span className="text-primary block">multiplique sua produtividade</span>
+                Organize sua{" "}
+                <span className="text-gradient">equipe</span> e 
+                <span className="text-gradient block">multiplique sua produtividade</span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed">
                 O sistema completo para gestão de tarefas e equipes que transforma caos em resultados. 
@@ -50,12 +61,21 @@ export function HeroSection() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" onClick={handleCTA} className="flex items-center space-x-2 text-lg px-8 py-3">
+              <Button 
+                size="lg" 
+                onClick={handleCTA} 
+                className="bg-gradient-primary hover:opacity-90 flex items-center space-x-2 text-lg px-8 py-3 shadow-lg"
+              >
                 <span>{isAuthenticated ? 'Ir para Dashboard' : 'Comece Grátis Agora'}</span>
                 <ArrowRight className="w-5 h-5" />
               </Button>
               {!isAuthenticated && (
-                <Button variant="outline" size="lg" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="border-2 border-primary hover:bg-primary hover:text-primary-foreground"
+                >
                   Ver Demonstração
                 </Button>
               )}
@@ -68,7 +88,7 @@ export function HeroSection() {
 
           {/* Visual Elements */}
           <div className="relative">
-            <div className="bg-card rounded-2xl border shadow-2xl p-8">
+            <div className="bg-gradient-card rounded-2xl border shadow-2xl p-8">
               <div className="space-y-6">
                 {/* Mini dashboard preview */}
                 <div className="flex justify-between items-center">
@@ -82,20 +102,20 @@ export function HeroSection() {
                 
                 {/* Stats cards */}
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-primary/10 p-3 rounded-lg">
-                    <Users className="w-6 h-6 text-primary mb-2" />
+                  <div className="bg-gradient-primary p-3 rounded-lg text-white">
+                    <Users className="w-6 h-6 mb-2" />
                     <p className="text-sm font-medium">24</p>
-                    <p className="text-xs text-muted-foreground">Membros</p>
+                    <p className="text-xs opacity-90">Membros</p>
                   </div>
-                  <div className="bg-primary/10 p-3 rounded-lg">
-                    <Clock className="w-6 h-6 text-primary mb-2" />
+                  <div className="bg-gradient-primary p-3 rounded-lg text-white">
+                    <Clock className="w-6 h-6 mb-2" />
                     <p className="text-sm font-medium">156</p>
-                    <p className="text-xs text-muted-foreground">Tarefas</p>
+                    <p className="text-xs opacity-90">Tarefas</p>
                   </div>
-                  <div className="bg-primary/10 p-3 rounded-lg">
-                    <TrendingUp className="w-6 h-6 text-primary mb-2" />
+                  <div className="bg-gradient-primary p-3 rounded-lg text-white">
+                    <TrendingUp className="w-6 h-6 mb-2" />
                     <p className="text-sm font-medium">89%</p>
-                    <p className="text-xs text-muted-foreground">Concluídas</p>
+                    <p className="text-xs opacity-90">Concluídas</p>
                   </div>
                 </div>
 
@@ -120,10 +140,10 @@ export function HeroSection() {
             </div>
 
             {/* Floating elements */}
-            <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+            <div className="absolute -top-4 -right-4 bg-gradient-primary text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
               ⚡ Em tempo real
             </div>
-            <div className="absolute -bottom-4 -left-4 bg-card border shadow-lg px-4 py-2 rounded-full text-sm font-medium">
+            <div className="absolute -bottom-4 -left-4 bg-gradient-card border shadow-lg px-4 py-2 rounded-full text-sm font-medium">
               📊 Relatórios automáticos
             </div>
           </div>

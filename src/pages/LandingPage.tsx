@@ -27,7 +27,14 @@ const LandingPage = () => {
         <div className="container mx-auto px-4 text-center">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <h3 className="text-lg font-semibold text-primary">OrganizeSe</h3>
+              <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
+                <img 
+                  src="/logo-favicon.png" 
+                  alt="OrganizeSe" 
+                  className="w-8 h-8"
+                />
+                <h3 className="text-lg font-semibold text-gradient">OrganizeSe</h3>
+              </div>
               <p className="text-muted-foreground">Organize sua equipe e multiplique sua produtividade</p>
             </div>
             <div className="text-sm text-muted-foreground">

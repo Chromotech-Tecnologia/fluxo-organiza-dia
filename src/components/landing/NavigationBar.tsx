@@ -17,11 +17,13 @@ export function NavigationBar() {
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">O</span>
-          </div>
-          <span className="text-xl font-bold text-primary">OrganizeSe</span>
+        <div className="flex items-center space-x-3">
+          <img 
+            src="/logo-favicon.png" 
+            alt="OrganizeSe" 
+            className="w-8 h-8"
+          />
+          <span className="text-xl font-bold text-gradient">OrganizeSe</span>
         </div>
 
         <div className="hidden md:flex items-center space-x-6">
@@ -69,7 +71,7 @@ export function NavigationBar() {
                 <LogIn className="w-4 h-4" />
                 <span>Entrar</span>
               </Button>
-              <Button onClick={() => navigate('/auth')} className="flex items-center space-x-2">
+              <Button onClick={() => navigate('/auth')} className="bg-gradient-primary hover:opacity-90 flex items-center space-x-2">
                 <span>Cadastre-se Grátis</span>
               </Button>
             </div>
