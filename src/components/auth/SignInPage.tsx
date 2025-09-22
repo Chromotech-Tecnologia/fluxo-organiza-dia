@@ -5,12 +5,19 @@ import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
+import { EmailConfirmationModal } from '@/components/modals/EmailConfirmationModal';
+import { useModalStore } from '@/stores/useModalStore';
 
 export const SignInPage = () => {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [searchParams] = useSearchParams();
+  const { 
+    isEmailConfirmationModalOpen, 
+    emailConfirmationData, 
+    closeEmailConfirmationModal 
+  } = useModalStore();
 
   useEffect(() => {
     if (user) {
@@ -68,6 +75,13 @@ export const SignInPage = () => {
         </div>
         
         {renderCurrentView()}
+        
+        <EmailConfirmationModal
+          isOpen={isEmailConfirmationModalOpen}
+          onClose={closeEmailConfirmationModal}
+          email={emailConfirmationData?.email}
+          isRegistration={emailConfirmationData?.isRegistration}
+        />
       </div>
     </div>
   );

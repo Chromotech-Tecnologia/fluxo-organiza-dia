@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff } from 'lucide-react';
 import { supabaseAuthService } from '@/lib/supabaseAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useModalStore } from '@/stores/useModalStore';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -19,6 +20,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { openEmailConfirmationModal } = useModalStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +34,21 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
       });
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao fazer login',
-        variant: 'destructive',
-      });
+      
+      // Check if the error is about email not being confirmed
+      if (error.message?.includes('Email not confirmed') || 
+          error.message?.includes('email_not_confirmed')) {
+        openEmailConfirmationModal({ 
+          email: email, 
+          isRegistration: false 
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: error.message || 'Erro ao fazer login',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }

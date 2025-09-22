@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabaseAuthService } from '@/lib/supabaseAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useModalStore } from '@/stores/useModalStore';
 
 interface RegisterFormProps {
   onToggleMode: () => void;
@@ -18,6 +19,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { openEmailConfirmationModal } = useModalStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,10 +47,13 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
     try {
       await supabaseAuthService.signUp(email, password, name);
-      toast({
-        title: 'Sucesso',
-        description: 'Conta criada com sucesso! Verifique seu email para confirmar.',
+      
+      // Show the email confirmation modal instead of toast
+      openEmailConfirmationModal({ 
+        email: email, 
+        isRegistration: true 
       });
+      
       onToggleMode(); // Switch to login form
     } catch (error: any) {
       console.error('Registration error:', error);

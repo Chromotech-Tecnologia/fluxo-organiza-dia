@@ -44,6 +44,12 @@ interface ModalState {
   tasksToReschedule: Task[] | null;
   openRescheduleModal: (tasks: Task | Task[]) => void;
   closeRescheduleModal: () => void;
+  
+  // Email Confirmation Modal
+  isEmailConfirmationModalOpen: boolean;
+  emailConfirmationData: { email?: string; isRegistration?: boolean } | null;
+  openEmailConfirmationModal: (data: { email?: string; isRegistration?: boolean }) => void;
+  closeEmailConfirmationModal: () => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -108,5 +114,17 @@ export const useModalStore = create<ModalState>((set) => ({
   closeRescheduleModal: () => set({ 
     isRescheduleModalOpen: false, 
     tasksToReschedule: null 
+  }),
+  
+  // Email Confirmation Modal
+  isEmailConfirmationModalOpen: false,
+  emailConfirmationData: null,
+  openEmailConfirmationModal: (data) => set({ 
+    isEmailConfirmationModalOpen: true, 
+    emailConfirmationData: data 
+  }),
+  closeEmailConfirmationModal: () => set({ 
+    isEmailConfirmationModalOpen: false, 
+    emailConfirmationData: null 
   }),
 }));
