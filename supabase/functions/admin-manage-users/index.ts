@@ -162,7 +162,7 @@ serve(async (req) => {
       )
     }
 
-    if (method === 'DELETE' && body.action === 'delete_user') {
+    if (method === 'POST' && body.action === 'delete_user') {
       const { userId } = body
       
       if (!userId) {

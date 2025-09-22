@@ -301,7 +301,7 @@ export function useUserRoles() {
       }
 
       const response = await fetch('https://sfwxbotcnfpjkwrsfyqj.supabase.co/functions/v1/admin-manage-users', {
-        method: 'DELETE',
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
