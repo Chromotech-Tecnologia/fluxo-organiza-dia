@@ -183,7 +183,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Informações Básicas */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Informações Básicas</h3>

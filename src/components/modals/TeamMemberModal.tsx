@@ -39,7 +39,7 @@ export function TeamMemberModal() {
 
   return (
     <Dialog open={isTeamMemberModalOpen} onOpenChange={(open) => !open && closeTeamMemberModal()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>
             {teamMemberToEdit ? "Editar Membro da Equipe" : "Novo Membro da Equipe"}
