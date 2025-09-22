@@ -99,7 +99,7 @@ export default function PeoplePage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
             {filteredTeamMembers.map((teamMember) => (
               <TeamMemberCard 
                 key={teamMember.id} 

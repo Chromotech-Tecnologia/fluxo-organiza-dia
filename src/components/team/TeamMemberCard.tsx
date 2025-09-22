@@ -48,7 +48,7 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow"
+      className="cursor-pointer hover:shadow-md transition-shadow h-full flex flex-col"
       onClick={handleCardClick}
     >
       <CardHeader className="pb-3">
@@ -68,69 +68,71 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-3">
-        {/* Contato */}
-        {(teamMember.email || teamMember.phone) && (
-          <div className="space-y-1">
-            {teamMember.email && (
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="truncate">{teamMember.email}</span>
-              </div>
-            )}
-            {teamMember.phone && (
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{teamMember.phone}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Endereço */}
-        {teamMember.address && (teamMember.address.city || teamMember.address.state) && (
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span>{teamMember.address.city}{teamMember.address.city && teamMember.address.state && ', '}{teamMember.address.state}</span>
-          </div>
-        )}
-
-        {/* Origem */}
-        {teamMember.origin && (
-          <div className="text-sm">
-            <span className="text-muted-foreground">Origem: </span>
-            <span>{teamMember.origin}</span>
-          </div>
-        )}
-
-        {/* Habilidades */}
-        {teamMember.skillIds && teamMember.skillIds.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Habilidades</span>
+      <CardContent className="flex flex-col h-full">
+        <div className="space-y-3 flex-1">
+          {/* Contato */}
+          {(teamMember.email || teamMember.phone) && (
+            <div className="space-y-1">
+              {teamMember.email && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{teamMember.email}</span>
+                </div>
+              )}
+              {teamMember.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{teamMember.phone}</span>
+                </div>
+              )}
             </div>
-            <Badge variant="secondary">
-              {teamMember.skillIds.length} habilidade{teamMember.skillIds.length !== 1 ? 's' : ''}
-            </Badge>
-          </div>
-        )}
+          )}
 
-        {/* Projetos Stats */}
-        {teamMember.projects && teamMember.projects.length > 0 && (
-          <div>
-            <div className="text-sm font-medium mb-1">Projetos</div>
-            <div className="flex gap-1 flex-wrap">
-              {stats.apresentado > 0 && <Badge variant="outline" className="text-xs">A: {stats.apresentado}</Badge>}
-              {stats.cotado > 0 && <Badge variant="outline" className="text-xs">C: {stats.cotado}</Badge>}
-              {stats.iniciado > 0 && <Badge variant="outline" className="text-xs">I: {stats.iniciado}</Badge>}
-              {stats.finalizado > 0 && <Badge variant="outline" className="text-xs">F: {stats.finalizado}</Badge>}
+          {/* Endereço */}
+          {teamMember.address && (teamMember.address.city || teamMember.address.state) && (
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{teamMember.address.city}{teamMember.address.city && teamMember.address.state && ', '}{teamMember.address.state}</span>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Origem */}
+          {teamMember.origin && (
+            <div className="text-sm">
+              <span className="text-muted-foreground">Origem: </span>
+              <span>{teamMember.origin}</span>
+            </div>
+          )}
+
+          {/* Habilidades */}
+          {teamMember.skillIds && teamMember.skillIds.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Habilidades</span>
+              </div>
+              <Badge variant="secondary">
+                {teamMember.skillIds.length} habilidade{teamMember.skillIds.length !== 1 ? 's' : ''}
+              </Badge>
+            </div>
+          )}
+
+          {/* Projetos Stats */}
+          {teamMember.projects && teamMember.projects.length > 0 && (
+            <div>
+              <div className="text-sm font-medium mb-1">Projetos</div>
+              <div className="flex gap-1 flex-wrap">
+                {stats.apresentado > 0 && <Badge variant="outline" className="text-xs">A: {stats.apresentado}</Badge>}
+                {stats.cotado > 0 && <Badge variant="outline" className="text-xs">C: {stats.cotado}</Badge>}
+                {stats.iniciado > 0 && <Badge variant="outline" className="text-xs">I: {stats.iniciado}</Badge>}
+                {stats.finalizado > 0 && <Badge variant="outline" className="text-xs">F: {stats.finalizado}</Badge>}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Ações */}
-        <div className="flex justify-end gap-2 pt-2 border-t">
+        <div className="flex justify-end gap-2 pt-2 border-t mt-auto">
           <Button
             variant="outline"
             size="sm"
