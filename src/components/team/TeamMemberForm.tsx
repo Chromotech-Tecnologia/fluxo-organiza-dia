@@ -15,7 +15,7 @@ import { MaskedInput } from '@/components/ui/masked-input';
 import { TeamMember, TeamMemberFormValues, Project } from '@/types';
 import { useSupabaseSkills } from '@/hooks/useSupabaseSkills';
 import { cepService } from '@/lib/cep';
-import { Plus, X } from 'lucide-react';
+import { ProjectList } from './ProjectList';
 import { useToast } from '@/hooks/use-toast';
 
 const teamMemberFormSchema = z.object({
@@ -52,7 +52,6 @@ interface TeamMemberFormProps {
 export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFormProps) {
   const { skills } = useSupabaseSkills();
   const { toast } = useToast();
-  const [newProject, setNewProject] = useState({ name: '', status: 'apresentado' as const });
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [skillAreaFilter, setSkillAreaFilter] = useState('all');
 
@@ -137,25 +136,6 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
     return () => clearTimeout(timeoutId);
   }, [watchedCep, form, toast]);
 
-  const addProject = () => {
-    if (newProject.name.trim()) {
-      const project: Project = {
-        id: crypto.randomUUID(),
-        name: newProject.name.trim(),
-        status: newProject.status,
-      };
-      
-      const currentProjects = form.getValues('projects');
-      form.setValue('projects', [...currentProjects, project]);
-      setNewProject({ name: '', status: 'apresentado' });
-    }
-  };
-
-  const removeProject = (projectId: string) => {
-    const currentProjects = form.getValues('projects');
-    form.setValue('projects', currentProjects.filter(p => p.id !== projectId));
-  };
-
   const toggleSkill = (skillId: string) => {
     const currentSkills = form.getValues('skillIds');
     if (currentSkills.includes(skillId)) {
@@ -164,23 +144,6 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
       form.setValue('skillIds', [...currentSkills, skillId]);
     }
   };
-
-  const getProjectStats = () => {
-    const stats = {
-      apresentado: 0,
-      cotado: 0,
-      iniciado: 0,
-      finalizado: 0,
-    };
-
-    watchedProjects?.forEach(project => {
-      stats[project.status]++;
-    });
-
-    return stats;
-  };
-
-  const stats = getProjectStats();
 
   // Filtrar habilidades por área
   const availableAreas = [...new Set(skills.map(s => s.area).filter(Boolean))];
@@ -486,61 +449,10 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
         </div>
 
         {/* Projetos */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Projetos</h3>
-            <div className="flex gap-2">
-              <Badge variant="outline">Apresentado: {stats.apresentado}</Badge>
-              <Badge variant="outline">Cotado: {stats.cotado}</Badge>
-              <Badge variant="outline">Iniciado: {stats.iniciado}</Badge>
-              <Badge variant="outline">Finalizado: {stats.finalizado}</Badge>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Input
-              placeholder="Nome do projeto"
-              value={newProject.name}
-              onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-            />
-            <Select
-              value={newProject.status}
-              onValueChange={(value: any) => setNewProject({ ...newProject, status: value })}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="apresentado">Apresentado</SelectItem>
-                <SelectItem value="cotado">Cotado</SelectItem>
-                <SelectItem value="iniciado">Iniciado</SelectItem>
-                <SelectItem value="finalizado">Finalizado</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button type="button" onClick={addProject} size="sm">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="space-y-2 max-h-32 overflow-y-auto">
-            {watchedProjects?.map((project) => (
-              <div key={project.id} className="flex items-center justify-between bg-muted p-2 rounded">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">{project.name}</span>
-                  <Badge variant="outline">{project.status}</Badge>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeProject(project.id)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ProjectList
+          projects={watchedProjects || []}
+          onProjectsChange={(projects) => form.setValue('projects', projects)}
+        />
 
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button type="button" variant="outline" onClick={onCancel}>
