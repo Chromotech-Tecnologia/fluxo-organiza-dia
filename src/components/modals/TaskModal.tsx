@@ -6,6 +6,7 @@ import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { SubItem, TaskFormValues } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { generateRoutineTasks, validateRoutineConfig, RoutineTaskData } from "@/lib/routineUtils";
 
 interface TaskModalProps {
   onTaskSaved?: () => void;
@@ -22,7 +23,7 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
       console.log('Salvando tarefa...', taskToEdit ? 'Edição' : 'Nova', data);
       
       // Garantir que assignedPersonId seja tratado corretamente
-      const cleanData = {
+      const cleanData: RoutineTaskData = {
         ...data,
         assignedPersonId: data.assignedPersonId && data.assignedPersonId !== '' ? data.assignedPersonId : undefined,
         description: data.description || '',
@@ -34,11 +35,25 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
 
       console.log('Dados limpos para salvar:', cleanData);
 
+      // Validar configuração de rotina
+      if (cleanData.isRoutine) {
+        const validationError = validateRoutineConfig(cleanData);
+        if (validationError) {
+          toast({
+            title: "Erro na configuração",
+            description: validationError,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       if (taskToEdit) {
+        // Para tarefas editadas, manter comportamento original (não criar rotinas)
         await updateTask(taskToEdit.id, {
           ...cleanData,
           deliveryDates: [],
-          isRecurrent: false
+          isRecurrent: cleanData.isRoutine || false
         });
         toast({
           title: "Tarefa atualizada",
@@ -46,23 +61,25 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         });
         console.log('Tarefa atualizada com sucesso');
       } else {
-        await addTask({
-          ...cleanData,
-          status: 'pending',
-          order: data.order || 0,
-          forwardHistory: [],
-          forwardCount: 0,
-          deliveryDates: [],
-          isRecurrent: false,
-          completionHistory: [],
-          isForwarded: false,
-          isConcluded: false
-        });
+        // Para novas tarefas, gerar rotinas se configurado
+        const tasksToCreate = generateRoutineTasks(cleanData);
+        
+        console.log(`Criando ${tasksToCreate.length} tarefa(s) ${cleanData.isRoutine ? 'da rotina' : ''}...`);
+        
+        // Criar todas as tarefas da rotina
+        for (const taskData of tasksToCreate) {
+          await addTask(taskData);
+        }
+        
+        const message = tasksToCreate.length > 1 
+          ? `${tasksToCreate.length} tarefas da rotina foram criadas com sucesso.`
+          : "A nova tarefa foi criada com sucesso.";
+          
         toast({
-          title: "Tarefa criada",
-          description: "A nova tarefa foi criada com sucesso.",
+          title: "Tarefa(s) criada(s)",
+          description: message,
         });
-        console.log('Nova tarefa criada com sucesso');
+        console.log('Tarefa(s) criada(s) com sucesso');
       }
       
       closeTaskModal();
