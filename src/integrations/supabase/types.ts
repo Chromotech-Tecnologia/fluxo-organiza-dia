@@ -270,6 +270,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           project_ids: string[] | null
+          projects: Json | null
           role: string | null
           skill_ids: string[] | null
           status: string | null
@@ -286,6 +287,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           project_ids?: string[] | null
+          projects?: Json | null
           role?: string | null
           skill_ids?: string[] | null
           status?: string | null
@@ -302,6 +304,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           project_ids?: string[] | null
+          projects?: Json | null
           role?: string | null
           skill_ids?: string[] | null
           status?: string | null

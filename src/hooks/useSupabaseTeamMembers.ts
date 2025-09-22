@@ -45,11 +45,11 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
         status: member.status as 'ativo' | 'inativo',
         isPartner: false,
         origin: '',
-        projects: (member as any).projects || (member.project_ids || []).map((id: string) => ({
-          id,
-          name: 'Projeto sem nome',
-          status: 'apresentado' as const
-        })),
+        projects: Array.isArray((member as any).projects) 
+          ? (member as any).projects 
+          : typeof (member as any).projects === 'string' 
+            ? JSON.parse((member as any).projects) 
+            : [],
         createdAt: member.created_at,
         updatedAt: member.updated_at
       }));
@@ -122,7 +122,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           phone: newTeamMember.phone,
           department: '',
           skill_ids: newTeamMember.skillIds,
-          projects: newTeamMember.projects || [],
+          projects: JSON.stringify(newTeamMember.projects || []),
           project_ids: (newTeamMember.projects || []).map(p => p.id),
           hire_date: null,
           status: newTeamMember.status,
@@ -163,7 +163,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           phone: updates.phone,
           department: '',
           skill_ids: updates.skillIds,
-          projects: updates.projects || [],
+          projects: JSON.stringify(updates.projects || []),
           project_ids: (updates.projects || []).map(p => p.id),
           hire_date: null,
           status: updates.status,
