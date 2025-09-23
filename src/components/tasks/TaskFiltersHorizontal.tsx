@@ -263,6 +263,36 @@ export function TaskFiltersHorizontal({
       {/* Separador visual */}
       <div className="h-6 w-px bg-border" />
 
+      {/* Conclusão buttons */}
+      <span className="text-sm font-medium text-muted-foreground">Conclusão:</span>
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant={currentFilters.isConcluded === true ? "default" : "outline"}
+          onClick={() => {
+            const newValue = currentFilters.isConcluded === true ? undefined : true;
+            handleAdvancedFilterChange('isConcluded', newValue);
+          }}
+          className="h-8 px-3 text-xs"
+        >
+          Concluído
+        </Button>
+        <Button
+          size="sm"
+          variant={currentFilters.isConcluded === false ? "default" : "outline"}
+          onClick={() => {
+            const newValue = currentFilters.isConcluded === false ? undefined : false;
+            handleAdvancedFilterChange('isConcluded', newValue);
+          }}
+          className="h-8 px-3 text-xs"
+        >
+          Não Concluído
+        </Button>
+      </div>
+
+      {/* Separador visual */}
+      <div className="h-6 w-px bg-border" />
+
       {/* Ordenação */}
       <Select value={sortBy} onValueChange={(value: SortOption) => onSortChange(value)}>
         <SelectTrigger className="w-[140px] h-8 text-xs">
@@ -435,28 +465,6 @@ export function TaskFiltersHorizontal({
                   className="h-7 px-2 text-xs"
                 >
                   Pessoal
-                </Button>
-                <Button
-                  size="sm"
-                  variant={currentFilters.isConcluded === true ? "default" : "outline"}
-                  onClick={() => {
-                    const newValue = currentFilters.isConcluded === true ? undefined : true;
-                    handleAdvancedFilterChange('isConcluded', newValue);
-                  }}
-                  className="h-7 px-2 text-xs"
-                >
-                  Concluído
-                </Button>
-                <Button
-                  size="sm"
-                  variant={currentFilters.isConcluded === false ? "default" : "outline"}
-                  onClick={() => {
-                    const newValue = currentFilters.isConcluded === false ? undefined : false;
-                    handleAdvancedFilterChange('isConcluded', newValue);
-                  }}
-                  className="h-7 px-2 text-xs"
-                >
-                  Não Concluído
                 </Button>
               </div>
             </div>
