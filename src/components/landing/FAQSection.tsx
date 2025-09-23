@@ -2,40 +2,32 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 const faqs = [
   {
-    question: "Como funciona o plano gratuito?",
-    answer: "O plano gratuito inclui até 5 usuários, tarefas ilimitadas, calendário básico e 2GB de armazenamento. Você pode usar indefinidamente sem nenhum custo ou compromisso."
+    question: "Como funciona o teste gratuito?",
+    answer: "Oferecemos 7 dias grátis para 1 usuário testar todas as funcionalidades. Após esse período, você pode solicitar ao suporte uma prorrogação do teste se necessário."
   },
   {
     question: "É seguro armazenar dados empresariais no OrganizeSe?",
     answer: "Absolutamente. Utilizamos criptografia de ponta a ponta, certificação SSL, backups automáticos e hospedagem em servidores seguros. Estamos em conformidade com a LGPD e seguimos as melhores práticas de segurança."
   },
   {
-    question: "Posso importar dados de outras ferramentas?",
-    answer: "Sim! Oferecemos importação de dados das principais ferramentas do mercado como Trello, Asana, Monday e planilhas Excel. Nossa equipe ajuda na migração sem perda de informações."
-  },
-  {
     question: "Como funciona o suporte ao cliente?",
     answer: "Oferecemos suporte via WhatsApp para todos os planos. É rápido, prático e em português! Nosso time está sempre pronto para ajudar."
   },
   {
-    question: "Posso personalizar o sistema para minha empresa?",
-    answer: "Sim! O plano Profissional inclui personalização completa de campos, status, fluxos de trabalho e integração com outras ferramentas. O plano Enterprise oferece desenvolvimento de funcionalidades específicas."
-  },
-  {
     question: "E se minha equipe crescer?",
-    answer: "Sem problema! Você pode adicionar novos usuários a qualquer momento. No plano gratuito, após 5 usuários, você pode fazer upgrade. No plano Profissional, não há limite de usuários."
+    answer: "Você pode fazer upgrade do plano Individual (1 usuário) para o Profissional (até 10 usuários) ou consultar o suporte para adicionar novos membros conforme necessário."
   },
   {
     question: "Existe versão mobile?",
     answer: "O OrganizeSe é 100% responsivo e funciona perfeitamente em qualquer dispositivo - desktop, tablet ou celular. Acesse suas tarefas de qualquer lugar com a mesma experiência."
   },
   {
-    question: "Como funciona o período de teste do plano Profissional?",
-    answer: "Todos os novos usuários podem experimentar o plano Profissional gratuitamente por 7 dias, com acesso a todas as funcionalidades premium. Não é necessário cartão de crédito para começar."
+    question: "Como funciona o período de teste?",
+    answer: "Oferecemos 7 dias grátis para testar todas as funcionalidades dos planos Individual e Profissional. Não é necessário cartão de crédito para começar o teste."
   },
   {
     question: "Posso cancelar a qualquer momento?",
-    answer: "Sim, não há contratos ou multas. Você pode cancelar sua assinatura a qualquer momento e continuar usando o plano gratuito ou fazer download dos seus dados."
+    answer: "Sim, não há contratos ou multas. Você pode cancelar sua assinatura a qualquer momento e fazer download dos seus dados."
   },
   {
     question: "Vocês oferecem treinamento para a equipe?",

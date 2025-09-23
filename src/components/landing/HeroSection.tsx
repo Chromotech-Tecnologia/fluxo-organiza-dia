@@ -55,7 +55,7 @@ export function HeroSection() {
               </div>
               <div className="flex items-center space-x-2">
                 <CheckCircle className="w-5 h-5 text-primary" />
-                <span>7 dias grátis para começar</span>
+                <span className="text-sm font-medium">Teste gratuito 7 dias</span>
               </div>
             </div>
 
@@ -66,7 +66,7 @@ export function HeroSection() {
                 onClick={handleCTA} 
                 className="bg-gradient-button hover:opacity-90 flex items-center space-x-2 text-lg px-8 py-3 shadow-lg text-white"
               >
-                <span>{isAuthenticated ? 'Ir para Dashboard' : 'Comece Grátis Agora'}</span>
+                <span>{isAuthenticated ? 'Ir para Dashboard' : 'Teste 7 Dias Grátis'}</span>
                 <ArrowRight className="w-5 h-5" />
               </Button>
               {!isAuthenticated && (

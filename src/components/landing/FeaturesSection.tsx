@@ -24,7 +24,7 @@ const features = [
   {
     icon: Users,
     title: "Equipes Colaborativas",
-    description: "Gerencie membros da equipe, defina permissões e acompanhe o progresso de cada pessoa.",
+    description: "Gerencie membros da equipe e acompanhe o progresso de cada pessoa.",
     highlight: "Trabalhe em equipe"
   },
   {
@@ -83,9 +83,9 @@ const features = [
   },
   {
     icon: Target,
-    title: "Metas e Objetivos",
-    description: "Defina objetivos claros e acompanhe o progresso rumo às suas metas.",
-    highlight: "Alcance objetivos"
+    title: "Controle Total",
+    description: "Tenha visibilidade completa sobre todas as atividades da sua equipe.",
+    highlight: "Controle total"
   }
 ];
 

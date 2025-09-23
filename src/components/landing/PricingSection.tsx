@@ -6,39 +6,40 @@ import { Check, Star, Zap, Crown } from "lucide-react";
 
 const plans = [
   {
-    name: "Gratuito",
-    description: "Perfeito para começar",
-    price: "R$ 0",
+    name: "Individual",
+    description: "Perfeito para profissionais",
+    price: "R$ 29",
     period: "/mês",
     features: [
-      "Até 5 usuários",
+      "1 usuário",
       "Tarefas ilimitadas",
-      "Calendário básico",
-      "Relatórios simples",
-      "Suporte por email",
-      "2GB de armazenamento"
+      "Calendário integrado",
+      "Relatórios básicos",
+      "Sistema de habilidades",
+      "Suporte por WhatsApp",
+      "Tarefas recorrentes",
+      "Backup automático"
     ],
-    buttonText: "Comece Grátis",
+    buttonText: "7 Dias Grátis",
     highlighted: false,
     icon: Star,
-    badge: "Mais Popular"
+    badge: "Para Você"
   },
   {
     name: "Profissional",
-    description: "Para equipes que crescem",
-    price: "R$ 29",
-    period: "/usuário/mês",
+    description: "Para pequenas equipes",
+    price: "R$ 79",
+    period: "/mês",
     features: [
-      "Usuários ilimitados",
+      "Até 10 usuários",
       "Todas as funcionalidades",
       "Relatórios avançados",
       "Tarefas recorrentes",
       "Sistema de habilidades",
       "Suporte prioritário",
-      "50GB de armazenamento",
       "Integrações avançadas",
       "Backup automático",
-      "Personalização completa"
+      "Dashboard completo"
     ],
     buttonText: "7 Dias Grátis",
     highlighted: true,
@@ -47,16 +48,16 @@ const plans = [
   },
   {
     name: "Enterprise",
-    description: "Para grandes organizações",
+    description: "Para grandes equipes",
     price: "Sob consulta",
     period: "",
     features: [
+      "Usuários ilimitados",
       "Tudo do Profissional",
       "Suporte dedicado",
       "Onboarding personalizado",
       "Treinamento da equipe",
       "SLA garantido",
-      "Armazenamento ilimitado",
       "API personalizada",
       "Auditoria de segurança",
       "Compliance LGPD",
@@ -75,16 +76,16 @@ const faqs = [
     answer: "Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. As mudanças são aplicadas imediatamente."
   },
   {
-    question: "O que acontece quando o período gratuito acaba?",
-    answer: "Você pode continuar usando o plano gratuito indefinidamente ou fazer upgrade para desbloquear recursos avançados."
+    question: "Como funciona o período de teste?",
+    answer: "Oferecemos 7 dias grátis para testar todos os recursos. Após esse período, você pode solicitar ao suporte uma prorrogação do teste se necessário."
   },
   {
     question: "Os dados ficam seguros?",
     answer: "Absolutamente. Usamos criptografia de ponta e fazemos backups automáticos. Seus dados são protegidos com os mais altos padrões de segurança."
   },
   {
-    question: "Há desconto para pagamento anual?",
-    answer: "Sim! Oferecemos 2 meses gratuitos para quem opta pelo pagamento anual. Entre em contato via WhatsApp para mais detalhes."
+    question: "E se minha equipe crescer?",
+    answer: "No plano Individual você tem 1 usuário. Se a equipe crescer, pode fazer upgrade para o Profissional (até 10 usuários) ou consultar o suporte para adicionar novos membros."
   }
 ];
 
@@ -114,7 +115,7 @@ export function PricingSection() {
             Planos que <span className="text-primary">cabem no seu bolso</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Comece gratuitamente e cresça no seu ritmo. Sem surpresas, sem taxas ocultas. 
+            Teste grátis por 7 dias e cresça no seu ritmo. Sem surpresas, sem taxas ocultas. 
             Apenas o que você precisa para impulsionar sua produtividade.
           </p>
           
