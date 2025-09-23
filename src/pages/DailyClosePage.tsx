@@ -236,7 +236,7 @@ const DailyClosePage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Média/Dia</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{avgTasksPerDay}</div>
@@ -281,7 +281,7 @@ const DailyClosePage = () => {
         <CardContent>
           {Object.keys(tasksByDate).length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+              <CalendarIcon className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
                 Nenhuma atividade encontrada
               </h3>
