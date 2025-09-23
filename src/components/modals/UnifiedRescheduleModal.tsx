@@ -18,7 +18,7 @@ interface UnifiedRescheduleModalProps {
 }
 
 export function UnifiedRescheduleModal({ onRescheduleComplete }: UnifiedRescheduleModalProps) {
-  const { isRescheduleModalOpen, tasksToReschedule, closeRescheduleModal } = useModalStore();
+  const { isRescheduleModalOpen, tasksToReschedule, onClearSelectionCallback, closeRescheduleModal } = useModalStore();
   const { updateTask, addTask, refetch } = useSupabaseTasks();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -186,6 +186,11 @@ export function UnifiedRescheduleModal({ onRescheduleComplete }: UnifiedReschedu
       setSelectedDate(undefined);
       setKeepOrder(true);
       setKeepChecklistStatus(true);
+      
+      // Limpar seleções se callback foi fornecido
+      if (onClearSelectionCallback) {
+        onClearSelectionCallback();
+      }
       
       // Invalidar queries para atualizar a UI
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });

@@ -346,7 +346,7 @@ export function BulkActionsBar({ selectedTasks, onClearSelection }: BulkActionsB
               size="sm"
               variant="outline"
               onClick={() => {
-                openRescheduleModal(selectedTasks);
+                openRescheduleModal(selectedTasks, onClearSelection);
               }}
               className="gap-1 text-orange-600 border-orange-600 hover:bg-orange-50"
             >

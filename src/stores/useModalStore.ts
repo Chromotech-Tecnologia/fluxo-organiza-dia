@@ -42,7 +42,8 @@ interface ModalState {
   // Unified Reschedule Modal
   isRescheduleModalOpen: boolean;
   tasksToReschedule: Task[] | null;
-  openRescheduleModal: (tasks: Task | Task[]) => void;
+  onClearSelectionCallback: (() => void) | null;
+  openRescheduleModal: (tasks: Task | Task[], onClearSelection?: () => void) => void;
   closeRescheduleModal: () => void;
   
   // Email Confirmation Modal
@@ -107,13 +108,16 @@ export const useModalStore = create<ModalState>((set) => ({
   // Unified Reschedule Modal
   isRescheduleModalOpen: false,
   tasksToReschedule: null,
-  openRescheduleModal: (tasks) => set({ 
+  onClearSelectionCallback: null,
+  openRescheduleModal: (tasks, onClearSelection) => set({ 
     isRescheduleModalOpen: true, 
-    tasksToReschedule: Array.isArray(tasks) ? tasks : [tasks]
+    tasksToReschedule: Array.isArray(tasks) ? tasks : [tasks],
+    onClearSelectionCallback: onClearSelection || null
   }),
   closeRescheduleModal: () => set({ 
     isRescheduleModalOpen: false, 
-    tasksToReschedule: null 
+    tasksToReschedule: null,
+    onClearSelectionCallback: null
   }),
   
   // Email Confirmation Modal
