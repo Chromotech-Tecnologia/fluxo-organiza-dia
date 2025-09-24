@@ -102,14 +102,16 @@ export function TaskCardImproved({
     }
     return 'border-border bg-background';
   };
+  // Calculate progress for sub-items using completed and notDone properties
   const completedSubItems = task.subItems?.filter(item => item.completed === true).length || 0;
-  const notCompletedSubItems = task.subItems?.filter(item => item.completed === false).length || 0;
+  const notCompletedSubItems = task.subItems?.filter(item => item.notDone === true).length || 0;
+  const pendingSubItems = task.subItems?.filter(item => !item.completed && !item.notDone).length || 0;
   const totalSubItems = task.subItems?.length || 0;
-  const pendingSubItems = totalSubItems - completedSubItems - notCompletedSubItems; // Items ainda não marcados
 
-  const completedProgress = totalSubItems > 0 ? completedSubItems / totalSubItems * 100 : 0;
-  const notCompletedProgress = totalSubItems > 0 ? notCompletedSubItems / totalSubItems * 100 : 0;
-  const pendingProgress = totalSubItems > 0 ? pendingSubItems / totalSubItems * 100 : 0;
+  // Calculate percentages ensuring they add up to 100%
+  const completedProgress = totalSubItems > 0 ? Math.round((completedSubItems / totalSubItems) * 100) : 0;
+  const notCompletedProgress = totalSubItems > 0 ? Math.round((notCompletedSubItems / totalSubItems) * 100) : 0;
+  const pendingProgress = totalSubItems > 0 ? 100 - completedProgress - notCompletedProgress : 0;
   const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
   const taskDate = new Date(task.scheduledDate + 'T00:00:00');
