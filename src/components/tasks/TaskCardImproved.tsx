@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Progress } from '@/components/ui/progress';
+import { DualColorProgress } from '@/components/ui/dual-color-progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getOrderNumberColor, getPriorityColor, getTimeInMinutes, formatTime } from '@/lib/taskUtils';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
@@ -108,8 +109,11 @@ export function TaskCardImproved({
   };
 
   const completedSubItems = task.subItems?.filter(item => item.completed).length || 0;
+  const notCompletedSubItems = task.subItems?.filter(item => !item.completed).length || 0;
   const totalSubItems = task.subItems?.length || 0;
-  const checklistProgress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
+  const processedItems = completedSubItems + notCompletedSubItems; // Todos foram "baixados"
+  const completedProgress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
+  const notCompletedProgress = totalSubItems > 0 ? (notCompletedSubItems / totalSubItems) * 100 : 0;
 
   const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
@@ -411,9 +415,13 @@ export function TaskCardImproved({
               <div className="flex-shrink-0 min-w-[120px] max-w-[200px]">
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                   <span>Checklist</span>
-                  <span>{completedSubItems}/{totalSubItems}</span>
+                  <span>{completedSubItems} ok / {notCompletedSubItems} não ok</span>
                 </div>
-                <Progress value={checklistProgress} className="h-1.5" />
+                <DualColorProgress 
+                  completedValue={completedProgress} 
+                  notCompletedValue={notCompletedProgress}
+                  className="h-1.5" 
+                />
               </div>
             )}
           </div>
