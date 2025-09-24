@@ -10,14 +10,17 @@ export function SupportLink() {
   };
 
   return (
-    <Button 
-      variant="ghost" 
-      size="sm" 
-      onClick={handleContactSupport}
-      className="gap-2"
-    >
-      <MessageCircle className="h-4 w-4" />
-      Suporte
-    </Button>
+    <div className="px-2">
+      <div className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-2">Suporte</div>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={handleContactSupport}
+        className="w-full justify-start gap-3 text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-all duration-200 font-medium"
+      >
+        <MessageCircle className="h-4 w-4" />
+        Suporte
+      </Button>
+    </div>
   );
 }

@@ -85,8 +85,8 @@ export function AppSidebar() {
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-green-50 text-green-600 font-medium border-l-4 border-green-500" 
-      : "hover:bg-gray-50 text-gray-600 transition-all duration-200";
+      ? "bg-emerald-50 text-emerald-700 font-semibold border-r-3 border-emerald-500 shadow-sm" 
+      : "text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-all duration-200";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"}>
@@ -111,7 +111,7 @@ export function AppSidebar() {
       <SidebarContent>
         {/* Menu Principal */}
         <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-2">Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -122,8 +122,8 @@ export function AppSidebar() {
                        end={item.url === '/'}
                        className={getNavClass}
                      >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {!collapsed && <span>{item.title}</span>}
+                       <item.icon className="h-4 w-4 mr-3" />
+                       {!collapsed && <span className="font-medium">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -134,7 +134,7 @@ export function AppSidebar() {
 
         {/* Gestão Diária */}
         <SidebarGroup>
-          <SidebarGroupLabel>Gestão Diária</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-2">Gestão Diária</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {dailyItems.map((item) => (
@@ -144,8 +144,8 @@ export function AppSidebar() {
                       to={item.url} 
                       className={getNavClass}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {!collapsed && <span>{item.title}</span>}
+                       <item.icon className="h-4 w-4 mr-3" />
+                       {!collapsed && <span className="font-medium">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -156,7 +156,7 @@ export function AppSidebar() {
 
         {/* Sistema */}
         <SidebarGroup>
-          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-2">Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {settingsItems.filter(item => {
@@ -169,8 +169,8 @@ export function AppSidebar() {
                       to={item.url} 
                       className={getNavClass}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {!collapsed && <span>{item.title}</span>}
+                       <item.icon className="h-4 w-4 mr-3" />
+                       {!collapsed && <span className="font-medium">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -188,14 +188,14 @@ export function AppSidebar() {
 
         {/* Logout Button */}
         <div className="mt-auto p-4 border-t border-border">
-          <div className="mb-2 text-xs text-gray-700">
+          <div className="mb-3 text-xs text-slate-500">
             {!collapsed && user && <span>Olá, {user.user_metadata?.name || user.email}</span>}
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="w-full justify-start gap-2 text-gray-700 hover:bg-muted/50 transition-all duration-200"
+            className="w-full justify-start gap-3 text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-all duration-200 font-medium"
           >
             <LogOut className="h-4 w-4" />
             {!collapsed && <span>Sair</span>}

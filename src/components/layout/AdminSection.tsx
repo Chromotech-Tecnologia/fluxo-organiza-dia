@@ -15,21 +15,23 @@ export function AdminSection() {
 
   if (!isAdmin) return null;
 
+  const getNavClass = ({ isActive }: { isActive: boolean }) =>
+    isActive 
+      ? "bg-emerald-50 text-emerald-700 font-semibold border-r-3 border-emerald-500 shadow-sm" 
+      : "text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-all duration-200";
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Administração</SidebarGroupLabel>
+      <SidebarGroupLabel className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-2">Administração</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <NavLink 
                 to="/admin" 
-                className={({ isActive }) => 
-                  isActive ? 
-                  "bg-green-100 text-primary font-medium border-l-4 border-primary" : 
-                  "hover:bg-green-100 text-black transition-all duration-200"}>
-                <Shield />
-                <span>Painel Admin</span>
+                className={getNavClass}>
+                <Shield className="h-4 w-4 mr-3" />
+                <span className="font-medium">Painel Admin</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
