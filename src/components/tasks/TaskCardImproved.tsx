@@ -308,9 +308,22 @@ export function TaskCardImproved({
             </div>
 
             {totalSubItems > 0 && <div className="flex-shrink-0 min-w-[120px] max-w-[200px]">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                  <span>Checklist </span>
-                  <span>{completedSubItems} ok / {notCompletedSubItems} não ok / {pendingSubItems} pendentes / {totalSubItems} total</span>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Checklist</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span className="text-green-700 font-medium">{completedSubItems}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                      <span className="text-red-700 font-medium">{notCompletedSubItems}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-muted"></div>
+                      <span className="text-muted-foreground font-medium">{pendingSubItems}</span>
+                    </div>
+                  </div>
                 </div>
                 <DualColorProgress completedValue={completedProgress} notCompletedValue={notCompletedProgress} pendingValue={pendingProgress} className="h-1.5" />
               </div>}
