@@ -5,12 +5,13 @@ interface DualColorProgressProps {
   className?: string;
   completedValue: number; // 0-100 for green portion
   notCompletedValue: number; // 0-100 for red portion
+  pendingValue: number; // 0-100 for gray portion (pending items)
 }
 
 const DualColorProgress = React.forwardRef<
   HTMLDivElement,
   DualColorProgressProps
->(({ className, completedValue = 0, notCompletedValue = 0, ...props }, ref) => (
+>(({ className, completedValue = 0, notCompletedValue = 0, pendingValue = 0, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
@@ -30,6 +31,14 @@ const DualColorProgress = React.forwardRef<
       style={{ 
         left: `${completedValue}%`,
         width: `${notCompletedValue}%`
+      }}
+    />
+    {/* Gray portion (pending items) */}
+    <div
+      className="absolute top-0 h-full bg-gray-300 transition-all"
+      style={{ 
+        left: `${completedValue + notCompletedValue}%`,
+        width: `${pendingValue}%`
       }}
     />
   </div>

@@ -109,11 +109,11 @@ export function TaskCardImproved({
   };
 
   const completedSubItems = task.subItems?.filter(item => item.completed).length || 0;
-  const notCompletedSubItems = task.subItems?.filter(item => !item.completed).length || 0;
   const totalSubItems = task.subItems?.length || 0;
-  const processedItems = completedSubItems + notCompletedSubItems; // Todos foram "baixados"
+  const pendingSubItems = totalSubItems - completedSubItems; // Items ainda não marcados
+  
   const completedProgress = totalSubItems > 0 ? (completedSubItems / totalSubItems) * 100 : 0;
-  const notCompletedProgress = totalSubItems > 0 ? (notCompletedSubItems / totalSubItems) * 100 : 0;
+  const pendingProgress = totalSubItems > 0 ? (pendingSubItems / totalSubItems) * 100 : 0;
 
   const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
   const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
@@ -415,11 +415,12 @@ export function TaskCardImproved({
               <div className="flex-shrink-0 min-w-[120px] max-w-[200px]">
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                   <span>Checklist</span>
-                  <span>{completedSubItems} ok / {notCompletedSubItems} não ok</span>
+                  <span>{completedSubItems} ok / {pendingSubItems} pendentes / {totalSubItems} total</span>
                 </div>
                 <DualColorProgress 
                   completedValue={completedProgress} 
-                  notCompletedValue={notCompletedProgress}
+                  notCompletedValue={0}
+                  pendingValue={pendingProgress}
                   className="h-1.5" 
                 />
               </div>
