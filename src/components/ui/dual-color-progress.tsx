@@ -36,4 +36,4 @@ const DualColorProgress = React.forwardRef<
 ))
 DualColorProgress.displayName = "DualColorProgress"
 
-export { DualColorProgress }
+export default DualColorProgress

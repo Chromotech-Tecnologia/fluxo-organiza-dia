@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Progress } from '@/components/ui/progress';
-import { DualColorProgress } from '@/components/ui/dual-color-progress';
+import DualColorProgress from '@/components/ui/dual-color-progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getOrderNumberColor, getPriorityColor, getTimeInMinutes, formatTime } from '@/lib/taskUtils';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
