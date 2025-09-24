@@ -35,7 +35,7 @@ const DualColorProgress = React.forwardRef<
     />
     {/* Gray portion (pending items) */}
     <div
-      className="absolute top-0 h-full bg-gray-300 transition-all"
+      className="absolute top-0 h-full bg-muted transition-all"
       style={{ 
         left: `${completedValue + notCompletedValue}%`,
         width: `${pendingValue}%`
