@@ -17,7 +17,7 @@ export function AdminSection() {
               isActive
             }) => isActive ? "bg-green-100 text-primary font-medium border-l-4 border-primary" : "hover:bg-green-100 text-black transition-all duration-200"}>
                 <Shield />
-                <span className="text-slate-500">Painel Admin</span>
+                <span className="text-slate-700">Painel Admin</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
