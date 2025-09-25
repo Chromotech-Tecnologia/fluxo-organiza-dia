@@ -135,7 +135,7 @@ export function UnifiedRescheduleModal({ onRescheduleComplete }: UnifiedReschedu
             order: keepOrder ? (task.order || 0) : 0,
             subItems: keepChecklistStatus 
               ? safeSubItems 
-              : safeSubItems.map(item => ({ ...item, completed: false })),
+              : safeSubItems.map(item => ({ ...item, completed: false, notDone: false })),
             forwardHistory: [
               {
                 forwardedAt: new Date().toISOString(),
