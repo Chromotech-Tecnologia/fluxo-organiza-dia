@@ -34,6 +34,7 @@ import { SignInPage } from "./components/auth/SignInPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
+import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 
 // Create QueryClient with better configuration for immediate updates
 const queryClient = new QueryClient({
@@ -58,6 +59,7 @@ const App = () => {
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/auth" element={<SignInPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/accept-invitation/:token" element={<AcceptInvitationPage />} />
             
             {/* Protected routes */}
             <Route path="/*" element={

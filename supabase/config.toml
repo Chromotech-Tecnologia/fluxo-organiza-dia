@@ -76,6 +76,12 @@ verify_jwt = true
 [functions.export-to-excel]
 verify_jwt = true
 
+[functions.send-team-invitation]
+verify_jwt = true
+
+[functions.accept-team-invitation]
+verify_jwt = true
+
 # Webhook configuration for auth emails
 [auth.hook.send_sms]
 enabled = false

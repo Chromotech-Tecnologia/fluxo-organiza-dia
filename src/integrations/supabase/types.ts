@@ -167,12 +167,14 @@ export type Database = {
           concluded_at: string | null
           created_at: string
           custom_time_minutes: number | null
+          delegated_by_user_id: string | null
           delivery_dates: string[] | null
           description: string | null
           forward_count: number | null
           forward_history: Json | null
           id: string
           is_concluded: boolean | null
+          is_external_delegation: boolean | null
           is_forwarded: boolean | null
           is_routine: boolean | null
           observations: string | null
@@ -197,12 +199,14 @@ export type Database = {
           concluded_at?: string | null
           created_at?: string
           custom_time_minutes?: number | null
+          delegated_by_user_id?: string | null
           delivery_dates?: string[] | null
           description?: string | null
           forward_count?: number | null
           forward_history?: Json | null
           id?: string
           is_concluded?: boolean | null
+          is_external_delegation?: boolean | null
           is_forwarded?: boolean | null
           is_routine?: boolean | null
           observations?: string | null
@@ -227,12 +231,14 @@ export type Database = {
           concluded_at?: string | null
           created_at?: string
           custom_time_minutes?: number | null
+          delegated_by_user_id?: string | null
           delivery_dates?: string[] | null
           description?: string | null
           forward_count?: number | null
           forward_history?: Json | null
           id?: string
           is_concluded?: boolean | null
+          is_external_delegation?: boolean | null
           is_forwarded?: boolean | null
           is_routine?: boolean | null
           observations?: string | null
@@ -259,13 +265,106 @@ export type Database = {
           },
         ]
       }
+      team_collaborations: {
+        Row: {
+          collaborator_user_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          owner_user_id: string
+          team_member_id: string
+          updated_at: string
+        }
+        Insert: {
+          collaborator_user_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_user_id: string
+          team_member_id: string
+          updated_at?: string
+        }
+        Update: {
+          collaborator_user_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_user_id?: string
+          team_member_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_collaborations_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_at: string
+          recipient_email: string
+          recipient_user_id: string | null
+          sender_user_id: string
+          status: Database["public"]["Enums"]["invitation_status"]
+          team_member_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_at?: string
+          recipient_email: string
+          recipient_user_id?: string | null
+          sender_user_id: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          team_member_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_at?: string
+          recipient_email?: string
+          recipient_user_id?: string | null
+          sender_user_id?: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          team_member_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
+          collaborator_user_id: string | null
           created_at: string
           department: string | null
           email: string | null
           hire_date: string | null
           id: string
+          is_external_collaborator: boolean | null
           name: string
           notes: string | null
           phone: string | null
@@ -278,11 +377,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          collaborator_user_id?: string | null
           created_at?: string
           department?: string | null
           email?: string | null
           hire_date?: string | null
           id?: string
+          is_external_collaborator?: boolean | null
           name: string
           notes?: string | null
           phone?: string | null
@@ -295,11 +396,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          collaborator_user_id?: string | null
           created_at?: string
           department?: string | null
           email?: string | null
           hire_date?: string | null
           id?: string
+          is_external_collaborator?: boolean | null
           name?: string
           notes?: string | null
           phone?: string | null
@@ -348,6 +451,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_collaboration_account_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       debug_auth_context: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -379,6 +486,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      invitation_status: "pending" | "accepted" | "rejected" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -507,6 +615,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      invitation_status: ["pending", "accepted", "rejected", "expired"],
     },
   },
 } as const

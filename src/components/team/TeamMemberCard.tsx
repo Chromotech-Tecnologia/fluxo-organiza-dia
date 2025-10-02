@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TeamMember } from "@/types";
-import { Mail, Phone, Edit, Trash2, MapPin, Users } from "lucide-react";
+import { Mail, Phone, Edit, Trash2, MapPin, Users, UserPlus, ExternalLink } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
+import { useState } from "react";
+import { InvitationModal } from "./InvitationModal";
 
 interface TeamMemberCardProps {
   teamMember: TeamMember;
@@ -14,6 +16,7 @@ interface TeamMemberCardProps {
 
 export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardProps) {
   const { openTeamMemberModal } = useModalStore();
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const handleCardClick = () => {
     openTeamMemberModal(teamMember);
@@ -27,6 +30,11 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(teamMember);
+  };
+
+  const handleInviteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowInviteModal(true);
   };
 
   const getProjectStats = () => {
@@ -47,10 +55,15 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
   const stats = getProjectStats();
 
   return (
-    <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow h-full flex flex-col"
-      onClick={handleCardClick}
-    >
+    <>
+      <Card 
+        className={`cursor-pointer hover:shadow-md transition-shadow h-full flex flex-col ${
+          teamMember.is_external_collaborator 
+            ? 'border-l-4 border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/10' 
+            : ''
+        }`}
+        onClick={handleCardClick}
+      >
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
@@ -63,6 +76,12 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
             </Badge>
             {teamMember.isPartner && (
               <Badge variant="outline">Sócio</Badge>
+            )}
+            {teamMember.is_external_collaborator && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Colaborador
+              </Badge>
             )}
           </div>
         </div>
@@ -133,6 +152,16 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
 
         {/* Ações */}
         <div className="flex justify-end gap-2 pt-2 border-t mt-auto">
+          {!teamMember.is_external_collaborator && teamMember.email && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleInviteClick}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -151,5 +180,13 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
         </div>
       </CardContent>
     </Card>
+    
+    <InvitationModal 
+      isOpen={showInviteModal}
+      onClose={() => setShowInviteModal(false)}
+      teamMemberId={teamMember.id}
+      teamMemberName={teamMember.name}
+    />
+    </>
   );
 }

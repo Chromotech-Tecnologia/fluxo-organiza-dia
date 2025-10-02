@@ -46,6 +46,8 @@ export interface TeamMember {
   projects: Project[];
   createdAt: string;
   updatedAt: string;
+  is_external_collaborator?: boolean;
+  collaborator_user_id?: string;
 }
 
 export interface Person {
@@ -107,11 +109,11 @@ export interface Task {
   type: TaskType;
   priority: TaskPriority;
   timeInvestment: TaskTimeInvestment;
-  customTimeMinutes?: number; // Novo campo para tempo personalizado
+  customTimeMinutes?: number;
   category: TaskCategory;
   status: TaskStatus;
   assignedPersonId?: string; // DEPRECATED: Use assignedTeamMemberId
-  assignedTeamMemberId?: string; // Nova referência para team_members
+  assignedTeamMemberId?: string;
   subItems: SubItem[];
   deliveryDates: string[];
   observations: string;
@@ -134,6 +136,8 @@ export interface Task {
   isConcluded?: boolean;
   concludedAt?: string;
   isProcessed?: boolean;
+  delegated_by_user_id?: string;
+  is_external_delegation?: boolean;
 }
 
 export interface DailyReport {
