@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,8 @@ import { Mail, Phone, Edit, Trash2, MapPin, Users, UserPlus, ExternalLink } from
 import { useModalStore } from "@/stores/useModalStore";
 import { useState } from "react";
 import { InvitationModal } from "./InvitationModal";
+import { useEmailVerification } from "@/hooks/useEmailVerification";
+import { toast } from "@/hooks/use-toast";
 
 interface TeamMemberCardProps {
   teamMember: TeamMember;
@@ -17,6 +18,9 @@ interface TeamMemberCardProps {
 export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardProps) {
   const { openTeamMemberModal } = useModalStore();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState<string>('');
+  const [verifiedUserName, setVerifiedUserName] = useState<string>('');
+  const { verifyEmail, isVerifying } = useEmailVerification();
 
   const handleCardClick = () => {
     openTeamMemberModal(teamMember);
@@ -32,9 +36,25 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
     onDelete(teamMember);
   };
 
-  const handleInviteClick = (e: React.MouseEvent) => {
+  const handleInviteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowInviteModal(true);
+    
+    if (!teamMember.email) {
+      toast({
+        title: "Email não encontrado",
+        description: "Esta equipe não possui email cadastrado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const result = await verifyEmail(teamMember.email);
+    
+    if (result.isValid) {
+      setVerifiedEmail(teamMember.email);
+      setVerifiedUserName(result.userName || 'Usuário');
+      setShowInviteModal(true);
+    }
   };
 
   const getProjectStats = () => {
@@ -157,6 +177,7 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
               variant="outline"
               size="sm"
               onClick={handleInviteClick}
+              disabled={isVerifying}
               className="text-blue-600 hover:text-blue-700"
             >
               <UserPlus className="h-4 w-4" />
@@ -183,7 +204,13 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
     
     <InvitationModal 
       isOpen={showInviteModal}
-      onClose={() => setShowInviteModal(false)}
+      onClose={() => {
+        setShowInviteModal(false);
+        setVerifiedEmail('');
+        setVerifiedUserName('');
+      }}
+      email={verifiedEmail}
+      userName={verifiedUserName}
       teamMemberId={teamMember.id}
       teamMemberName={teamMember.name}
     />

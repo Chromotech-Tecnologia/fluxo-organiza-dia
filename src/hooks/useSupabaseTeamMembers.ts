@@ -19,7 +19,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
     try {
       const { data, error } = await supabase
         .from('team_members')
-        .select('*')
+        .select('*, is_external_collaborator, collaborator_user_id')
         .eq('user_id', user.id)
         .order('name');
 
@@ -50,6 +50,8 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           : typeof (member as any).projects === 'string' 
             ? JSON.parse((member as any).projects) 
             : [],
+        is_external_collaborator: (member as any).is_external_collaborator || false,
+        collaborator_user_id: (member as any).collaborator_user_id,
         createdAt: member.created_at,
         updatedAt: member.updated_at
       }));

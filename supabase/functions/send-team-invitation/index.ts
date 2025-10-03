@@ -18,37 +18,63 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
     
     // Verificar autenticação
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("Unauthorized");
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
-      throw new Error("Unauthorized");
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Verificar se o sender tem conta ativa
+    // Verificar se o sender tem conta ativa (com fallback)
     const { data: userRole } = await supabase
       .from("user_roles")
-      .select("*")
+      .select("is_permanent, trial_expires_at")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
+    // Se não encontrar user_role, criar um trial padrão
+    let isActive = false;
     if (!userRole) {
-      throw new Error("User does not have active account");
+      const { error: insertError } = await supabase
+        .from("user_roles")
+        .insert({
+          user_id: user.id,
+          role: 'user',
+          trial_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        });
+      
+      if (!insertError) {
+        isActive = true;
+      }
+    } else {
+      isActive = userRole.is_permanent || 
+        (userRole.trial_expires_at && new Date(userRole.trial_expires_at) > new Date());
     }
 
-    const isActive = userRole.is_permanent || 
-      (userRole.trial_expires_at && new Date(userRole.trial_expires_at) > new Date());
-
     if (!isActive) {
-      throw new Error("Your account is not active. Please renew your subscription.");
+      return new Response(
+        JSON.stringify({ error: 'Sua conta não está ativa. Entre em contato com o suporte.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { recipientEmail, teamMemberId } = await req.json() as InvitationRequest;
@@ -56,11 +82,23 @@ serve(async (req) => {
     console.log("Sending invitation to:", recipientEmail);
 
     // Verificar se o email existe na plataforma
-    const { data: recipientUser } = await supabase.auth.admin.listUsers();
-    const recipient = recipientUser.users.find(u => u.email === recipientEmail);
+    const { data: recipientUserData, error: usersError } = await supabase.auth.admin.listUsers();
+    
+    if (usersError) {
+      console.error('Error verifying recipient:', usersError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao verificar email do destinatário' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const recipient = recipientUserData.users.find(u => u.email?.toLowerCase() === recipientEmail.toLowerCase());
 
     if (!recipient) {
-      throw new Error("Email não encontrado. O usuário precisa estar cadastrado na plataforma.");
+      return new Response(
+        JSON.stringify({ error: 'Email não está cadastrado na plataforma' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Verificar se já existe convite pendente
@@ -70,10 +108,13 @@ serve(async (req) => {
       .eq("sender_user_id", user.id)
       .eq("recipient_email", recipientEmail)
       .eq("status", "pending")
-      .single();
+      .maybeSingle();
 
     if (existingInvite) {
-      throw new Error("Já existe um convite pendente para este email.");
+      return new Response(
+        JSON.stringify({ error: 'Já existe um convite pendente para este email' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Criar convite

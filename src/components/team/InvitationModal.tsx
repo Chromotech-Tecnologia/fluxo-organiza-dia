@@ -1,32 +1,26 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useTeamInvitations } from '@/hooks/useTeamInvitations';
-import { Loader2, Mail } from 'lucide-react';
+import { Loader2, Mail, User } from 'lucide-react';
 
 interface InvitationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  email: string;
+  userName: string;
   teamMemberId?: string;
   teamMemberName?: string;
 }
 
-export function InvitationModal({ isOpen, onClose, teamMemberId, teamMemberName }: InvitationModalProps) {
-  const [email, setEmail] = useState('');
+export function InvitationModal({ isOpen, onClose, email, userName, teamMemberId, teamMemberName }: InvitationModalProps) {
   const [loading, setLoading] = useState(false);
   const { sendInvitation } = useTeamInvitations();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email.trim()) return;
-
+  const handleConfirm = async () => {
     setLoading(true);
     try {
-      await sendInvitation(email.trim(), teamMemberId);
-      setEmail('');
+      await sendInvitation(email, teamMemberId);
       onClose();
     } catch (error) {
       // Error already handled in hook
@@ -39,45 +33,42 @@ export function InvitationModal({ isOpen, onClose, teamMemberId, teamMemberName 
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Enviar Convite de Colaboração</DialogTitle>
+          <DialogTitle>Confirmar Envio de Convite</DialogTitle>
           <DialogDescription>
             {teamMemberName 
-              ? `Envie um convite para vincular ${teamMemberName} a um usuário da plataforma.`
-              : 'Digite o email de um usuário cadastrado na plataforma para convidá-lo a colaborar.'}
+              ? `Confirmar envio de convite para vincular ${teamMemberName} ao usuário da plataforma?`
+              : 'Confirmar envio de convite de colaboração?'}
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email do usuário</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="usuario@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10"
-                required
-                disabled={loading}
-              />
+        <div className="space-y-4">
+          <div className="space-y-3 rounded-lg border p-4 bg-muted/50">
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">Usuário:</span>
+              <span className="text-muted-foreground">{userName}</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              O usuário precisa estar cadastrado na plataforma para receber o convite.
-            </p>
+            <div className="flex items-center gap-2 text-sm">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">Email:</span>
+              <span className="text-muted-foreground">{email}</span>
+            </div>
           </div>
 
+          <p className="text-sm text-muted-foreground">
+            O usuário receberá um email com o link para aceitar o convite de colaboração.
+          </p>
+
           <div className="flex gap-2 justify-end">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+            <Button variant="outline" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button onClick={handleConfirm} disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enviar Convite
+              Confirmar Envio
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
