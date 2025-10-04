@@ -44,16 +44,17 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se o sender tem conta ativa (com fallback)
+    // Verificar se o sender tem conta ativa (com fallback e autocorreção de trial)
     const { data: userRole } = await supabase
       .from("user_roles")
-      .select("is_permanent, trial_expires_at")
+      .select("is_permanent, trial_expires_at, role")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    // Se não encontrar user_role, criar um trial padrão
+    // Se não encontrar user_role, criar um trial padrão (7 dias)
     let isActive = false;
     if (!userRole) {
+      console.log("user_roles: nenhum registro encontrado. Criando trial padrão de 7 dias.");
       const { error: insertError } = await supabase
         .from("user_roles")
         .insert({
@@ -62,12 +63,36 @@ serve(async (req) => {
           trial_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         });
       
-      if (!insertError) {
+      if (insertError) {
+        console.error("Falha ao criar trial padrão", insertError);
+      } else {
         isActive = true;
       }
+    } else if (userRole.is_permanent) {
+      console.log("user_roles: conta permanente ativa");
+      isActive = true;
     } else {
-      isActive = userRole.is_permanent || 
-        (userRole.trial_expires_at && new Date(userRole.trial_expires_at) > new Date());
+      const now = new Date();
+      const trialDate = userRole.trial_expires_at ? new Date(userRole.trial_expires_at) : null;
+      const hasValidTrial = !!trialDate && trialDate > now;
+
+      if (hasValidTrial) {
+        console.log("user_roles: trial válido até", trialDate?.toISOString());
+        isActive = true;
+      } else {
+        // Auto-ajuste: se não houver trial ou estiver expirado, conceder trial de 7 dias
+        const newTrial = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        console.log("user_roles: trial ausente/expirado. Concedendo novo trial até", newTrial);
+        const { error: updateError } = await supabase
+          .from("user_roles")
+          .update({ trial_expires_at: newTrial })
+          .eq("user_id", user.id);
+        if (updateError) {
+          console.error("Falha ao atualizar trial_expires_at", updateError);
+        } else {
+          isActive = true;
+        }
+      }
     }
 
     if (!isActive) {
