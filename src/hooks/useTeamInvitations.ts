@@ -22,20 +22,40 @@ export function useTeamInvitations() {
 
   const loadInvitations = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setInvitations([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('team_invitations')
         .select('*')
         .order('invited_at', { ascending: false });
 
-      if (error) throw error;
-      setInvitations(data || []);
+      if (error) {
+        // Se for erro de permissão e não houver dados, apenas defina array vazio
+        if (error.code === 'PGRST301' || error.message.includes('permission denied')) {
+          console.log('No invitations found or access denied');
+          setInvitations([]);
+        } else {
+          throw error;
+        }
+      } else {
+        setInvitations(data || []);
+      }
     } catch (error: any) {
       console.error('Error loading invitations:', error);
-      toast({
-        title: 'Erro ao carregar convites',
-        description: error.message,
-        variant: 'destructive',
-      });
+      // Não mostrar erro se for apenas falta de dados
+      if (!error.message?.includes('permission denied')) {
+        toast({
+          title: 'Erro ao carregar convites',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+      setInvitations([]);
     } finally {
       setLoading(false);
     }
@@ -50,20 +70,28 @@ export function useTeamInvitations() {
         body: { recipientEmail, teamMemberId },
       });
 
-      if (response.error) throw response.error;
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao enviar convite');
+      }
+
+      // Verificar se há mensagem de erro na resposta de dados
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
 
       toast({
         title: 'Convite enviado',
-        description: 'O convite foi enviado com sucesso!',
+        description: response.data?.message || 'O convite foi enviado com sucesso!',
       });
 
       await loadInvitations();
       return response.data;
     } catch (error: any) {
       console.error('Error sending invitation:', error);
+      const errorMessage = error.message || 'Erro desconhecido ao enviar convite';
       toast({
         title: 'Erro ao enviar convite',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
       throw error;
