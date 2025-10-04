@@ -44,53 +44,75 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se o sender tem conta ativa (com fallback e autocorreção de trial)
-    const { data: userRole } = await supabase
+    // Checar todas as roles do usuário e ativar conta se houver permanente ou trial válido
+    const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
-      .select("is_permanent, trial_expires_at, role")
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .select("role, is_permanent, trial_expires_at")
+      .eq("user_id", user.id);
 
-    // Se não encontrar user_role, criar um trial padrão (7 dias)
     let isActive = false;
-    if (!userRole) {
-      console.log("user_roles: nenhum registro encontrado. Criando trial padrão de 7 dias.");
-      const { error: insertError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: user.id,
-          role: 'user',
-          trial_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        });
-      
-      if (insertError) {
-        console.error("Falha ao criar trial padrão", insertError);
-      } else {
-        isActive = true;
-      }
-    } else if (userRole.is_permanent) {
-      console.log("user_roles: conta permanente ativa");
-      isActive = true;
-    } else {
-      const now = new Date();
-      const trialDate = userRole.trial_expires_at ? new Date(userRole.trial_expires_at) : null;
-      const hasValidTrial = !!trialDate && trialDate > now;
 
-      if (hasValidTrial) {
-        console.log("user_roles: trial válido até", trialDate?.toISOString());
-        isActive = true;
-      } else {
-        // Auto-ajuste: se não houver trial ou estiver expirado, conceder trial de 7 dias
-        const newTrial = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        console.log("user_roles: trial ausente/expirado. Concedendo novo trial até", newTrial);
-        const { error: updateError } = await supabase
+    if (rolesError) {
+      console.error("Erro ao buscar user_roles", rolesError);
+    }
+
+    const now = new Date();
+    const hasPermanent = Array.isArray(roles) && roles.some((r: any) => r.is_permanent === true);
+    const hasValidTrial = Array.isArray(roles) && roles.some((r: any) => r.trial_expires_at && new Date(r.trial_expires_at as string) > now);
+
+    if (hasPermanent || hasValidTrial) {
+      isActive = true;
+      console.log("Conta ativa por", hasPermanent ? "permanente" : "trial válido");
+    } else {
+      // Nenhuma role ativa
+      if (!roles || roles.length === 0) {
+        console.log("Nenhuma role encontrada. Inserindo role 'user' com trial de 7 dias.");
+        const trial = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { error: insertError } = await supabase
           .from("user_roles")
-          .update({ trial_expires_at: newTrial })
-          .eq("user_id", user.id);
-        if (updateError) {
-          console.error("Falha ao atualizar trial_expires_at", updateError);
+          .insert({ user_id: user.id, role: 'user', trial_expires_at: trial });
+        if (insertError) {
+          console.error("Falha ao inserir role 'user'", insertError);
+          // Tratar conflito de chave única (registro já existe)
+          // Em alguns cenários .maybeSingle() pode ter ocultado registros
+          if ((insertError as any).code === "23505") {
+            console.log("Registro 'user' já existia (23505). Prosseguindo como ativo.");
+            isActive = true;
+          }
         } else {
           isActive = true;
+        }
+      } else {
+        // Existem roles mas todas inativas - ajustar trial da role 'user'
+        const userRole = roles.find((r: any) => r.role === 'user');
+        const newTrial = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        if (userRole) {
+          console.log("Atualizando trial da role 'user' para +7 dias.");
+          const { error: updateError } = await supabase
+            .from("user_roles")
+            .update({ trial_expires_at: newTrial, is_permanent: false })
+            .eq("user_id", user.id)
+            .eq("role", "user");
+          if (updateError) {
+            console.error("Falha ao atualizar trial_expires_at", updateError);
+          } else {
+            isActive = true;
+          }
+        } else {
+          console.log("Inserindo role 'user' com trial de 7 dias (não existia).");
+          const { error: insertError2 } = await supabase
+            .from("user_roles")
+            .insert({ user_id: user.id, role: 'user', trial_expires_at: newTrial });
+          if (insertError2) {
+            console.error("Falha ao inserir role 'user'", insertError2);
+            if ((insertError2 as any).code === "23505") {
+              console.log("Registro 'user' já existia (23505). Prosseguindo como ativo.");
+              isActive = true;
+            }
+          } else {
+            isActive = true;
+          }
         }
       }
     }
