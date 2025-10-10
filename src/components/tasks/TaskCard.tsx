@@ -151,6 +151,13 @@ export function TaskCard({ task, onEdit, onComplete, onDelete, className }: Task
             {/* Status Icon */}
             {getStatusIcon(task.status)}
             
+            {/* Horário de início e fim (apenas para reuniões) */}
+            {task.type === 'meeting' && task.meetingStartTime && task.meetingEndTime && (
+              <Badge variant="outline" className="text-xs h-5 px-2 font-mono">
+                {task.meetingStartTime} - {task.meetingEndTime}
+              </Badge>
+            )}
+            
             {/* Título */}
             <h3 className="font-semibold text-sm truncate flex-1">{task.title}</h3>
           </div>

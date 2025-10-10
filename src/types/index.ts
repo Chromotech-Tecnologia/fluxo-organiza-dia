@@ -138,6 +138,8 @@ export interface Task {
   isProcessed?: boolean;
   delegated_by_user_id?: string;
   is_external_delegation?: boolean;
+  meetingStartTime?: string;
+  meetingEndTime?: string;
 }
 
 export interface DailyReport {
