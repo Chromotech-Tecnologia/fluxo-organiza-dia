@@ -53,8 +53,16 @@ export function PeopleSelectWithSearch({ value, onValueChange, placeholder = "Se
     );
   }
 
+  const handleValueChange = (val: string) => {
+    if (val === "unassigned") {
+      onValueChange(undefined as any);
+    } else {
+      onValueChange(val);
+    }
+  };
+
   return (
-    <Select value={value || "unassigned"} onValueChange={onValueChange} disabled={disabled}>
+    <Select value={value || "unassigned"} onValueChange={handleValueChange} disabled={disabled}>
       <SelectTrigger>
         <SelectValue placeholder={disabled ? "Disponível apenas para tarefas delegadas" : placeholder} />
       </SelectTrigger>

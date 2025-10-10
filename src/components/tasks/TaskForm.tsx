@@ -45,6 +45,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       routineEndDate: task?.routineEndDate || undefined,
       includeWeekends: task?.includeWeekends || true,
       subItems: task?.subItems || [],
+      meetingStartTime: undefined,
+      meetingEndTime: undefined,
     },
   });
 
@@ -58,6 +60,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const timeInvestment = form.watch("timeInvestment");
   const isRoutine = form.watch("isRoutine");
   const taskType = form.watch("type");
+  const meetingStartTime = form.watch("meetingStartTime");
+  const meetingEndTime = form.watch("meetingEndTime");
 
   // Reset assignedPersonId when type changes to non-delegated
   useEffect(() => {
@@ -65,6 +69,24 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       form.setValue('assignedPersonId', undefined);
     }
   }, [taskType, form]);
+
+  // Calculate meeting duration automatically
+  useEffect(() => {
+    if (taskType === 'meeting' && meetingStartTime && meetingEndTime && 
+        typeof meetingStartTime === 'string' && typeof meetingEndTime === 'string') {
+      const [startHour, startMin] = meetingStartTime.split(':').map(Number);
+      const [endHour, endMin] = meetingEndTime.split(':').map(Number);
+      
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+      const duration = endMinutes - startMinutes;
+      
+      if (duration > 0) {
+        form.setValue('timeInvestment', 'custom');
+        form.setValue('customTimeMinutes', duration);
+      }
+    }
+  }, [taskType, meetingStartTime, meetingEndTime, form]);
 
   useEffect(() => {
     if (task) {
@@ -230,6 +252,38 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             />
           </div>
 
+          {taskType === 'meeting' && (
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="meetingStartTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Início</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="meetingEndTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Fim</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -237,7 +291,11 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tempo de Investimento</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                    disabled={taskType === 'meeting' && !!meetingStartTime && !!meetingEndTime}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o tempo" />
@@ -272,6 +330,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                         placeholder="Ex: 90"
+                        disabled={taskType === 'meeting' && !!meetingStartTime && !!meetingEndTime}
                       />
                     </FormControl>
                     <FormMessage />

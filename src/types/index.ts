@@ -205,6 +205,8 @@ export interface TaskFormValues {
   routineEndDate?: string;
   includeWeekends?: boolean;
   subItems: SubItem[];
+  meetingStartTime?: string;
+  meetingEndTime?: string;
 }
 
 export interface PersonFormValues {
