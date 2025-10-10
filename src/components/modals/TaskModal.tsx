@@ -31,6 +31,8 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         routineEndDate: data.routineEndDate || undefined,
         routineStartDate: data.isRoutine ? data.routineStartDate : undefined,
         routineCycle: data.isRoutine ? data.routineCycle : undefined,
+        meetingStartTime: data.meetingStartTime || undefined,
+        meetingEndTime: data.meetingEndTime || undefined,
       };
 
       console.log('Dados limpos para salvar:', cleanData);

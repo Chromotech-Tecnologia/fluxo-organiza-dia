@@ -179,7 +179,13 @@ export function TaskCardImproved({
                   {task.order || taskIndex + 1}
                 </Badge>}
               
-              {assignedTeam && <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300 flex-shrink-0">
+              {task.type === 'meeting' && task.meetingStartTime && task.meetingEndTime && (
+                <Badge variant="outline" className="text-xs px-2 py-0.5 bg-blue-50 text-blue-800 border-blue-300 flex-shrink-0 font-mono">
+                  {task.meetingStartTime} - {task.meetingEndTime}
+                </Badge>
+              )}
+              
+              {task.type === 'delegated-task' && assignedTeam && <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300 flex-shrink-0">
                   {assignedTeam.name}
                 </Badge>}
               

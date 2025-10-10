@@ -45,8 +45,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       routineEndDate: task?.routineEndDate || undefined,
       includeWeekends: task?.includeWeekends || true,
       subItems: task?.subItems || [],
-      meetingStartTime: undefined,
-      meetingEndTime: undefined,
+      meetingStartTime: task?.meetingStartTime || undefined,
+      meetingEndTime: task?.meetingEndTime || undefined,
     },
   });
 
