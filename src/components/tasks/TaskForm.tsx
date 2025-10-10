@@ -66,7 +66,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   // Reset assignedPersonId when type changes to non-delegated
   useEffect(() => {
     if (taskType !== 'delegated-task') {
-      form.setValue('assignedPersonId', undefined);
+      form.setValue('assignedPersonId', null);
     }
   }, [taskType, form]);
 

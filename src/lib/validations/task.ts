@@ -9,7 +9,7 @@ export const taskFormSchema = z.object({
   timeInvestment: z.enum(['custom-5', 'custom-30', 'low', 'medium', 'high', 'custom-4h', 'custom-8h', 'custom']),
   customTimeMinutes: z.number().min(1, "Tempo personalizado deve ser maior que 0").optional(),
   category: z.enum(['personal', 'business']),
-  assignedPersonId: z.string().optional().nullable(),
+  assignedPersonId: z.string().nullable().optional(),
   scheduledDate: z.string(),
   order: z.number().default(0),
   observations: z.string().optional(),

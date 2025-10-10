@@ -55,7 +55,7 @@ export function PeopleSelectWithSearch({ value, onValueChange, placeholder = "Se
 
   const handleValueChange = (val: string) => {
     if (val === "unassigned") {
-      onValueChange(undefined as any);
+      onValueChange(null as any);
     } else {
       onValueChange(val);
     }
