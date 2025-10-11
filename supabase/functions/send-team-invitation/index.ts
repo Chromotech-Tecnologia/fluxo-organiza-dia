@@ -190,8 +190,10 @@ serve(async (req) => {
 
     const senderName = senderProfile?.name || user.email;
 
-    // Enviar email
-    const acceptUrl = `${Deno.env.get("SUPABASE_URL")?.replace("supabase.co", "lovableproject.com")}/accept-invitation/${invitation.invitation_token}`;
+    // Enviar email com URL corrigida
+    const acceptUrl = `https://organizese.chromotech.com.br/accept-invitation/${invitation.invitation_token}`;
+    
+    console.log("Generated invitation URL:", acceptUrl);
 
     const { error: emailError } = await resend.emails.send({
       from: "OrganizeSe <onboarding@resend.dev>",
@@ -218,10 +220,24 @@ serve(async (req) => {
 
     if (emailError) {
       console.error("Error sending email:", emailError);
-      // Não falhar a requisição se o email não for enviado
+      console.error("Email error details:", JSON.stringify(emailError));
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          invitation,
+          message: "Convite criado, mas houve um problema ao enviar o email. Verifique as configurações do Resend.",
+          emailError: emailError.message 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     console.log("Invitation created successfully:", invitation.id);
+    console.log("Email sent successfully to:", recipientEmail);
 
     return new Response(
       JSON.stringify({ 

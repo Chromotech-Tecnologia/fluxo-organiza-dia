@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { ImpersonationBar } from "@/components/admin/ImpersonationBar";
 import { DisabledUserModal } from "@/components/auth/DisabledUserModal";
 import { TrialBanner } from "@/components/layout/TrialBanner";
+import { PendingInvitationBanner } from "@/components/invitations/PendingInvitationBanner";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { useUserStatus } from "@/hooks/useUserStatus";
@@ -67,6 +68,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           <main className="flex-1 flex flex-col">
             {/* Impersonation Bar */}
             {isImpersonating && <ImpersonationBar />}
+            
+            {/* Pending Invitations Banner */}
+            <PendingInvitationBanner />
             
             {/* Header */}
             <header className="h-14 border-b border-border flex items-center px-4 bg-card">

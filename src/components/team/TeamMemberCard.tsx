@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TeamMember } from "@/types";
 import { Mail, Phone, Edit, Trash2, MapPin, Users, UserPlus, ExternalLink } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { InvitationModal } from "./InvitationModal";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { toast } from "@/hooks/use-toast";
@@ -20,7 +20,27 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState<string>('');
   const [verifiedUserName, setVerifiedUserName] = useState<string>('');
+  const [isEmailRegistered, setIsEmailRegistered] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const { verifyEmail, isVerifying } = useEmailVerification();
+  
+  // Verificar proativamente se o email está registrado
+  const checkEmailRegistration = async () => {
+    if (!teamMember.email || teamMember.is_external_collaborator) {
+      setIsEmailRegistered(false);
+      return;
+    }
+    
+    setCheckingEmail(true);
+    const result = await verifyEmail(teamMember.email);
+    setIsEmailRegistered(result.isValid);
+    setCheckingEmail(false);
+  };
+  
+  // Verificar ao montar o componente
+  useEffect(() => {
+    checkEmailRegistration();
+  }, [teamMember.email, teamMember.is_external_collaborator]);
 
   const handleCardClick = () => {
     openTeamMemberModal(teamMember);
@@ -103,6 +123,11 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
                 Colaborador
               </Badge>
             )}
+            {!teamMember.is_external_collaborator && isEmailRegistered && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 dark:bg-green-950 dark:text-green-300">
+                Email Cadastrado
+              </Badge>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -172,13 +197,14 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
 
         {/* Ações */}
         <div className="flex justify-end gap-2 pt-2 border-t mt-auto">
-          {!teamMember.is_external_collaborator && teamMember.email && (
+          {!teamMember.is_external_collaborator && teamMember.email && isEmailRegistered && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleInviteClick}
-              disabled={isVerifying}
+              disabled={isVerifying || checkingEmail}
               className="text-blue-600 hover:text-blue-700"
+              title="Enviar convite de colaboração"
             >
               <UserPlus className="h-4 w-4" />
             </Button>

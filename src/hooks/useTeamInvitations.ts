@@ -114,16 +114,61 @@ export function useTeamInvitations() {
         description: 'Você agora faz parte da equipe!',
       });
 
+      await loadInvitations();
       return response.data;
     } catch (error: any) {
       console.error('Error accepting invitation:', error);
+      
+      let errorMessage = error.message;
+      if (error.message?.includes('expired')) {
+        errorMessage = 'Este convite expirou';
+      } else if (error.message?.includes('already accepted')) {
+        errorMessage = 'Este convite já foi aceito anteriormente';
+      }
+      
       toast({
         title: 'Erro ao aceitar convite',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const rejectInvitation = async (invitationToken: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+
+      const { error } = await supabase
+        .from('team_invitations')
+        .update({ status: 'rejected' })
+        .eq('invitation_token', invitationToken);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Convite recusado',
+        description: 'O convite foi recusado',
+      });
+
+      await loadInvitations();
+    } catch (error: any) {
+      console.error('Error rejecting invitation:', error);
+      toast({
+        title: 'Erro ao recusar convite',
         description: error.message,
         variant: 'destructive',
       });
       throw error;
     }
+  };
+
+  const getPendingInvitations = () => {
+    return invitations.filter(inv => 
+      inv.status === 'pending' && 
+      new Date(inv.expires_at) > new Date()
+    );
   };
 
   useEffect(() => {
@@ -155,6 +200,8 @@ export function useTeamInvitations() {
     loading,
     sendInvitation,
     acceptInvitation,
+    rejectInvitation,
+    getPendingInvitations,
     refetch: loadInvitations,
   };
 }
