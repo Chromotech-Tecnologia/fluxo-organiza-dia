@@ -14,6 +14,7 @@ import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { InteractiveSubItemList } from "./InteractiveSubItemList";
 import { PeopleSelectWithSearch } from "@/components/people/PeopleSelectWithSearch";
+import { ShareTaskSelect } from "./ShareTaskSelect";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -456,6 +457,16 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               </FormItem>
             )}
           />
+
+          {task && (
+            <div className="border rounded-lg p-4 space-y-2">
+              <h4 className="font-medium text-sm">Compartilhar Tarefa</h4>
+              <p className="text-xs text-muted-foreground mb-3">
+                Compartilhe esta tarefa com colaboradores que aceitaram seu convite
+              </p>
+              <ShareTaskSelect taskId={task.id} />
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onCancel} className="flex-1">

@@ -272,6 +272,22 @@ export function TaskFiltersImproved({
               </Button>
 
               <Button 
+                variant={currentFilters.sharedByMe === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterChange('sharedByMe', currentFilters.sharedByMe === true ? undefined : true)}
+              >
+                Compartilhadas por Mim
+              </Button>
+
+              <Button 
+                variant={currentFilters.sharedWithMe === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterChange('sharedWithMe', currentFilters.sharedWithMe === true ? undefined : true)}
+              >
+                Compartilhadas Comigo
+              </Button>
+
+              <Button 
                 variant={currentFilters.status?.includes('completed') ? "default" : "outline"}
                 size="sm"
                 onClick={() => {

@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { getOrderNumberColor, getPriorityColor, getTimeInMinutes, formatTime } from '@/lib/taskUtils';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
+import { useTaskShares } from '@/hooks/useTaskShares';
 interface TaskCardImprovedProps {
   task: Task;
   onStatusChange: (status: Task['status']) => void;
@@ -42,6 +43,7 @@ export function TaskCardImproved({
 }: TaskCardImprovedProps) {
   const [isRescheduling, setIsRescheduling] = React.useState(false);
   const [justRescheduled, setJustRescheduled] = React.useState(false);
+  const { isTaskSharedByMe, isTaskSharedWithMe } = useTaskShares();
   const {
     attributes,
     listeners,
@@ -100,6 +102,15 @@ export function TaskCardImproved({
     if (lastCompletion?.status === 'completed') {
       return 'border-green-500 bg-green-50';
     }
+
+    // Verificar se é uma tarefa compartilhada
+    const sharedByMe = isTaskSharedByMe(task.id);
+    const sharedWithMe = isTaskSharedWithMe(task.id);
+    
+    if (sharedByMe || sharedWithMe) {
+      return 'border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50/50 to-cyan-50/30';
+    }
+
     return 'border-border bg-background';
   };
   // Calculate progress for sub-items using completed and notDone properties
@@ -188,6 +199,12 @@ export function TaskCardImproved({
               {task.type === 'delegated-task' && assignedTeam && <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300 flex-shrink-0">
                   {assignedTeam.name}
                 </Badge>}
+              
+              {(isTaskSharedByMe(task.id) || isTaskSharedWithMe(task.id)) && (
+                <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-300 flex-shrink-0">
+                  {isTaskSharedWithMe(task.id) ? 'Compartilhado comigo' : 'Compartilhei'}
+                </Badge>
+              )}
               
               <div className="font-semibold text-sm truncate flex-1">
                 {task.title}

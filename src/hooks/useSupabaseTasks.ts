@@ -6,12 +6,14 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurrentUserId } from '@/hooks/useCurrentUserId';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTaskShares } from '@/hooks/useTaskShares';
 
 export function useSupabaseTasks(filters?: TaskFilter) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const { user } = useAuthStore();
   const currentUserId = useCurrentUserId();
   const queryClient = useQueryClient();
+  const { isTaskSharedByMe, isTaskSharedWithMe } = useTaskShares();
 
   // Determinar período para busca no servidor
   const getDateRange = () => {
@@ -204,11 +206,27 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
+      // Filtro por compartilhadas por mim
+      if (filters.sharedByMe !== undefined) {
+        const taskIsSharedByMe = isTaskSharedByMe(task.id);
+        if (filters.sharedByMe !== taskIsSharedByMe) {
+          return false;
+        }
+      }
+
+      // Filtro por compartilhadas comigo
+      if (filters.sharedWithMe !== undefined) {
+        const taskIsSharedWithMe = isTaskSharedWithMe(task.id);
+        if (filters.sharedWithMe !== taskIsSharedWithMe) {
+          return false;
+        }
+      }
+
       return true;
     });
     
     return filtered;
-  }, [tasks, filters]);
+  }, [tasks, filters, isTaskSharedByMe, isTaskSharedWithMe]);
 
   // Adicionar nova tarefa
   const addTask = useCallback(async (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> | Task) => {

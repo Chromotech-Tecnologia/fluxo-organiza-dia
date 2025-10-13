@@ -1,7 +1,7 @@
 
 // Tipos principais do sistema de controle de tarefas
 
-export type TaskType = 'meeting' | 'own-task' | 'delegated-task';
+export type TaskType = 'meeting' | 'own-task' | 'delegated-task' | 'shared-task';
 export type TaskPriority = 'none' | 'priority' | 'extreme';
 export type TaskTimeInvestment = 'custom-5' | 'custom-30' | 'low' | 'medium' | 'high' | 'custom-4h' | 'custom-8h' | 'custom';
 export type TaskCategory = 'personal' | 'business';
@@ -174,6 +174,8 @@ export interface TaskFilter {
   noOrder?: boolean;
   isConcluded?: boolean;
   isProcessed?: boolean;
+  sharedByMe?: boolean; // Filtro para tarefas compartilhadas por mim
+  sharedWithMe?: boolean; // Filtro para tarefas compartilhadas comigo
 }
 
 export interface TaskStats {

@@ -68,6 +68,11 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
       return;
     }
 
+    // Não mostrar erro se email não estiver cadastrado, apenas não permitir convite
+    if (!isEmailRegistered) {
+      return;
+    }
+
     const result = await verifyEmail(teamMember.email);
     
     if (result.isValid) {
