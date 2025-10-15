@@ -43,7 +43,8 @@ export function TaskCardImproved({
 }: TaskCardImprovedProps) {
   const [isRescheduling, setIsRescheduling] = React.useState(false);
   const [justRescheduled, setJustRescheduled] = React.useState(false);
-  const { isTaskSharedByMe, isTaskSharedWithMe } = useTaskShares();
+  const [sharedByUserName, setSharedByUserName] = React.useState<string>('');
+  const { isTaskSharedByMe, isTaskSharedWithMe, getTaskSharedByUser } = useTaskShares();
   const {
     attributes,
     listeners,
@@ -74,6 +75,19 @@ export function TaskCardImproved({
     return null;
   };
   const assignedTeam = getAssignedTeam();
+
+  // Buscar nome do usuário que compartilhou
+  React.useEffect(() => {
+    const fetchSharedByUser = async () => {
+      if (isTaskSharedWithMe(task.id)) {
+        const user = await getTaskSharedByUser(task.id);
+        if (user) {
+          setSharedByUserName(user.name);
+        }
+      }
+    };
+    fetchSharedByUser();
+  }, [task.id, isTaskSharedWithMe, getTaskSharedByUser]);
 
   // Nova lógica: verificar se a tarefa foi reagendada usando o histórico
   const wasRescheduledFromThisDate = React.useMemo(() => {
@@ -202,7 +216,9 @@ export function TaskCardImproved({
               
               {(isTaskSharedByMe(task.id) || isTaskSharedWithMe(task.id)) && (
                 <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-300 flex-shrink-0">
-                  {isTaskSharedWithMe(task.id) ? 'Compartilhado comigo' : 'Compartilhei'}
+                  {isTaskSharedWithMe(task.id) 
+                    ? `Compartilhado comigo${sharedByUserName ? ` - ${sharedByUserName}` : ''}` 
+                    : 'Compartilhei'}
                 </Badge>
               )}
               

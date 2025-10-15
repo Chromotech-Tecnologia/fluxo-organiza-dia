@@ -288,6 +288,23 @@ export function TaskFiltersImproved({
               </Button>
 
               <Button 
+                variant={currentFilters.sharedByMe === true || currentFilters.sharedWithMe === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  const hasSharedFilter = currentFilters.sharedByMe === true || currentFilters.sharedWithMe === true;
+                  if (hasSharedFilter) {
+                    handleFilterChange('sharedByMe', undefined);
+                    handleFilterChange('sharedWithMe', undefined);
+                  } else {
+                    handleFilterChange('sharedByMe', true);
+                    handleFilterChange('sharedWithMe', true);
+                  }
+                }}
+              >
+                Tarefa Compartilhada
+              </Button>
+
+              <Button 
                 variant={currentFilters.status?.includes('completed') ? "default" : "outline"}
                 size="sm"
                 onClick={() => {

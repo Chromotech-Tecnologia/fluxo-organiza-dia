@@ -498,6 +498,23 @@ export function TaskFiltersHorizontal({
                 >
                   Pessoal
                 </Button>
+                <Button
+                  size="sm"
+                  variant={currentFilters.sharedByMe === true || currentFilters.sharedWithMe === true ? "default" : "outline"}
+                  onClick={() => {
+                    const hasSharedFilter = currentFilters.sharedByMe === true || currentFilters.sharedWithMe === true;
+                    if (hasSharedFilter) {
+                      handleAdvancedFilterChange('sharedByMe', undefined);
+                      handleAdvancedFilterChange('sharedWithMe', undefined);
+                    } else {
+                      handleAdvancedFilterChange('sharedByMe', true);
+                      handleAdvancedFilterChange('sharedWithMe', true);
+                    }
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Tarefa Compartilhada
+                </Button>
               </div>
             </div>
           </div>

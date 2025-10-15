@@ -158,6 +158,33 @@ export function useTaskShares() {
     return shares.filter(share => share.task_id === taskId);
   }, [shares]);
 
+  const getTaskSharedByUser = useCallback(async (taskId: string): Promise<{ id: string; name: string; email: string } | null> => {
+    const share = shares.find(
+      share => share.task_id === taskId && share.shared_with_user_id === currentUserId
+    );
+    
+    if (!share) return null;
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .eq('id', share.owner_user_id)
+        .single();
+
+      if (error) throw error;
+
+      return profile ? {
+        id: profile.id,
+        name: profile.name || profile.email || 'Usuário',
+        email: profile.email || ''
+      } : null;
+    } catch (error) {
+      console.error('Erro ao buscar usuário que compartilhou:', error);
+      return null;
+    }
+  }, [shares, currentUserId]);
+
   const isTaskSharedByMe = useCallback((taskId: string): boolean => {
     return shares.some(
       share => share.task_id === taskId && share.owner_user_id === currentUserId
@@ -201,6 +228,7 @@ export function useTaskShares() {
     unshareTask,
     getSharedUsers,
     getTaskShares,
+    getTaskSharedByUser,
     isTaskSharedByMe,
     isTaskSharedWithMe,
     refetch: loadShares,
