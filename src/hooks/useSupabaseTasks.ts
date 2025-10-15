@@ -44,10 +44,11 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     queryFn: async () => {
       if (!currentUserId) return [];
       
+      // Buscar todas as tarefas (próprias e compartilhadas)
+      // A RLS vai filtrar automaticamente para mostrar apenas tarefas permitidas
       let query = supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', currentUserId)
         .gte('scheduled_date', dateRange.start)
         .lte('scheduled_date', dateRange.end)
         .order('scheduled_date', { ascending: true })

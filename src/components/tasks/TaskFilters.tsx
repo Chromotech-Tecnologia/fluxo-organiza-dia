@@ -272,6 +272,28 @@ export function TaskFilters({ filters, onFiltersChange, onClearFilters }: TaskFi
             />
             <label htmlFor="no-order" className="text-sm">Sem ordem</label>
           </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="shared-by-me"
+              checked={filters.sharedByMe === true}
+              onCheckedChange={(checked) => 
+                handleFilterChange('sharedByMe', checked ? true : undefined)
+              }
+            />
+            <label htmlFor="shared-by-me" className="text-sm">Compartilhadas por mim</label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="shared-with-me"
+              checked={filters.sharedWithMe === true}
+              onCheckedChange={(checked) => 
+                handleFilterChange('sharedWithMe', checked ? true : undefined)
+              }
+            />
+            <label htmlFor="shared-with-me" className="text-sm">Compartilhadas comigo</label>
+          </div>
         </div>
       </CardContent>
     </Card>

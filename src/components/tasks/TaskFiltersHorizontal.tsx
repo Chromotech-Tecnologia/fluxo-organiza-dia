@@ -54,6 +54,8 @@ export function TaskFiltersHorizontal({
     if (currentFilters.isForwarded !== undefined) count++;
     if (currentFilters.noOrder !== undefined) count++;
     if (currentFilters.isConcluded !== undefined) count++;
+    if (currentFilters.sharedByMe !== undefined) count++;
+    if (currentFilters.sharedWithMe !== undefined) count++;
     
     return count;
   };
@@ -287,6 +289,36 @@ export function TaskFiltersHorizontal({
           className="h-8 px-3 text-xs"
         >
           Não Concluído
+        </Button>
+      </div>
+
+      {/* Separador visual */}
+      <div className="h-6 w-px bg-border" />
+
+      {/* Compartilhamento buttons */}
+      <span className="text-sm font-medium text-muted-foreground">Compartilhadas:</span>
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant={currentFilters.sharedByMe === true ? "default" : "outline"}
+          onClick={() => {
+            const newValue = currentFilters.sharedByMe === true ? undefined : true;
+            handleAdvancedFilterChange('sharedByMe', newValue);
+          }}
+          className="h-8 px-3 text-xs"
+        >
+          Por Mim
+        </Button>
+        <Button
+          size="sm"
+          variant={currentFilters.sharedWithMe === true ? "default" : "outline"}
+          onClick={() => {
+            const newValue = currentFilters.sharedWithMe === true ? undefined : true;
+            handleAdvancedFilterChange('sharedWithMe', newValue);
+          }}
+          className="h-8 px-3 text-xs"
+        >
+          Comigo
         </Button>
       </div>
 
