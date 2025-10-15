@@ -321,13 +321,12 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         updateData.assigned_person_id = currentTask.assignedPersonId || null;
       }
       
-      const { data, error } = await supabase
-        .from('tasks')
-        .update(updateData)
-        .eq('id', taskId)
-        .eq('user_id', currentUserId)
-        .select()
-        .single();
+       const { data, error } = await supabase
+         .from('tasks')
+         .update(updateData)
+         .eq('id', taskId)
+         .select()
+         .single();
 
       if (error) throw error;
       
@@ -405,11 +404,10 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       }));
 
       for (const update of updates) {
-        const { error } = await supabase
-          .from('tasks')
-          .update({ task_order: update.task_order, updated_at: update.updated_at })
-          .eq('id', update.id)
-          .eq('user_id', currentUserId);
+         const { error } = await supabase
+           .from('tasks')
+           .update({ task_order: update.task_order, updated_at: update.updated_at })
+           .eq('id', update.id);
 
         if (error) throw error;
       }
@@ -469,8 +467,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         {
           event: '*',
           schema: 'public',
-          table: 'tasks',
-          filter: `user_id=eq.${currentUserId}`
+          table: 'tasks'
         },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ['tasks'] });
