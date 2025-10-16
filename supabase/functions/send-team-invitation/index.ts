@@ -148,20 +148,44 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se já existe convite pendente
-    const { data: existingInvite } = await supabase
+    // Verificar se já existe convite pendente OU aceito
+    const { data: existingInvites } = await supabase
       .from("team_invitations")
       .select("*")
       .eq("sender_user_id", user.id)
       .eq("recipient_email", recipientEmail)
-      .eq("status", "pending")
-      .maybeSingle();
+      .in("status", ["pending", "accepted"]);
 
-    if (existingInvite) {
-      return new Response(
-        JSON.stringify({ error: 'Já existe um convite pendente para este email' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (existingInvites && existingInvites.length > 0) {
+      const pendingInvite = existingInvites.find(inv => inv.status === "pending");
+      const acceptedInvite = existingInvites.find(inv => inv.status === "accepted");
+      
+      if (acceptedInvite) {
+        return new Response(
+          JSON.stringify({ error: 'Este usuário já aceitou um convite anterior' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (pendingInvite) {
+        // Verificar se está expirado
+        const expiresAt = new Date(pendingInvite.expires_at);
+        const now = new Date();
+        
+        if (expiresAt > now) {
+          return new Response(
+            JSON.stringify({ error: 'Já existe um convite pendente para este email' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } else {
+          // Convite expirado, deletar para permitir reenvio
+          console.log("Deletando convite expirado:", pendingInvite.id);
+          await supabase
+            .from("team_invitations")
+            .delete()
+            .eq("id", pendingInvite.id);
+        }
+      }
     }
 
     // Criar convite
