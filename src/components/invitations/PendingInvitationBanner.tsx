@@ -147,12 +147,15 @@ export function PendingInvitationBanner() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground">
-                      Convite de {senderNames[invite.sender_user_id] || 'Usuário'}
+                      Você recebeu um convite de:
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Recebido em {new Date(invite.invited_at).toLocaleDateString('pt-BR')}
+                      {senderNames[invite.sender_user_id] || 'Usuário não identificado'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
+                      Recebido em {new Date(invite.invited_at).toLocaleDateString('pt-BR')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
                       Expira em {new Date(invite.expires_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
