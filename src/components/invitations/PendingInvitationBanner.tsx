@@ -36,26 +36,22 @@ export function PendingInvitationBanner() {
 
       const senderIds = [...new Set(pendingInvites.map(inv => inv.sender_user_id))];
       
-      const { data: profiles, error } = await supabase
+      const { data: profiles } = await supabase
         .from('profiles')
         .select('id, name, email')
         .in('id', senderIds);
 
-      console.log('Profiles fetched:', profiles, 'Error:', error);
-
-      if (profiles && profiles.length > 0) {
+      if (profiles) {
         const names: Record<string, string> = {};
         profiles.forEach(profile => {
-          // Priorizar nome, depois email, depois ID
-          const displayName = profile.name?.trim() || profile.email?.split('@')[0] || profile.id.substring(0, 8);
-          names[profile.id] = displayName;
-          console.log(`Sender ${profile.id} display name:`, displayName);
+          // Usar o email se o nome não estiver disponível
+          names[profile.id] = profile.name || profile.email || 'Usuário';
         });
         setSenderNames(names);
       }
     };
 
-    if (currentUserId && invitations.length > 0) {
+    if (currentUserId) {
       fetchSenderNames();
     }
   }, [invitations, currentUserId]);
