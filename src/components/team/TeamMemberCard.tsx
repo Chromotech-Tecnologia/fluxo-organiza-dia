@@ -24,23 +24,19 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
   const [checkingEmail, setCheckingEmail] = useState(false);
   const { verifyEmail, isVerifying } = useEmailVerification();
   
-  // Verificar proativamente se o email está registrado
+  // Verificar se o email está registrado apenas quando necessário (ao tentar enviar convite)
   const checkEmailRegistration = async () => {
     if (!teamMember.email || teamMember.is_external_collaborator) {
       setIsEmailRegistered(false);
-      return;
+      return false;
     }
     
     setCheckingEmail(true);
     const result = await verifyEmail(teamMember.email);
     setIsEmailRegistered(result.isValid);
     setCheckingEmail(false);
+    return result.isValid;
   };
-  
-  // Verificar ao montar o componente
-  useEffect(() => {
-    checkEmailRegistration();
-  }, [teamMember.email, teamMember.is_external_collaborator]);
 
   const handleCardClick = () => {
     openTeamMemberModal(teamMember);
@@ -62,23 +58,25 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
     if (!teamMember.email) {
       toast({
         title: "Email não encontrado",
-        description: "Esta equipe não possui email cadastrado",
+        description: "Este membro não possui email cadastrado",
         variant: "destructive"
       });
       return;
     }
 
-    // Não mostrar erro se email não estiver cadastrado, apenas não permitir convite
-    if (!isEmailRegistered) {
-      return;
-    }
-
+    // Verificar email apenas ao tentar enviar convite
     const result = await verifyEmail(teamMember.email);
     
     if (result.isValid) {
       setVerifiedEmail(teamMember.email);
       setVerifiedUserName(result.userName || 'Usuário');
       setShowInviteModal(true);
+    } else {
+      toast({
+        title: "Email não cadastrado",
+        description: "Este email não está cadastrado na plataforma. O usuário precisa criar uma conta primeiro.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -126,11 +124,6 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
               <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                 <ExternalLink className="h-3 w-3 mr-1" />
                 Colaborador
-              </Badge>
-            )}
-            {!teamMember.is_external_collaborator && isEmailRegistered && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 dark:bg-green-950 dark:text-green-300">
-                Email Cadastrado
               </Badge>
             )}
           </div>
@@ -202,7 +195,7 @@ export function TeamMemberCard({ teamMember, onEdit, onDelete }: TeamMemberCardP
 
         {/* Ações */}
         <div className="flex justify-end gap-2 pt-2 border-t mt-auto">
-          {!teamMember.is_external_collaborator && teamMember.email && isEmailRegistered && (
+          {!teamMember.is_external_collaborator && teamMember.email && (
             <Button
               variant="outline"
               size="sm"

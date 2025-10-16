@@ -38,13 +38,14 @@ export function PendingInvitationBanner() {
       
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, name')
+        .select('id, name, email')
         .in('id', senderIds);
 
       if (profiles) {
         const names: Record<string, string> = {};
         profiles.forEach(profile => {
-          names[profile.id] = profile.name || 'Usuário';
+          // Usar o email se o nome não estiver disponível
+          names[profile.id] = profile.name || profile.email || 'Usuário';
         });
         setSenderNames(names);
       }
