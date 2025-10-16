@@ -93,7 +93,7 @@ export function AppSidebar() {
     isActive
   }: {
     isActive: boolean;
-  }) => isActive ? "bg-green-50 text-green-600 font-medium border-l-4 border-green-500" : "hover:bg-gray-50 text-gray-600 transition-all duration-200";
+  }) => isActive ? "bg-primary/10 text-primary font-semibold border-l-4 border-primary" : "hover:bg-accent text-muted-foreground transition-all duration-200";
   return <Sidebar className={collapsed ? "w-14" : "w-60"}>
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
@@ -111,7 +111,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                      <NavLink to={item.url} end={item.url === '/'} className={getNavClass}>
                       <item.icon className="h-4 w-4 mr-2" />
-                      {!collapsed && <span className="text-slate-700">{item.title}</span>}
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>)}
@@ -128,7 +128,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavClass}>
                       <item.icon className="h-4 w-4 mr-2" />
-                      {!collapsed && <span className="text-slate-700">{item.title}</span>}
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>)}
@@ -148,7 +148,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavClass}>
                       <item.icon className="h-4 w-4 mr-2" />
-                      {!collapsed && <span className="text-slate-700">{item.title}</span>}
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>)}
