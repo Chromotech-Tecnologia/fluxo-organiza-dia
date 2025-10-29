@@ -26,6 +26,7 @@ import PeoplePage from "./pages/PeoplePage";
 import ReportsPage from "./pages/ReportsPage";
 import DailyClosePage from "./pages/DailyClosePage";
 import StatsPage from "./pages/StatsPage";
+import TimeManagementPage from "./pages/TimeManagementPage";
 import SettingsPage from "./pages/SettingsPage";
 import BackupPage from "./pages/BackupPage";
 import { SkillsPage } from "./pages/SkillsPage";
@@ -75,6 +76,7 @@ const App = () => {
                     <Route path="/reports" element={<ReportsPage />} />
                     <Route path="/daily-close" element={<DailyClosePage />} />
                     <Route path="/stats" element={<StatsPage />} />
+                    <Route path="/time-management" element={<TimeManagementPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/backup" element={<BackupPage />} />
                     <Route path="/admin" element={<AdminPage />} />

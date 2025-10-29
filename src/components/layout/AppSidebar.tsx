@@ -42,6 +42,10 @@ const dailyItems = [{
   title: "Estatísticas",
   url: "/stats",
   icon: TrendingUp
+}, {
+  title: "Gestão de Tempo",
+  url: "/time-management",
+  icon: BarChart3
 }];
 const settingsItems = [{
   title: "Configurações de Perfil",

@@ -9,13 +9,19 @@ import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useModalStore } from "@/stores/useModalStore";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, startOfDay, endOfDay, addDays, subDays, addWeeks, subWeeks, startOfYear, endOfYear, addYears, subYears, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Task } from "@/types";
+import { Task, TaskFilter, SortOption } from "@/types";
+import { TaskFiltersImproved } from "@/components/tasks/TaskFiltersImproved";
+import { sortTasks } from "@/lib/taskUtils";
+import { filterTasks } from "@/lib/searchUtils";
 
 type ViewType = 'day' | 'week' | 'month' | 'year';
 
 const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('month');
+  const [filters, setFilters] = useState<TaskFilter>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('order');
   const { openTaskModal } = useModalStore();
 
   // Calculate date ranges based on view type
@@ -51,9 +57,15 @@ const CalendarPage = () => {
     }
   };
 
-  const { tasks } = useSupabaseTasks({
+  const { tasks: rawTasks } = useSupabaseTasks({
     dateRange: getDateRange()
   });
+
+  // Apply filters, search and sorting
+  const tasks = useMemo(() => {
+    let filtered = filterTasks(rawTasks, searchQuery, filters);
+    return sortTasks(filtered, sortBy);
+  }, [rawTasks, searchQuery, filters, sortBy]);
 
   // Gerar os dias do calendário baseado no tipo de visualização
   const getCalendarDays = () => {
@@ -157,6 +169,16 @@ const CalendarPage = () => {
           Nova Tarefa
         </Button>
       </div>
+
+      {/* Filtros Avançados */}
+      <TaskFiltersImproved
+        currentFilters={filters}
+        onFiltersChange={setFilters}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
 
       <Card>
         <CardHeader>
