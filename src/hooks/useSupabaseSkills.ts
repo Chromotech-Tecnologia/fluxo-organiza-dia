@@ -1,25 +1,26 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skill } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useCurrentUserId } from '@/hooks/useCurrentUserId';
 
 export function useSupabaseSkills() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
+  const currentUserId = useCurrentUserId(); // Usar ID considerando impersonação
 
   // Carregar skills do Supabase
-  const loadSkills = async () => {
-    if (!user) return;
+  const loadSkills = useCallback(async () => {
+    if (!currentUserId) return;
     
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('skills')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUserId)
         .order('name');
 
       if (error) throw error;
@@ -30,7 +31,6 @@ export function useSupabaseSkills() {
         name: skill.name,
         area: skill.category || '',
         observation: skill.description || '',
-        
         createdAt: skill.created_at,
         updatedAt: skill.updated_at
       }));
@@ -46,7 +46,7 @@ export function useSupabaseSkills() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId]);
 
   // Adicionar nova skill
   const addSkill = async (newSkill: Omit<Skill, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -92,7 +92,6 @@ export function useSupabaseSkills() {
           name: updates.name,
           category: updates.area,
           description: updates.observation,
-          
         })
         .eq('id', skillId);
 
@@ -160,10 +159,10 @@ export function useSupabaseSkills() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (currentUserId) {
       loadSkills();
       
-      // Setup real-time subscription
+      // Setup real-time subscription usando currentUserId para impersonação
       const channel = supabase
         .channel('skills-changes')
         .on(
@@ -172,7 +171,7 @@ export function useSupabaseSkills() {
             event: '*',
             schema: 'public',
             table: 'skills',
-            filter: `user_id=eq.${user.id}`
+            filter: `user_id=eq.${currentUserId}`
           },
           () => {
             loadSkills();
@@ -184,7 +183,7 @@ export function useSupabaseSkills() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user?.id]);
+  }, [currentUserId, loadSkills]);
 
   return {
     skills,

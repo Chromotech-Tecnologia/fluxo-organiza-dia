@@ -11,55 +11,19 @@ export function useUserTaskStats() {
   return useQuery({
     queryKey: ['user-task-stats'],
     queryFn: async (): Promise<UserTaskStats[]> => {
-      // Get date 7 days ago
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      // Usar a função RPC que tem SECURITY DEFINER para acessar tarefas de todos os usuários
+      const { data, error } = await supabase.rpc('get_user_task_counts');
 
-      // Get all users' total tasks
-      const { data: totalTasks, error: totalError } = await supabase
-        .from('tasks')
-        .select('user_id')
-        .then(({ data, error }) => {
-          if (error) throw error;
-          // Group by user_id and count
-          const tasksByUser = data?.reduce((acc, task) => {
-            acc[task.user_id] = (acc[task.user_id] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>) || {};
-          
-          return { data: tasksByUser, error: null };
-        });
+      if (error) {
+        console.error('Error fetching user task stats:', error);
+        throw error;
+      }
 
-      if (totalError) throw totalError;
-
-      // Get tasks from last 7 days
-      const { data: recentTasks, error: recentError } = await supabase
-        .from('tasks')
-        .select('user_id')
-        .gte('created_at', sevenDaysAgo.toISOString())
-        .then(({ data, error }) => {
-          if (error) throw error;
-          // Group by user_id and count
-          const tasksByUser = data?.reduce((acc, task) => {
-            acc[task.user_id] = (acc[task.user_id] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>) || {};
-          
-          return { data: tasksByUser, error: null };
-        });
-
-      if (recentError) throw recentError;
-
-      // Combine results
-      const allUserIds = new Set([
-        ...Object.keys(totalTasks || {}),
-        ...Object.keys(recentTasks || {})
-      ]);
-
-      return Array.from(allUserIds).map(userId => ({
-        userId,
-        totalTasks: totalTasks?.[userId] || 0,
-        tasksLast7Days: recentTasks?.[userId] || 0,
+      // Converter dados da função RPC para o formato esperado
+      return (data || []).map((row: { user_id: string; total_tasks: number; tasks_last_7_days: number }) => ({
+        userId: row.user_id,
+        totalTasks: row.total_tasks,
+        tasksLast7Days: row.tasks_last_7_days,
       }));
     },
     refetchOnWindowFocus: false,

@@ -393,6 +393,7 @@ export type Database = {
       }
       team_members: {
         Row: {
+          address: Json | null
           collaborator_user_id: string | null
           created_at: string
           department: string | null
@@ -400,8 +401,10 @@ export type Database = {
           hire_date: string | null
           id: string
           is_external_collaborator: boolean | null
+          is_partner: boolean | null
           name: string
           notes: string | null
+          origin: string | null
           phone: string | null
           project_ids: string[] | null
           projects: Json | null
@@ -412,6 +415,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address?: Json | null
           collaborator_user_id?: string | null
           created_at?: string
           department?: string | null
@@ -419,8 +423,10 @@ export type Database = {
           hire_date?: string | null
           id?: string
           is_external_collaborator?: boolean | null
+          is_partner?: boolean | null
           name: string
           notes?: string | null
+          origin?: string | null
           phone?: string | null
           project_ids?: string[] | null
           projects?: Json | null
@@ -431,6 +437,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address?: Json | null
           collaborator_user_id?: string | null
           created_at?: string
           department?: string | null
@@ -438,8 +445,10 @@ export type Database = {
           hire_date?: string | null
           id?: string
           is_external_collaborator?: boolean | null
+          is_partner?: boolean | null
           name?: string
           notes?: string | null
+          origin?: string | null
           phone?: string | null
           project_ids?: string[] | null
           projects?: Json | null
@@ -497,6 +506,14 @@ export type Database = {
         }[]
       }
       get_trial_days_remaining: { Args: { _user_id: string }; Returns: number }
+      get_user_task_counts: {
+        Args: never
+        Returns: {
+          tasks_last_7_days: number
+          total_tasks: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
