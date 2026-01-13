@@ -486,12 +486,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_collaboration_account_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      check_collaboration_account_status: { Args: never; Returns: undefined }
       debug_auth_context: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           current_user_id: string
           has_admin_role: boolean
@@ -499,10 +496,7 @@ export type Database = {
           user_role: string
         }[]
       }
-      get_trial_days_remaining: {
-        Args: { _user_id: string }
-        Returns: number
-      }
+      get_trial_days_remaining: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -510,14 +504,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_user_in_trial: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
+      is_user_in_trial: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
