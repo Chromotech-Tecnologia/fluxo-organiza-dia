@@ -4,6 +4,7 @@ import { TeamMember, TeamMemberFilter } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurrentUserId } from '@/hooks/useCurrentUserId';
+import { useImpersonation } from '@/hooks/useImpersonation';
 
 export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -11,6 +12,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
   const currentUserId = useCurrentUserId(); // Usar ID considerando impersonação
+  const { isImpersonating } = useImpersonation();
 
   // Carregar membros do Supabase (sem filtros)
   const loadTeamMembers = useCallback(async () => {
@@ -18,11 +20,26 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('team_members')
-        .select('*, is_external_collaborator, collaborator_user_id, address, origin, is_partner')
-        .eq('user_id', currentUserId)
-        .order('name');
+      let data: any[] = [];
+      let error: any = null;
+      
+      // Se está impersonando, usar a função RPC SECURITY DEFINER
+      if (isImpersonating) {
+        const result = await supabase.rpc('get_team_members_for_user', {
+          target_user_id: currentUserId
+        });
+        data = result.data || [];
+        error = result.error;
+      } else {
+        // Buscar normalmente via RLS
+        const result = await supabase
+          .from('team_members')
+          .select('*, is_external_collaborator, collaborator_user_id, address, origin, is_partner, notes')
+          .eq('user_id', currentUserId)
+          .order('name');
+        data = result.data || [];
+        error = result.error;
+      }
 
       if (error) throw error;
 
@@ -52,6 +69,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           status: member.status as 'ativo' | 'inativo',
           isPartner: member.is_partner || false,
           origin: member.origin || '',
+          notes: member.notes || '',
           projects: Array.isArray((member as any).projects) 
             ? (member as any).projects 
             : typeof (member as any).projects === 'string' 
@@ -75,7 +93,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, isImpersonating]);
 
   // Aplicar filtros usando useMemo para otimização
   const filteredTeamMembers = useMemo(() => {    
@@ -139,7 +157,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           project_ids: (newTeamMember.projects || []).map(p => p.id),
           hire_date: null,
           status: newTeamMember.status,
-          notes: '',
+          notes: newTeamMember.notes || '',
           user_id: user.id
         }])
         .select()
@@ -183,7 +201,7 @@ export function useSupabaseTeamMembers(filters?: TeamMemberFilter) {
           project_ids: (updates.projects || []).map(p => p.id),
           hire_date: null,
           status: updates.status,
-          notes: ''
+          notes: updates.notes || ''
         })
         .eq('id', teamMemberId);
 

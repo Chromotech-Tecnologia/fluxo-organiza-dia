@@ -4,12 +4,14 @@ import { Skill } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurrentUserId } from '@/hooks/useCurrentUserId';
+import { useImpersonation } from '@/hooks/useImpersonation';
 
 export function useSupabaseSkills() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
   const currentUserId = useCurrentUserId(); // Usar ID considerando impersonação
+  const { isImpersonating } = useImpersonation();
 
   // Carregar skills do Supabase
   const loadSkills = useCallback(async () => {
@@ -17,11 +19,26 @@ export function useSupabaseSkills() {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('skills')
-        .select('*')
-        .eq('user_id', currentUserId)
-        .order('name');
+      let data: any[] = [];
+      let error: any = null;
+      
+      // Se está impersonando, usar a função RPC SECURITY DEFINER
+      if (isImpersonating) {
+        const result = await supabase.rpc('get_skills_for_user', {
+          target_user_id: currentUserId
+        });
+        data = result.data || [];
+        error = result.error;
+      } else {
+        // Buscar normalmente via RLS
+        const result = await supabase
+          .from('skills')
+          .select('*')
+          .eq('user_id', currentUserId)
+          .order('name');
+        data = result.data || [];
+        error = result.error;
+      }
 
       if (error) throw error;
 
@@ -46,7 +63,7 @@ export function useSupabaseSkills() {
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, isImpersonating]);
 
   // Adicionar nova skill
   const addSkill = async (newSkill: Omit<Skill, 'id' | 'createdAt' | 'updatedAt'>) => {

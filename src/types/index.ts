@@ -43,6 +43,7 @@ export interface TeamMember {
   isPartner: boolean;
   skillIds: string[];
   origin: string;
+  notes: string;
   projects: Project[];
   createdAt: string;
   updatedAt: string;
@@ -244,6 +245,7 @@ export interface TeamMemberFormValues {
   isPartner: boolean;
   skillIds: string[];
   origin: string;
+  notes: string;
   projects: Project[];
 }
 
