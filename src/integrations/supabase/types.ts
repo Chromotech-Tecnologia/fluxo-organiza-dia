@@ -505,6 +505,119 @@ export type Database = {
           user_role: string
         }[]
       }
+      get_people_for_user: {
+        Args: { target_user_id: string }
+        Returns: {
+          active: boolean
+          created_at: string
+          department: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "people"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_skills_for_user: {
+        Args: { target_user_id: string }
+        Returns: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          level: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "skills"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_tasks_for_user: {
+        Args: { end_date: string; start_date: string; target_user_id: string }
+        Returns: {
+          assigned_person_id: string | null
+          assigned_team_member_id: string | null
+          category: string | null
+          completion_history: Json | null
+          concluded_at: string | null
+          created_at: string
+          custom_time_minutes: number | null
+          delegated_by_user_id: string | null
+          delivery_dates: string[] | null
+          description: string | null
+          forward_count: number | null
+          forward_history: Json | null
+          id: string
+          is_concluded: boolean | null
+          is_external_delegation: boolean | null
+          is_forwarded: boolean | null
+          is_routine: boolean | null
+          observations: string | null
+          order_index: number | null
+          priority: string
+          routine_config: Json | null
+          scheduled_date: string
+          status: string
+          sub_items: Json | null
+          task_order: number | null
+          time_investment: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tasks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_team_members_for_user: {
+        Args: { target_user_id: string }
+        Returns: {
+          address: Json | null
+          collaborator_user_id: string | null
+          created_at: string
+          department: string | null
+          email: string | null
+          hire_date: string | null
+          id: string
+          is_external_collaborator: boolean | null
+          is_partner: boolean | null
+          name: string
+          notes: string | null
+          origin: string | null
+          phone: string | null
+          project_ids: string[] | null
+          projects: Json | null
+          role: string | null
+          skill_ids: string[] | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "team_members"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_trial_days_remaining: { Args: { _user_id: string }; Returns: number }
       get_user_task_counts: {
         Args: never

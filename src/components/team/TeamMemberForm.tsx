@@ -36,6 +36,7 @@ const teamMemberFormSchema = z.object({
   isPartner: z.boolean(),
   skillIds: z.array(z.string()),
   origin: z.string().optional(),
+  notes: z.string().optional(),
   projects: z.array(z.object({
     id: z.string(),
     name: z.string(),
@@ -54,6 +55,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
   const { toast } = useToast();
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [skillAreaFilter, setSkillAreaFilter] = useState('all');
+  const [skillSearchQuery, setSkillSearchQuery] = useState('');
 
   const form = useForm<TeamMemberFormValues>({
     resolver: zodResolver(teamMemberFormSchema),
@@ -75,6 +77,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
       isPartner: teamMember?.isPartner || false,
       skillIds: teamMember?.skillIds || [],
       origin: teamMember?.origin || '',
+      notes: teamMember?.notes || '',
       projects: teamMember?.projects || [],
     },
   });
@@ -145,11 +148,15 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
     }
   };
 
-  // Filtrar habilidades por área
+  // Filtrar habilidades por área e busca
   const availableAreas = [...new Set(skills.map(s => s.area).filter(Boolean))];
-  const filteredSkills = skillAreaFilter === 'all' || !skillAreaFilter
-    ? skills
-    : skills.filter(skill => skill.area === skillAreaFilter);
+  const filteredSkills = skills.filter(skill => {
+    const matchesArea = skillAreaFilter === 'all' || !skillAreaFilter || skill.area === skillAreaFilter;
+    const matchesSearch = !skillSearchQuery.trim() || 
+      skill.name.toLowerCase().includes(skillSearchQuery.toLowerCase()) ||
+      skill.area.toLowerCase().includes(skillSearchQuery.toLowerCase());
+    return matchesArea && matchesSearch;
+  });
 
   return (
     <Form {...form}>
@@ -273,6 +280,24 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
                 <FormLabel>Origem da Equipe</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Ex: Indicação, LinkedIn, Site..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    {...field} 
+                    placeholder="Anotações e observações sobre o membro da equipe..." 
+                    className="min-h-[80px]"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -404,6 +429,14 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
           </div>
           
           <div className="space-y-3">
+            {/* Busca por habilidades */}
+            <Input
+              placeholder="Buscar habilidades..."
+              value={skillSearchQuery}
+              onChange={(e) => setSkillSearchQuery(e.target.value)}
+              className="max-w-sm"
+            />
+            
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -426,7 +459,7 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
               ))}
             </div>
             
-            <div className="grid grid-cols-2 gap-2 h-24 overflow-y-auto border rounded-md p-3">
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded-md p-3">
               {filteredSkills.map((skill) => (
                 <div key={skill.id} className="flex items-center space-x-2">
                   <Checkbox
@@ -434,14 +467,17 @@ export function TeamMemberForm({ teamMember, onSubmit, onCancel }: TeamMemberFor
                     checked={watchedSkillIds?.includes(skill.id) || false}
                     onCheckedChange={() => toggleSkill(skill.id)}
                   />
-                  <label htmlFor={`skill-${skill.id}`} className="text-sm font-medium leading-none">
+                  <label htmlFor={`skill-${skill.id}`} className="text-sm font-medium leading-none cursor-pointer">
                     {skill.name}
+                    {skill.area && <span className="text-xs text-muted-foreground ml-1">({skill.area})</span>}
                   </label>
                 </div>
               ))}
               {filteredSkills.length === 0 && (
                 <p className="text-sm text-muted-foreground col-span-2">
-                  {skillAreaFilter !== 'all' && skillAreaFilter ? 'Nenhuma habilidade encontrada para esta área' : 'Nenhuma habilidade cadastrada'}
+                  {skillSearchQuery ? 'Nenhuma habilidade encontrada para a busca' : 
+                   skillAreaFilter !== 'all' && skillAreaFilter ? 'Nenhuma habilidade encontrada para esta área' : 
+                   'Nenhuma habilidade cadastrada'}
                 </p>
               )}
             </div>

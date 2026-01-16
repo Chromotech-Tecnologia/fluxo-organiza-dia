@@ -1,29 +1,46 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Person } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurrentUserId } from '@/hooks/useCurrentUserId';
+import { useImpersonation } from '@/hooks/useImpersonation';
 
 export function useSupabasePeople() {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
   const currentUserId = useCurrentUserId();
+  const { isImpersonating } = useImpersonation();
 
   // Carregar apenas pessoas ativas do Supabase
-  const loadPeople = async () => {
+  const loadPeople = useCallback(async () => {
     if (!currentUserId) return;
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('people')
-        .select('*')
-        .eq('user_id', currentUserId)
-        .eq('active', true) // Filtrar apenas pessoas ativas
-        .order('name');
+      let data: any[] = [];
+      let error: any = null;
+      
+      // Se está impersonando, usar a função RPC SECURITY DEFINER
+      if (isImpersonating) {
+        const result = await supabase.rpc('get_people_for_user', {
+          target_user_id: currentUserId
+        });
+        // Filtrar apenas ativos no frontend
+        data = (result.data || []).filter((p: any) => p.active !== false);
+        error = result.error;
+      } else {
+        // Buscar normalmente via RLS
+        const result = await supabase
+          .from('people')
+          .select('*')
+          .eq('user_id', currentUserId)
+          .eq('active', true) // Filtrar apenas pessoas ativas
+          .order('name');
+        data = result.data || [];
+        error = result.error;
+      }
 
       if (error) throw error;
 
@@ -49,7 +66,7 @@ export function useSupabasePeople() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId, isImpersonating]);
 
   // Adicionar nova pessoa
   const addPerson = async (newPerson: Omit<Person, 'id' | 'createdAt' | 'updatedAt'>) => {

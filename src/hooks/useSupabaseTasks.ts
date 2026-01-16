@@ -4,6 +4,7 @@ import { Task, TaskFilter, TaskStats, SubItem, CompletionRecord } from '@/types'
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurrentUserId } from '@/hooks/useCurrentUserId';
+import { useImpersonation } from '@/hooks/useImpersonation';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTaskShares } from '@/hooks/useTaskShares';
@@ -12,6 +13,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const { user } = useAuthStore();
   const currentUserId = useCurrentUserId();
+  const { isImpersonating } = useImpersonation();
   const queryClient = useQueryClient();
   const { isTaskSharedByMe, isTaskSharedWithMe } = useTaskShares();
 
@@ -40,21 +42,34 @@ export function useSupabaseTasks(filters?: TaskFilter) {
 
   // Query para carregar tarefas com filtro de data no servidor
   const { data: tasks = [], isLoading: loading, refetch } = useQuery({
-    queryKey: ['tasks', currentUserId, dateRange.start, dateRange.end],
+    queryKey: ['tasks', currentUserId, dateRange.start, dateRange.end, isImpersonating],
     queryFn: async () => {
       if (!currentUserId) return [];
       
-      // Buscar todas as tarefas (próprias e compartilhadas)
-      // A RLS vai filtrar automaticamente para mostrar apenas tarefas permitidas
-      let query = supabase
-        .from('tasks')
-        .select('*')
-        .gte('scheduled_date', dateRange.start)
-        .lte('scheduled_date', dateRange.end)
-        .order('scheduled_date', { ascending: true })
-        .order('task_order', { ascending: true });
-
-      const { data, error } = await query;
+      let data: any[] = [];
+      let error: any = null;
+      
+      // Se está impersonando, usar a função RPC SECURITY DEFINER
+      if (isImpersonating) {
+        const result = await supabase.rpc('get_tasks_for_user', {
+          target_user_id: currentUserId,
+          start_date: dateRange.start,
+          end_date: dateRange.end
+        });
+        data = result.data || [];
+        error = result.error;
+      } else {
+        // Buscar normalmente via RLS
+        const result = await supabase
+          .from('tasks')
+          .select('*')
+          .gte('scheduled_date', dateRange.start)
+          .lte('scheduled_date', dateRange.end)
+          .order('scheduled_date', { ascending: true })
+          .order('task_order', { ascending: true });
+        data = result.data || [];
+        error = result.error;
+      }
 
       if (error) {
         console.error('Erro ao carregar tarefas:', error);
