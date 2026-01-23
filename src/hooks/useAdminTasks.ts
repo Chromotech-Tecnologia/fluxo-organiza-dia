@@ -63,6 +63,7 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
         customTimeMinutes: task.custom_time_minutes || undefined,
         category: task.category as Task['category'],
         subItems: (task.sub_items as unknown as SubItem[]) || [],
+        attachments: (task.attachments as unknown as Task['attachments']) || [],
         deliveryDates: task.delivery_dates ? JSON.parse(task.delivery_dates as unknown as string) : [],
         completionHistory: (task.completion_history as unknown as CompletionRecord[]) || [],
         forwardHistory: task.forward_history ? JSON.parse(task.forward_history as unknown as string) : [],

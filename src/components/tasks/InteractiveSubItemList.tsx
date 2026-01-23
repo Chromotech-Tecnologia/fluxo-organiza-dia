@@ -3,12 +3,46 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GripVertical, Check, X, Circle, Trash2 } from "lucide-react";
+import { Plus, GripVertical, Check, X, Circle, Trash2, ExternalLink } from "lucide-react";
 import { SubItem } from "@/types";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+// Regex para detectar URLs
+const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
+
+// Componente para renderizar texto com links clicáveis
+function TextWithLinks({ text }: { text: string }) {
+  if (!text) return null;
+
+  const parts = text.split(urlRegex);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (urlRegex.test(part)) {
+          urlRegex.lastIndex = 0;
+          return (
+            <a
+              key={index}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline hover:text-primary/80 inline-flex items-center gap-0.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part.length > 40 ? part.substring(0, 40) + '...' : part}
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </>
+  );
+}
 
 interface InteractiveSubItemListProps {
   subItems: SubItem[];
@@ -22,9 +56,12 @@ interface SortableSubItemProps {
   onStatusChange: (id: string, status: SubItemStatus) => void;
   onUpdate: (id: string, text: string) => void;
   onDelete: (id: string) => void;
+  isEditing: boolean;
+  onEditStart: (id: string) => void;
+  onEditEnd: () => void;
 }
 
-function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: SortableSubItemProps) {
+function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete, isEditing, onEditStart, onEditEnd }: SortableSubItemProps) {
   const {
     attributes,
     listeners,
@@ -95,41 +132,54 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
         </Button>
       </div>
       
-      <textarea
-        value={subItem.text}
-        onChange={(e) => onUpdate(subItem.id, e.target.value)}
-        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-snug min-w-0 w-full"
-        placeholder="Item do checklist"
-        onKeyDown={(e) => {
-          e.stopPropagation();
-        }}
-        rows={1}
-        style={{
-          height: 'auto',
-          minHeight: '1.25rem',
-          maxHeight: 'none',
-          wordWrap: 'break-word',
-          whiteSpace: 'pre-wrap',
-          overflowWrap: 'break-word',
-          overflow: 'hidden',
-          lineHeight: '1.25'
-        }}
-        onInput={(e) => {
-          const target = e.target as HTMLTextAreaElement;
-          target.style.height = '1.25rem';
-          target.style.height = target.scrollHeight + 'px';
-        }}
-        ref={(textarea) => {
-          if (textarea) {
-            const resizeTextarea = () => {
-              textarea.style.height = '1.25rem';
-              textarea.style.height = textarea.scrollHeight + 'px';
-            };
-            // Resize on mount and when value changes
-            resizeTextarea();
-          }
-        }}
-      />
+      {isEditing ? (
+        <textarea
+          value={subItem.text}
+          onChange={(e) => onUpdate(subItem.id, e.target.value)}
+          onBlur={onEditEnd}
+          autoFocus
+          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-snug min-w-0 w-full"
+          placeholder="Item do checklist"
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === 'Escape') {
+              onEditEnd();
+            }
+          }}
+          rows={1}
+          style={{
+            height: 'auto',
+            minHeight: '1.25rem',
+            maxHeight: 'none',
+            wordWrap: 'break-word',
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'break-word',
+            overflow: 'hidden',
+            lineHeight: '1.25'
+          }}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = '1.25rem';
+            target.style.height = target.scrollHeight + 'px';
+          }}
+          ref={(textarea) => {
+            if (textarea) {
+              const resizeTextarea = () => {
+                textarea.style.height = '1.25rem';
+                textarea.style.height = textarea.scrollHeight + 'px';
+              };
+              resizeTextarea();
+            }
+          }}
+        />
+      ) : (
+        <div
+          className="flex-1 text-sm leading-snug cursor-text min-w-0"
+          onClick={() => onEditStart(subItem.id)}
+        >
+          <TextWithLinks text={subItem.text} />
+        </div>
+      )}
       
       <Button
         type="button"
@@ -147,6 +197,7 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete }: Sortab
 
 export function InteractiveSubItemList({ subItems, onSubItemsChange }: InteractiveSubItemListProps) {
   const [newItemText, setNewItemText] = useState('');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -272,6 +323,9 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
                     onStatusChange={handleStatusChange}
                     onUpdate={updateSubItem}
                     onDelete={deleteSubItem}
+                    isEditing={editingItemId === subItem.id}
+                    onEditStart={(id) => setEditingItemId(id)}
+                    onEditEnd={() => setEditingItemId(null)}
                   />
                 ))}
             </div>

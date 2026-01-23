@@ -70,6 +70,16 @@ export interface User {
   updatedAt: string;
 }
 
+export interface TaskAttachment {
+  id: string;
+  name: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: string;
+}
+
 export interface SubItem {
   id: string;
   text: string;
@@ -116,6 +126,7 @@ export interface Task {
   assignedPersonId?: string; // DEPRECATED: Use assignedTeamMemberId
   assignedTeamMemberId?: string;
   subItems: SubItem[];
+  attachments: TaskAttachment[];
   deliveryDates: string[];
   observations: string;
   order: number;
@@ -210,6 +221,7 @@ export interface TaskFormValues {
   routineEndDate?: string;
   includeWeekends?: boolean;
   subItems: SubItem[];
+  attachments?: TaskAttachment[];
   meetingStartTime?: string;
   meetingEndTime?: string;
 }
