@@ -91,6 +91,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         customTimeMinutes: task.custom_time_minutes || undefined,
         category: task.category as Task['category'],
         subItems: (task.sub_items as unknown as SubItem[]) || [],
+        attachments: (task.attachments as unknown as Task['attachments']) || [],
         completionHistory: (task.completion_history as unknown as CompletionRecord[]) || [],
         forwardHistory: (task.forward_history as unknown as Task['forwardHistory']) || [],
         forwardCount: task.forward_count || 0,
@@ -262,6 +263,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         custom_time_minutes: newTask.customTimeMinutes || null,
         category: newTask.category,
         sub_items: JSON.parse(JSON.stringify(newTask.subItems || [])),
+        attachments: JSON.parse(JSON.stringify(newTask.attachments || [])),
         completion_history: JSON.parse(JSON.stringify(newTask.completionHistory || [])),
         forward_history: JSON.parse(JSON.stringify(newTask.forwardHistory || [])),
         forward_count: newTask.forwardCount || 0,
@@ -320,6 +322,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (updates.customTimeMinutes !== undefined) updateData.custom_time_minutes = updates.customTimeMinutes;
       if (updates.category !== undefined) updateData.category = updates.category;
       if (updates.subItems !== undefined) updateData.sub_items = JSON.parse(JSON.stringify(updates.subItems));
+      if (updates.attachments !== undefined) updateData.attachments = JSON.parse(JSON.stringify(updates.attachments));
       if (updates.completionHistory !== undefined) updateData.completion_history = JSON.parse(JSON.stringify(updates.completionHistory));
       if (updates.forwardHistory !== undefined) updateData.forward_history = JSON.parse(JSON.stringify(updates.forwardHistory));
       if (updates.forwardCount !== undefined) updateData.forward_count = updates.forwardCount;

@@ -8,13 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Task, TaskFormValues, SubItem, TaskType, TaskPriority, TaskTimeInvestment, TaskCategory } from "@/types";
+import { Task, TaskFormValues, SubItem, TaskType, TaskPriority, TaskTimeInvestment, TaskCategory, TaskAttachment } from "@/types";
 import { taskFormSchema } from "@/lib/validations/task";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { InteractiveSubItemList } from "./InteractiveSubItemList";
 import { PeopleSelectWithSearch } from "@/components/people/PeopleSelectWithSearch";
 import { ShareTaskSelect } from "./ShareTaskSelect";
+import { TaskAttachments } from "./TaskAttachments";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -25,6 +26,7 @@ interface TaskFormProps {
 export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const { teamMembers } = useSupabaseTeamMembers();
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
+  const [attachments, setAttachments] = useState<TaskAttachment[]>(task?.attachments || []);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -55,6 +57,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
     onSubmit({
       ...data,
       subItems,
+      attachments,
     });
   };
 
@@ -92,6 +95,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   useEffect(() => {
     if (task) {
       setSubItems(task.subItems || []);
+      setAttachments(task.attachments || []);
     }
   }, [task]);
 
@@ -456,6 +460,12 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                 <FormMessage />
               </FormItem>
             )}
+          />
+
+          <TaskAttachments
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+            taskId={task?.id}
           />
 
           {task && (

@@ -197,6 +197,7 @@ export type Database = {
         Row: {
           assigned_person_id: string | null
           assigned_team_member_id: string | null
+          attachments: Json | null
           category: string | null
           completion_history: Json | null
           concluded_at: string | null
@@ -229,6 +230,7 @@ export type Database = {
         Insert: {
           assigned_person_id?: string | null
           assigned_team_member_id?: string | null
+          attachments?: Json | null
           category?: string | null
           completion_history?: Json | null
           concluded_at?: string | null
@@ -261,6 +263,7 @@ export type Database = {
         Update: {
           assigned_person_id?: string | null
           assigned_team_member_id?: string | null
+          attachments?: Json | null
           category?: string | null
           completion_history?: Json | null
           concluded_at?: string | null
@@ -551,6 +554,7 @@ export type Database = {
         Returns: {
           assigned_person_id: string | null
           assigned_team_member_id: string | null
+          attachments: Json | null
           category: string | null
           completion_history: Json | null
           concluded_at: string | null

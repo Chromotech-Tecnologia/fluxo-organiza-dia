@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useModalStore } from "@/stores/useModalStore";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
-import { SubItem, TaskFormValues } from "@/types";
+import { SubItem, TaskFormValues, TaskAttachment } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { generateRoutineTasks, validateRoutineConfig, RoutineTaskData } from "@/lib/routineUtils";
@@ -18,7 +18,7 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[] }) => {
+  const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[]; attachments?: TaskAttachment[] }) => {
     try {
       console.log('Salvando tarefa...', taskToEdit ? 'Edição' : 'Nova', data);
       
@@ -33,6 +33,7 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         routineCycle: data.isRoutine ? data.routineCycle : undefined,
         meetingStartTime: data.meetingStartTime || undefined,
         meetingEndTime: data.meetingEndTime || undefined,
+        attachments: data.attachments || [],
       };
 
       console.log('Dados limpos para salvar:', cleanData);

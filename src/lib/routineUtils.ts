@@ -81,7 +81,8 @@ export function generateRoutineTasks(taskData: RoutineTaskData): Omit<Task, 'id'
       isRecurrent: true,
       completionHistory: [],
       isForwarded: false,
-      isConcluded: false
+      isConcluded: false,
+      attachments: taskData.attachments || []
     }];
   }
 
@@ -106,7 +107,8 @@ export function generateRoutineTasks(taskData: RoutineTaskData): Omit<Task, 'id'
     isRecurrent: true,
     completionHistory: [],
     isForwarded: false,
-    isConcluded: false
+    isConcluded: false,
+    attachments: taskData.attachments || []
   }));
 }
 
