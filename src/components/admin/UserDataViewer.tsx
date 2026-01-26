@@ -106,7 +106,7 @@ export function UserDataViewer() {
   const refreshData = async () => {
     try {
       await queryClient.invalidateQueries({ 
-        queryKey: ['admin-tasks', selectedUserId],
+        queryKey: ['admin-tasks'],
         refetchType: 'all'
       });
     } catch (error) {
