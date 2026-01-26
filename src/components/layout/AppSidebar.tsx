@@ -97,7 +97,9 @@ export function AppSidebar() {
     isActive
   }: {
     isActive: boolean;
-  }) => isActive ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 text-gray-700 font-medium" : "text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200";
+  }) => isActive 
+    ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 text-primary font-semibold border-l-4 border-primary" 
+    : "text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200";
   return <Sidebar className={collapsed ? "w-14" : "w-60"}>
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
