@@ -13,32 +13,23 @@ interface AdminTasksParams {
 export function useAdminTasks({ userId, filters }: AdminTasksParams) {
   const queryClient = useQueryClient();
 
-  // Query para carregar tarefas do usuário especificado
+  // Query para carregar tarefas do usuário especificado (incluindo compartilhadas)
   const { data: tasks = [], isLoading: loading, refetch } = useQuery({
-    queryKey: ['admin-tasks', userId],
+    queryKey: ['admin-tasks', userId, filters?.dateRange?.start, filters?.dateRange?.end],
     queryFn: async () => {
       if (!userId) return [];
       
-      console.log('Carregando tarefas do usuário:', userId);
+      console.log('Carregando tarefas do usuário (via RPC):', userId);
       
-      // Debug: Check authentication context
-      try {
-        const { data: authDebug, error: debugError } = await supabase.rpc('debug_auth_context');
-        if (debugError) {
-          console.error('Erro ao verificar contexto de auth:', debugError);
-        } else {
-          console.log('Context de auth:', authDebug);
-        }
-      } catch (debugErr) {
-        console.log('Debug auth não disponível:', debugErr);
-      }
+      // Usar a RPC SECURITY DEFINER que inclui tarefas compartilhadas
+      const startDate = filters?.dateRange?.start || '2020-01-01';
+      const endDate = filters?.dateRange?.end || '2099-12-31';
       
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', userId)
-        .order('scheduled_date', { ascending: true })
-        .order('task_order', { ascending: true });
+      const { data, error } = await supabase.rpc('get_tasks_for_user', {
+        target_user_id: userId,
+        start_date: startDate,
+        end_date: endDate
+      });
 
       if (error) {
         console.error('Erro ao carregar tarefas:', error);
@@ -190,7 +181,7 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
       if (error) throw error;
 
       // Invalidar cache para forçar recarregamento
-      queryClient.invalidateQueries({ queryKey: ['admin-tasks', userId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tasks'] });
 
       console.log('Tarefa atualizada com sucesso');
     } catch (error) {
@@ -217,7 +208,7 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
       if (error) throw error;
 
       // Invalidar cache
-      queryClient.invalidateQueries({ queryKey: ['admin-tasks', userId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tasks'] });
       
       toast({
         title: "Sucesso",
@@ -250,7 +241,7 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['admin-tasks', userId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tasks'] });
       
       toast({
         title: "Sucesso",
@@ -279,7 +270,7 @@ export function useAdminTasks({ userId, filters }: AdminTasksParams) {
           .eq('id', taskIds[i]);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['admin-tasks', userId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tasks'] });
     } catch (error) {
       console.error('Erro ao reordenar tarefas:', error);
       toast({
