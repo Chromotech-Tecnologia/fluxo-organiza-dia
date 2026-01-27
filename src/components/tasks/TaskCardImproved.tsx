@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical, Undo, Clock } from "lucide-react";
+import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical, Undo, Clock, Copy } from "lucide-react";
 import { Task } from "@/types";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -10,11 +10,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Progress } from '@/components/ui/progress';
 import DualColorProgress from '@/components/ui/dual-color-progress';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { getOrderNumberColor, getPriorityColor, getTimeInMinutes, formatTime } from '@/lib/taskUtils';
 import { useSupabaseTeamMembers } from '@/hooks/useSupabaseTeamMembers';
 import { getCurrentDateInSaoPaulo } from '@/lib/utils';
 import { useTaskShares } from '@/hooks/useTaskShares';
+
 interface TaskCardImprovedProps {
   task: Task;
   onStatusChange: (status: Task['status']) => void;
@@ -24,6 +25,7 @@ interface TaskCardImprovedProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onHistory?: () => void;
+  onDuplicate?: () => void;
   currentViewDate?: string;
   taskIndex?: number;
   maxOrder?: number;
@@ -37,6 +39,7 @@ export function TaskCardImproved({
   onEdit,
   onDelete,
   onHistory,
+  onDuplicate,
   currentViewDate,
   taskIndex,
   maxOrder = 100
@@ -189,6 +192,13 @@ export function TaskCardImproved({
     onEdit?.();
   };
 
+  const handleDuplicateClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Clicou duplicar - chamando onDuplicate');
+    onDuplicate?.();
+  };
+
   // Botão reagendar laranja se foi reagendada desta data OU se acabou de ser reagendada
   const shouldShowOrangeRescheduleButton = wasRescheduledFromThisDate || isRescheduling || justRescheduled;
   return <Card ref={setNodeRef} style={style} className={`cursor-pointer hover:shadow-md transition-all duration-200 ${getCardColor()}`} onClick={handleCardClick}>
@@ -249,10 +259,19 @@ export function TaskCardImproved({
                       <Edit2 className="h-4 w-4 mr-2" />
                       Editar
                     </DropdownMenuItem>}
-                  {onDelete && <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir
+                  {onDuplicate && <DropdownMenuItem onClick={handleDuplicateClick}>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Duplicar
                     </DropdownMenuItem>}
+                  {onDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

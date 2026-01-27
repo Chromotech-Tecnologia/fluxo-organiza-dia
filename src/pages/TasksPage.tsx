@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, CheckCircle } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
+import { useToast } from "@/hooks/use-toast";
 import { TaskCardImproved } from "@/components/tasks/TaskCardImproved";
 import { TaskStatsCompact } from "@/components/tasks/TaskStatsCompact";
 import { TaskFiltersHorizontal } from "@/components/tasks/TaskFiltersHorizontal";
@@ -36,7 +37,8 @@ const TasksPage = () => {
     }
   });
   const { openTaskModal, openRescheduleModal, openDeleteModal } = useModalStore();
-  const { tasks, updateTask, deleteTask, reorderTasks, concludeTask } = useSupabaseTasks(taskFilters);
+  const { tasks, updateTask, deleteTask, reorderTasks, concludeTask, addTask } = useSupabaseTasks(taskFilters);
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Função para forçar atualização de dados mais robusta
@@ -169,6 +171,62 @@ const TasksPage = () => {
 
   const handleTaskHistory = (task: Task) => {
     setTaskForHistory(task);
+  };
+
+  const handleDuplicateTask = async (task: Task) => {
+    try {
+      console.log('Duplicando tarefa:', task.title);
+      
+      // Criar cópia da tarefa sem campos únicos
+      const duplicatedTask = {
+        title: `${task.title} (cópia)`,
+        description: task.description || '',
+        observations: task.observations || '',
+        scheduledDate: task.scheduledDate,
+        priority: task.priority,
+        type: task.type,
+        category: task.category,
+        timeInvestment: task.timeInvestment,
+        customTimeMinutes: task.customTimeMinutes,
+        assignedPersonId: task.assignedPersonId,
+        assignedTeamMemberId: task.assignedTeamMemberId,
+        subItems: task.subItems?.map(item => ({
+          ...item,
+          id: crypto.randomUUID(),
+          completed: false,
+          notDone: false
+        })) || [],
+        isRoutine: false,
+        isRecurrent: false,
+        deliveryDates: [] as string[],
+        attachments: [] as any[], // Não duplicar anexos pois são arquivos no storage
+        meetingStartTime: task.meetingStartTime,
+        meetingEndTime: task.meetingEndTime,
+        status: 'pending' as const,
+        order: 0,
+        forwardCount: 0,
+        isConcluded: false,
+        isForwarded: false,
+        forwardHistory: [],
+        completionHistory: [],
+      };
+
+      await addTask(duplicatedTask);
+      
+      toast({
+        title: "Tarefa duplicada",
+        description: `A tarefa "${task.title}" foi duplicada com sucesso.`,
+      });
+      
+      await refreshData();
+    } catch (error) {
+      console.error('Erro ao duplicar tarefa:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível duplicar a tarefa.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -345,6 +403,7 @@ const TasksPage = () => {
                         onEdit={() => handleEditTask(task)}
                         onDelete={() => handleDeleteTask(task)}
                         onHistory={() => handleTaskHistory(task)}
+                        onDuplicate={() => handleDuplicateTask(task)}
                         currentViewDate={taskFilters.dateRange?.start}
                       />
                     </div>
