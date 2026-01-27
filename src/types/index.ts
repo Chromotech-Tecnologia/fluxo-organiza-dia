@@ -182,6 +182,7 @@ export interface TaskFilter {
   timeInvestment?: TaskTimeInvestment[];
   category?: ('personal' | 'business')[];
   hasChecklist?: boolean;
+  hasAttachments?: boolean; // Novo filtro para anexos
   isForwarded?: boolean;
   noOrder?: boolean;
   isConcluded?: boolean;

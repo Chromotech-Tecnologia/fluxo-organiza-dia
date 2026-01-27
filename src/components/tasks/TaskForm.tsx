@@ -15,11 +15,17 @@ import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { InteractiveSubItemList } from "./InteractiveSubItemList";
 import { PeopleSelectWithSearch } from "@/components/people/PeopleSelectWithSearch";
 import { ShareTaskSelect } from "./ShareTaskSelect";
+import { ShareTaskSelectNew } from "./ShareTaskSelectNew";
 import { TaskAttachments } from "./TaskAttachments";
+
+interface PendingShare {
+  userId: string;
+  userName: string;
+}
 
 interface TaskFormProps {
   task?: Task | null;
-  onSubmit: (data: TaskFormValues & { subItems: SubItem[] }) => void;
+  onSubmit: (data: TaskFormValues & { subItems: SubItem[]; pendingShares?: PendingShare[] }) => void;
   onCancel: () => void;
 }
 
@@ -27,6 +33,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const { teamMembers } = useSupabaseTeamMembers();
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
   const [attachments, setAttachments] = useState<TaskAttachment[]>(task?.attachments || []);
+  const [pendingShares, setPendingShares] = useState<PendingShare[]>([]);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -58,6 +65,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       ...data,
       subItems,
       attachments,
+      pendingShares: !task ? pendingShares : undefined, // Only include for new tasks
     });
   };
 
@@ -468,13 +476,24 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
             taskId={task?.id}
           />
 
-          {task && (
+          {task ? (
             <div className="border rounded-lg p-4 space-y-2">
               <h4 className="font-medium text-sm">Compartilhar Tarefa</h4>
               <p className="text-xs text-muted-foreground mb-3">
                 Compartilhe esta tarefa com colaboradores que aceitaram seu convite
               </p>
               <ShareTaskSelect taskId={task.id} />
+            </div>
+          ) : (
+            <div className="border rounded-lg p-4 space-y-2">
+              <h4 className="font-medium text-sm">Compartilhar Tarefa</h4>
+              <p className="text-xs text-muted-foreground mb-3">
+                Selecione colaboradores para compartilhar esta tarefa após criá-la
+              </p>
+              <ShareTaskSelectNew 
+                pendingShares={pendingShares}
+                onPendingSharesChange={setPendingShares}
+              />
             </div>
           )}
 
