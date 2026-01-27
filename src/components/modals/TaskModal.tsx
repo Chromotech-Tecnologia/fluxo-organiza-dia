@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useModalStore } from "@/stores/useModalStore";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
+import { useTaskShares } from "@/hooks/useTaskShares";
 import { SubItem, TaskFormValues, TaskAttachment } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,13 +13,19 @@ interface TaskModalProps {
   onTaskSaved?: () => void;
 }
 
+interface PendingShare {
+  userId: string;
+  userName: string;
+}
+
 export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
   const { isTaskModalOpen, taskToEdit, closeTaskModal } = useModalStore();
   const { addTask, updateTask } = useSupabaseTasks();
+  const { shareTask } = useTaskShares();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[]; attachments?: TaskAttachment[] }) => {
+  const handleSubmit = async (data: TaskFormValues & { subItems: SubItem[]; attachments?: TaskAttachment[]; pendingShares?: PendingShare[] }) => {
     try {
       console.log('Salvando tarefa...', taskToEdit ? 'Edição' : 'Nova', data);
       
@@ -70,8 +77,26 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         console.log(`Criando ${tasksToCreate.length} tarefa(s) ${cleanData.isRoutine ? 'da rotina' : ''}...`);
         
         // Criar todas as tarefas da rotina
+        const createdTaskIds: string[] = [];
         for (const taskData of tasksToCreate) {
-          await addTask(taskData);
+          const createdTask = await addTask(taskData);
+          if (createdTask?.id) {
+            createdTaskIds.push(createdTask.id);
+          }
+        }
+
+        // Se há compartilhamentos pendentes, aplicar às tarefas criadas
+        if (data.pendingShares && data.pendingShares.length > 0 && createdTaskIds.length > 0) {
+          console.log('Aplicando compartilhamentos pendentes...');
+          for (const taskId of createdTaskIds) {
+            for (const share of data.pendingShares) {
+              try {
+                await shareTask(taskId, share.userId);
+              } catch (shareError) {
+                console.error('Erro ao compartilhar tarefa:', shareError);
+              }
+            }
+          }
         }
         
         const message = tasksToCreate.length > 1 

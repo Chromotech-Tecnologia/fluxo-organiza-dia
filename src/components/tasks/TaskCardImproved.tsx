@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical, Undo, Clock, Copy } from "lucide-react";
+import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical, Undo, Clock, Copy, Paperclip } from "lucide-react";
 import { Task } from "@/types";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -229,6 +229,14 @@ export function TaskCardImproved({
                   {isTaskSharedWithMe(task.id) 
                     ? `Compartilhado comigo${sharedByUserName ? ` - ${sharedByUserName}` : ''}` 
                     : 'Compartilhei'}
+                </Badge>
+              )}
+
+              {/* Ícone de anexos */}
+              {task.attachments && task.attachments.length > 0 && (
+                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-800 border-amber-300 flex-shrink-0 gap-1">
+                  <Paperclip className="h-3 w-3" />
+                  {task.attachments.length}
                 </Badge>
               )}
               

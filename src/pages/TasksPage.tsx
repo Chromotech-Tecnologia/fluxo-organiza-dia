@@ -177,7 +177,7 @@ const TasksPage = () => {
     try {
       console.log('Duplicando tarefa:', task.title);
       
-      // Criar cópia da tarefa sem campos únicos
+      // Criar cópia da tarefa preservando anexos
       const duplicatedTask = {
         title: `${task.title} (cópia)`,
         description: task.description || '',
@@ -199,7 +199,8 @@ const TasksPage = () => {
         isRoutine: false,
         isRecurrent: false,
         deliveryDates: [] as string[],
-        attachments: [] as any[], // Não duplicar anexos pois são arquivos no storage
+        // Manter os anexos na duplicação
+        attachments: task.attachments || [],
         meetingStartTime: task.meetingStartTime,
         meetingEndTime: task.meetingEndTime,
         status: 'pending' as const,

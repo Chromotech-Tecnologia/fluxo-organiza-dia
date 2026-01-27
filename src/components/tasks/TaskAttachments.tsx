@@ -2,20 +2,13 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Paperclip, X, Upload, FileText, Image, File, Download, Loader2, Clipboard } from "lucide-react";
+import { Paperclip, X, Upload, FileText, Image, File, Download, Loader2, Eye } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from '@/hooks/use-toast';
-
-export interface TaskAttachment {
-  id: string;
-  name: string;
-  fileName: string;
-  filePath: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedAt: string;
-}
+import { TaskAttachment } from '@/types';
+import { AttachmentPreviewModal } from './AttachmentPreviewModal';
+import { AttachmentThumbnail } from './AttachmentThumbnail';
 
 interface TaskAttachmentsProps {
   attachments: TaskAttachment[];
@@ -27,8 +20,8 @@ interface TaskAttachmentsProps {
 export function TaskAttachments({ attachments, onAttachmentsChange, taskId, readOnly = false }: TaskAttachmentsProps) {
   const { user } = useAuthStore();
   const [uploading, setUploading] = useState(false);
-  const [newAttachmentName, setNewAttachmentName] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [previewAttachment, setPreviewAttachment] = useState<TaskAttachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -53,18 +46,34 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
       });
       return;
     }
-    setSelectedFile(file);
-    if (!newAttachmentName) {
-      // Remove a extensão do nome do arquivo para usar como nome padrão
-      const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, '');
-      setNewAttachmentName(nameWithoutExtension);
+    setPendingFiles(prev => [...prev, file]);
+  }, []);
+
+  const processMultipleFiles = useCallback((files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const validFiles: File[] = [];
+    
+    for (const file of fileArray) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: `"${file.name}" excede o limite de 10MB`,
+          variant: "destructive"
+        });
+      } else {
+        validFiles.push(file);
+      }
     }
-  }, [newAttachmentName]);
+    
+    if (validFiles.length > 0) {
+      setPendingFiles(prev => [...prev, ...validFiles]);
+    }
+  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      processMultipleFiles(files);
     }
   };
 
@@ -132,49 +141,51 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
     };
   }, [handlePaste, readOnly]);
 
-  const handleUpload = async () => {
-    if (!selectedFile || !user?.id) return;
-
-    const displayName = newAttachmentName.trim() || selectedFile.name.replace(/\.[^/.]+$/, '');
+  const handleUploadAll = async () => {
+    if (pendingFiles.length === 0 || !user?.id) return;
     
     setUploading(true);
+    const newAttachments: TaskAttachment[] = [];
+    
     try {
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      for (const file of pendingFiles) {
+        const displayName = file.name.replace(/\.[^/.]+$/, '');
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('task-attachments')
-        .upload(filePath, selectedFile);
+        const { error: uploadError } = await supabase.storage
+          .from('task-attachments')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const newAttachment: TaskAttachment = {
-        id: crypto.randomUUID(),
-        name: displayName,
-        fileName: selectedFile.name,
-        filePath,
-        fileSize: selectedFile.size,
-        mimeType: selectedFile.type,
-        uploadedAt: new Date().toISOString()
-      };
+        newAttachments.push({
+          id: crypto.randomUUID(),
+          name: displayName,
+          fileName: file.name,
+          filePath,
+          fileSize: file.size,
+          mimeType: file.type,
+          uploadedAt: new Date().toISOString()
+        });
+      }
 
-      onAttachmentsChange([...attachments, newAttachment]);
-      setSelectedFile(null);
-      setNewAttachmentName('');
+      onAttachmentsChange([...attachments, ...newAttachments]);
+      setPendingFiles([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
 
       toast({
-        title: "Arquivo anexado",
-        description: `"${displayName}" foi anexado com sucesso.`
+        title: "Arquivos anexados",
+        description: `${newAttachments.length} arquivo(s) anexado(s) com sucesso.`
       });
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
       toast({
         title: "Erro no upload",
-        description: error.message || "Não foi possível enviar o arquivo",
+        description: error.message || "Não foi possível enviar os arquivos",
         variant: "destructive"
       });
     } finally {
@@ -232,9 +243,12 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
     }
   };
 
+  const removePendingFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const cancelUpload = () => {
-    setSelectedFile(null);
-    setNewAttachmentName('');
+    setPendingFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -264,15 +278,19 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
         )}
       </div>
 
-      {/* Lista de anexos existentes */}
+      {/* Lista de anexos existentes com thumbnails */}
       {attachments.length > 0 && (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 gap-2">
           {attachments.map((attachment) => (
             <div
               key={attachment.id}
-              className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50"
+              className="flex items-center gap-3 p-2 border rounded-lg bg-muted/50"
             >
-              {getFileIcon(attachment.mimeType)}
+              <AttachmentThumbnail 
+                attachment={attachment} 
+                size="sm"
+                onClick={() => setPreviewAttachment(attachment)}
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{attachment.name}</p>
                 <p className="text-xs text-muted-foreground">
@@ -280,6 +298,15 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
                 </p>
               </div>
               <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPreviewAttachment(attachment)}
+                  title="Visualizar"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
                 <Button
                   type="button"
                   variant="ghost"
@@ -307,30 +334,31 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
         </div>
       )}
 
-      {/* Upload de novo anexo */}
+      {/* Upload de novos anexos */}
       {!readOnly && (
         <div className="space-y-3">
-          {selectedFile ? (
+          {pendingFiles.length > 0 ? (
             <div className="space-y-3 p-3 border rounded-lg border-dashed">
-              <div className="flex items-center gap-2">
-                {getFileIcon(selectedFile.type)}
-                <span className="text-sm truncate flex-1">{selectedFile.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {formatFileSize(selectedFile.size)}
-                </span>
-              </div>
-              
+              <p className="text-sm font-medium">{pendingFiles.length} arquivo(s) selecionado(s):</p>
               <div className="space-y-2">
-                <Label htmlFor="attachmentName" className="text-xs">
-                  Nome do anexo
-                </Label>
-                <Input
-                  id="attachmentName"
-                  value={newAttachmentName}
-                  onChange={(e) => setNewAttachmentName(e.target.value)}
-                  placeholder="Digite um nome para o anexo"
-                  className="h-9"
-                />
+                {pendingFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    {getFileIcon(file.type)}
+                    <span className="truncate flex-1">{file.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatFileSize(file.size)}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-destructive"
+                      onClick={() => removePendingFile(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="flex gap-2">
@@ -346,8 +374,17 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
                 </Button>
                 <Button
                   type="button"
+                  variant="outline"
                   size="sm"
-                  onClick={handleUpload}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  + Mais
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleUploadAll}
                   disabled={uploading}
                   className="flex-1"
                 >
@@ -359,7 +396,7 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
                   ) : (
                     <>
                       <Upload className="h-4 w-4 mr-2" />
-                      Anexar
+                      Anexar todos
                     </>
                   )}
                 </Button>
@@ -373,6 +410,7 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
                 onChange={handleFileSelect}
                 className="hidden"
                 accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+                multiple
               />
               <Button
                 type="button"
@@ -382,15 +420,22 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
                 className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Selecionar arquivo para anexar
+                Selecionar arquivos para anexar
               </Button>
               <p className="text-xs text-muted-foreground mt-1 text-center">
-                Máx. 10MB • Imagens, PDFs, documentos
+                Máx. 10MB cada • Imagens, PDFs, documentos • Múltiplos arquivos
               </p>
             </div>
           )}
         </div>
       )}
+
+      {/* Modal de preview */}
+      <AttachmentPreviewModal
+        attachment={previewAttachment}
+        isOpen={!!previewAttachment}
+        onClose={() => setPreviewAttachment(null)}
+      />
     </div>
   );
 }

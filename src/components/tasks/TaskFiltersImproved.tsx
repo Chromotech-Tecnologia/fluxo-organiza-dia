@@ -246,13 +246,21 @@ export function TaskFiltersImproved({
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button 
                 variant={currentFilters.hasChecklist === true ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleFilterChange('hasChecklist', currentFilters.hasChecklist === true ? undefined : true)}
               >
                 Com Checklist
+              </Button>
+
+              <Button 
+                variant={currentFilters.hasAttachments === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterChange('hasAttachments', currentFilters.hasAttachments === true ? undefined : true)}
+              >
+                Com Anexos
               </Button>
 
               <Button 

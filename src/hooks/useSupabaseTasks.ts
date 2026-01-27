@@ -195,6 +195,14 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         }
       }
 
+      // Filtro por anexos
+      if (filters.hasAttachments !== undefined) {
+        const hasAttachments = task.attachments && task.attachments.length > 0;
+        if (filters.hasAttachments !== hasAttachments) {
+          return false;
+        }
+      }
+
       // Filtro por reagendadas - LÓGICA USANDO HISTÓRICO
       if (filters.isForwarded !== undefined) {
         // Verificar se a tarefa foi reagendada usando o histórico
@@ -245,9 +253,9 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     return filtered;
   }, [tasks, filters, isTaskSharedByMe, isTaskSharedWithMe]);
 
-  // Adicionar nova tarefa
-  const addTask = useCallback(async (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> | Task) => {
-    if (!currentUserId) return;
+  // Adicionar nova tarefa - retorna a tarefa criada
+  const addTask = useCallback(async (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> | Task): Promise<{ id: string } | null> => {
+    if (!currentUserId) return null;
     
     try {
       const taskData = {
@@ -286,6 +294,7 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
+      return data ? { id: data.id } : null;
     } catch (error: any) {
       console.error('Erro ao adicionar tarefa:', error);
       toast({
