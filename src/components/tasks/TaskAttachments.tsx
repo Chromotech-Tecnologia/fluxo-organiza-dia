@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Paperclip, X, Upload, FileText, Image, File, Download, Loader2 } from "lucide-react";
+import { Paperclip, X, Upload, FileText, Image, File, Download, Loader2, Clipboard } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from '@/hooks/use-toast';
@@ -30,6 +30,7 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
   const [newAttachmentName, setNewAttachmentName] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith('image/')) return <Image className="h-4 w-4" />;
@@ -43,25 +44,93 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const processFile = useCallback((file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo permitido é 10MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    setSelectedFile(file);
+    if (!newAttachmentName) {
+      // Remove a extensão do nome do arquivo para usar como nome padrão
+      const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, '');
+      setNewAttachmentName(nameWithoutExtension);
+    }
+  }, [newAttachmentName]);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "Arquivo muito grande",
-          description: "O tamanho máximo permitido é 10MB",
-          variant: "destructive"
-        });
-        return;
-      }
-      setSelectedFile(file);
-      if (!newAttachmentName) {
-        // Remove a extensão do nome do arquivo para usar como nome padrão
-        const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, '');
-        setNewAttachmentName(nameWithoutExtension);
-      }
+      processFile(file);
     }
   };
+
+  // Handle paste event (Ctrl+V)
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    if (readOnly) return;
+    
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      // Check if it's a file (image or other)
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          
+          // Generate a name for pasted content
+          const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+          let fileName = file.name;
+          
+          // For screenshots/clipboard images, generate a descriptive name
+          if (file.type.startsWith('image/') && (!file.name || file.name === 'image.png')) {
+            const ext = file.type.split('/')[1] || 'png';
+            fileName = `screenshot_${timestamp}.${ext}`;
+          }
+          
+          // Create a new file with the generated name if needed
+          const blob = new Blob([file], { type: file.type });
+          const processedFile = new window.File([blob], fileName, { type: file.type });
+          processFile(processedFile);
+          
+          toast({
+            title: "Arquivo colado",
+            description: `"${fileName}" pronto para anexar.`
+          });
+          return;
+        }
+      }
+    }
+  }, [readOnly, processFile]);
+
+  // Set up paste event listener
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || readOnly) return;
+
+    // Listen for paste on the container
+    const handleContainerPaste = (e: Event) => handlePaste(e as ClipboardEvent);
+    container.addEventListener('paste', handleContainerPaste);
+
+    // Also listen globally when container is focused
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      if (container.contains(document.activeElement) || document.activeElement === container) {
+        handlePaste(e);
+      }
+    };
+    document.addEventListener('paste', handleGlobalPaste);
+
+    return () => {
+      container.removeEventListener('paste', handleContainerPaste);
+      document.removeEventListener('paste', handleGlobalPaste);
+    };
+  }, [handlePaste, readOnly]);
 
   const handleUpload = async () => {
     if (!selectedFile || !user?.id) return;
@@ -172,11 +241,21 @@ export function TaskAttachments({ attachments, onAttachmentsChange, taskId, read
   };
 
   return (
-    <div className="space-y-4">
+    <div 
+      ref={containerRef}
+      className="space-y-4"
+      tabIndex={0}
+      onFocus={() => {}}
+    >
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium flex items-center gap-2">
           <Paperclip className="h-4 w-4" />
           Anexos
+          {!readOnly && (
+            <span className="text-xs text-muted-foreground font-normal ml-1">
+              (Ctrl+V para colar)
+            </span>
+          )}
         </Label>
         {attachments.length > 0 && (
           <span className="text-xs text-muted-foreground">
