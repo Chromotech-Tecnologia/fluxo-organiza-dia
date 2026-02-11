@@ -86,6 +86,8 @@ export interface SubItem {
   completed: boolean;
   notDone?: boolean;
   order: number;
+  subject?: string;
+  createdAt?: string;
 }
 
 export interface RecurrenceConfig {
