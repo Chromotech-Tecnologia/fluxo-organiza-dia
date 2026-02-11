@@ -48,6 +48,7 @@ function TextWithLinks({ text }: { text: string }) {
 }
 
 interface InteractiveSubItemListProps {
+  taskId?: string;
   subItems: SubItem[];
   onSubItemsChange: (subItems: SubItem[]) => void;
 }
@@ -228,14 +229,50 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete, onSubjec
   );
 }
 
-export function InteractiveSubItemList({ subItems, onSubItemsChange }: InteractiveSubItemListProps) {
+export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: InteractiveSubItemListProps) {
+  const storageKey = taskId ? `checklist-prefs-${taskId}` : null;
+
+  const loadPrefs = () => {
+    if (!storageKey) return { hideCompleted: false, hideNotDone: false, groupBySubject: false };
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { hideCompleted: false, hideNotDone: false, groupBySubject: false };
+  };
+
   const [newItemText, setNewItemText] = useState('');
   const [newItemSubject, setNewItemSubject] = useState('');
   const [customSubject, setCustomSubject] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [hideCompleted, setHideCompleted] = useState(false);
-  const [hideNotDone, setHideNotDone] = useState(false);
-  const [groupBySubject, setGroupBySubject] = useState(false);
+  const initialPrefs = loadPrefs();
+  const [hideCompleted, setHideCompleted] = useState(initialPrefs.hideCompleted);
+  const [hideNotDone, setHideNotDone] = useState(initialPrefs.hideNotDone);
+  const [groupBySubject, setGroupBySubject] = useState(initialPrefs.groupBySubject);
+
+  const savePrefs = (hc: boolean, hnd: boolean, gbs: boolean) => {
+    if (storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify({ hideCompleted: hc, hideNotDone: hnd, groupBySubject: gbs }));
+    }
+  };
+
+  const toggleHideCompleted = () => {
+    const next = !hideCompleted;
+    setHideCompleted(next);
+    savePrefs(next, hideNotDone, groupBySubject);
+  };
+
+  const toggleHideNotDone = () => {
+    const next = !hideNotDone;
+    setHideNotDone(next);
+    savePrefs(hideCompleted, next, groupBySubject);
+  };
+
+  const toggleGroupBySubject = () => {
+    const next = !groupBySubject;
+    setGroupBySubject(next);
+    savePrefs(hideCompleted, hideNotDone, next);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -379,7 +416,7 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
               type="button"
               variant={groupBySubject ? "default" : "outline"}
               size="sm"
-              onClick={() => setGroupBySubject(!groupBySubject)}
+              onClick={toggleGroupBySubject}
               className="text-xs h-6 px-2 gap-1"
             >
               <Tag className="h-3 w-3" />
@@ -391,7 +428,7 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
               type="button"
               variant={hideCompleted ? "default" : "outline"}
               size="sm"
-              onClick={() => setHideCompleted(!hideCompleted)}
+              onClick={toggleHideCompleted}
               className="text-xs h-6 px-2 gap-1"
             >
               <Check className="h-3 w-3" />
@@ -403,7 +440,7 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
               type="button"
               variant={hideNotDone ? "default" : "outline"}
               size="sm"
-              onClick={() => setHideNotDone(!hideNotDone)}
+              onClick={toggleHideNotDone}
               className="text-xs h-6 px-2 gap-1"
             >
               <X className="h-3 w-3" />

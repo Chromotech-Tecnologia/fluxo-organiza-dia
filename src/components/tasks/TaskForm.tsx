@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { taskFormSchema } from "@/lib/validations/task";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { InteractiveSubItemList } from "./InteractiveSubItemList";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { PeopleSelectWithSearch } from "@/components/people/PeopleSelectWithSearch";
 import { ShareTaskSelect } from "./ShareTaskSelect";
 import { ShareTaskSelectNew } from "./ShareTaskSelectNew";
@@ -34,6 +35,27 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
   const [attachments, setAttachments] = useState<TaskAttachment[]>(task?.attachments || []);
   const [pendingShares, setPendingShares] = useState<PendingShare[]>([]);
+  const { updateTask } = useSupabaseTasks();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Auto-save checklist for existing tasks (without closing modal)
+  const isFirstRender = useRef(true);
+  const handleSubItemsChange = useCallback((newSubItems: SubItem[]) => {
+    setSubItems(newSubItems);
+    if (task && !isFirstRender.current) {
+      clearTimeout((window as any).__checklistSaveTimeout);
+      (window as any).__checklistSaveTimeout = setTimeout(() => {
+        updateTask(task.id, { subItems: newSubItems } as any).catch(console.error);
+      }, 800);
+    }
+  }, [task, updateTask]);
+
+  useEffect(() => {
+    isFirstRender.current = false;
+    return () => {
+      clearTimeout((window as any).__checklistSaveTimeout);
+    };
+  }, []);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -166,6 +188,13 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                       min={1}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          form.handleSubmit(handleSubmit)();
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -354,8 +383,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
           </div>
 
           <InteractiveSubItemList 
+            taskId={task?.id}
             subItems={subItems}
-            onSubItemsChange={setSubItems}
+            onSubItemsChange={handleSubItemsChange}
           />
 
           <FormField
