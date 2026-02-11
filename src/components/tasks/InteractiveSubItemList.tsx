@@ -198,6 +198,8 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete, isEditin
 export function InteractiveSubItemList({ subItems, onSubItemsChange }: InteractiveSubItemListProps) {
   const [newItemText, setNewItemText] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [hideNotDone, setHideNotDone] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -272,17 +274,50 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
   };
 
   const completedCount = subItems.filter(item => item.completed).length;
+  const notDoneCount = subItems.filter(item => item.notDone).length;
   const totalCount = subItems.length;
+
+  const filteredSubItems = subItems.filter(item => {
+    if (hideCompleted && item.completed) return false;
+    if (hideNotDone && item.notDone) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h4 className="font-medium text-gray-900">Checklist</h4>
-        {totalCount > 0 && (
-          <Badge variant="secondary" className="text-xs">
-            {completedCount}/{totalCount} concluídos
-          </Badge>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {completedCount > 0 && (
+            <Button
+              type="button"
+              variant={hideCompleted ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHideCompleted(!hideCompleted)}
+              className="text-xs h-6 px-2 gap-1"
+            >
+              <Check className="h-3 w-3" />
+              {hideCompleted ? 'Mostrar' : 'Ocultar'} feitos ({completedCount})
+            </Button>
+          )}
+          {notDoneCount > 0 && (
+            <Button
+              type="button"
+              variant={hideNotDone ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHideNotDone(!hideNotDone)}
+              className="text-xs h-6 px-2 gap-1"
+            >
+              <X className="h-3 w-3" />
+              {hideNotDone ? 'Mostrar' : 'Ocultar'} não feitos ({notDoneCount})
+            </Button>
+          )}
+          {totalCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {completedCount}/{totalCount} concluídos
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Adicionar novo item */}
@@ -306,15 +341,15 @@ export function InteractiveSubItemList({ subItems, onSubItemsChange }: Interacti
       </div>
 
       {/* Lista de itens */}
-      {subItems.length > 0 && (
+      {filteredSubItems.length > 0 && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={subItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={filteredSubItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2">
-              {subItems
+              {filteredSubItems
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((subItem) => (
                   <SortableSubItem
