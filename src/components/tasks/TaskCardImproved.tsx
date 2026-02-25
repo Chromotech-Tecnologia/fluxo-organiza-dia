@@ -202,12 +202,12 @@ export function TaskCardImproved({
   // Botão reagendar laranja se foi reagendada desta data OU se acabou de ser reagendada
   const shouldShowOrangeRescheduleButton = wasRescheduledFromThisDate || isRescheduling || justRescheduled;
   return <Card ref={setNodeRef} style={style} className={`cursor-pointer hover:shadow-md transition-all duration-200 ${getCardColor()}`} onClick={handleCardClick}>
-      <CardContent className="p-3">
-        <div className="space-y-3">
+      <CardContent className="p-3 md:p-3">
+        <div className="space-y-2.5 md:space-y-3">
           <div className="flex justify-between items-start gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div {...attributes} {...listeners} className="cursor-grab hover:cursor-grabbing flex-shrink-0">
-                <GripVertical className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
+              <div {...attributes} {...listeners} className="cursor-grab hover:cursor-grabbing flex-shrink-0 touch-none">
+                <GripVertical className="h-5 w-5 md:h-4 md:w-4 text-muted-foreground" />
               </div>
               
               {taskIndex !== undefined && <Badge variant="outline" className={`text-xs px-1.5 py-0.5 min-w-[24px] text-center flex-shrink-0 ${getOrderNumberColor(task.order || taskIndex + 1, maxOrder)}`}>
@@ -240,7 +240,7 @@ export function TaskCardImproved({
                 </Badge>
               )}
               
-              <div className="font-semibold text-sm truncate flex-1">
+              <div className="font-semibold text-sm md:text-sm truncate flex-1 leading-tight">
                 {task.title}
               </div>
             </div>
@@ -321,50 +321,50 @@ export function TaskCardImproved({
               </Badge>}
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 sm:gap-4">
-            <div className="flex gap-1 flex-shrink-0 flex-wrap">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2">
+            <div className="flex gap-1.5 md:gap-1 flex-shrink-0 flex-wrap w-full sm:w-auto">
               {!task.isConcluded && <>
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('completed');
-              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
+              }} className={`h-10 md:h-7 px-3 md:px-2 text-sm md:text-xs font-medium rounded-lg ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
                     {lastCompletion?.status === 'completed' ? '✓ Feito' : 'Feito'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('not-done');
-              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
+              }} className={`h-10 md:h-7 px-3 md:px-2 text-sm md:text-xs font-medium rounded-lg ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
                     {lastCompletion?.status === 'not-done' ? '✗ N.Feito' : 'N.Feito'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+              }} className={`h-10 md:h-7 px-3 md:px-2 text-sm md:text-xs font-medium rounded-lg ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
                     {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onConclude();
-              }} className="h-8 sm:h-7 px-2.5 sm:px-2 text-xs text-blue-600 border-blue-600 hover:bg-blue-50">
+              }} className="h-10 md:h-7 px-3 md:px-2 text-sm md:text-xs font-medium rounded-lg text-blue-600 border-blue-600 hover:bg-blue-50">
                     Concluir
                   </Button>
                 </>}
 
               {task.isConcluded && <>
-                  <Button size="sm" variant="outline" onClick={e => {
+              <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+              }} className={`h-10 md:h-7 px-3 md:px-2 text-sm md:text-xs font-medium rounded-lg ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
                     {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
 
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onUnconclude();
-              }} className="h-8 sm:h-7 px-2.5 sm:px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50">
+              }} className="h-10 md:h-7 px-3 md:px-2 text-sm md:text-xs font-medium rounded-lg text-orange-600 border-orange-600 hover:bg-orange-50">
                     <Undo className="h-3 w-3 mr-1" />
                     Desfazer
                   </Button>

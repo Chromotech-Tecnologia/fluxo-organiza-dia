@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, CheckCircle } from "lucide-react";
+import { Plus, CheckCircle, Filter, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +24,7 @@ import { getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { searchInTask } from "@/lib/searchUtils";
 import { sortTasks } from "@/lib/taskUtils";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const TasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -300,83 +301,119 @@ const TasksPage = () => {
 
   const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
 
+  const [showFilters, setShowFilters] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+
   return (
-    <div className="space-y-3 md:space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl md:text-3xl font-bold text-foreground">Gestão de Tarefas</h1>
-          <p className="text-muted-foreground text-xs md:text-sm hidden sm:block">
-            Controle e organize suas tarefas diárias
-          </p>
+    <div className="space-y-2 md:space-y-6">
+      {/* Header - sticky no mobile */}
+      <div className="flex items-center justify-between gap-2 sticky top-0 z-10 bg-background py-2 md:py-0 md:static">
+        <h1 className="text-lg md:text-3xl font-bold text-foreground">Tarefas</h1>
+        <div className="flex items-center gap-1.5">
+          <Button 
+            variant={showFilters ? "default" : "outline"} 
+            size="sm" 
+            className="md:hidden h-9 w-9 p-0"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant={showStats ? "default" : "outline"} 
+            size="sm" 
+            className="md:hidden h-9 w-9 p-0"
+            onClick={() => setShowStats(!showStats)}
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
+          <Button className="gap-2 flex-shrink-0 h-9" size="sm" onClick={() => openTaskModal()}>
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nova Tarefa</span>
+          </Button>
         </div>
-        <Button className="gap-2 flex-shrink-0" size="sm" onClick={() => openTaskModal()}>
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Nova Tarefa</span>
-        </Button>
       </div>
 
       {/* Indicador de Dia Fechado */}
       {allTasksConcluded && (
-        <Card className="border-green-500 bg-green-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-green-800">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">🎉 Período Fechado! Todas as tarefas foram concluídas!</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
+          <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="font-medium">🎉 Período Fechado!</span>
+        </div>
       )}
 
-      <TaskFiltersHorizontal 
-        currentFilters={taskFilters}
-        onFiltersChange={setTaskFilters}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-      />
+      {/* Filtros - colapsável no mobile, sempre visível no desktop */}
+      <div className="hidden md:block">
+        <TaskFiltersHorizontal 
+          currentFilters={taskFilters}
+          onFiltersChange={setTaskFilters}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
+      </div>
+      
+      <Collapsible open={showFilters} onOpenChange={setShowFilters} className="md:hidden">
+        <CollapsibleContent>
+          <TaskFiltersHorizontal 
+            currentFilters={taskFilters}
+            onFiltersChange={setTaskFilters}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+          />
+        </CollapsibleContent>
+      </Collapsible>
 
-      <TaskStatsCompact tasks={displayTasks} />
+      {/* Stats - colapsável no mobile, sempre visível no desktop */}
+      <div className="hidden md:block">
+        <TaskStatsCompact tasks={displayTasks} />
+      </div>
 
-      <div className="grid gap-4">
+      <Collapsible open={showStats} onOpenChange={setShowStats} className="md:hidden">
+        <CollapsibleContent>
+          <TaskStatsCompact tasks={displayTasks} />
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Lista de tarefas */}
+      <div className="grid gap-2 md:gap-4">
         {displayTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <Plus className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery 
-                    ? "Tente ajustar sua busca ou criar uma nova tarefa"
-                    : "Comece criando sua primeira tarefa para organizar seu dia"
-                  }
-                </p>
-                <Button className="gap-2" onClick={() => openTaskModal()}>
-                  <Plus className="h-4 w-4" />
-                  {searchQuery ? "Nova Tarefa" : "Criar Primeira Tarefa"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center py-16 px-4">
+            <Plus className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+            <h3 className="text-base font-medium text-foreground mb-1">
+              {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa"}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {searchQuery 
+                ? "Tente ajustar sua busca"
+                : "Crie sua primeira tarefa"
+              }
+            </p>
+            <Button size="lg" className="gap-2 h-12 px-6 text-base" onClick={() => openTaskModal()}>
+              <Plus className="h-5 w-5" />
+              Nova Tarefa
+            </Button>
+          </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 px-1">
-              <Checkbox
-                checked={selectedTasks.length === displayTasks.length}
-                onCheckedChange={handleSelectAll}
-                className="hidden sm:flex"
-              />
-              <label className="text-xs sm:text-sm text-muted-foreground">
-                {displayTasks.length} tarefas
-                {hasFiltersApplied && (
-                  <span className="text-orange-600 ml-1 hidden sm:inline">
-                    ⚠️ D&D desabilitado
-                  </span>
-                )}
-              </label>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedTasks.length === displayTasks.length}
+                  onCheckedChange={handleSelectAll}
+                  className="hidden sm:flex"
+                />
+                <span className="text-xs text-muted-foreground font-medium">
+                  {displayTasks.length} tarefas
+                </span>
+              </div>
+              {hasFiltersApplied && (
+                <span className="text-xs text-orange-600 hidden sm:inline">
+                  ⚠️ D&D desabilitado
+                </span>
+              )}
             </div>
 
             <DndContext
@@ -391,7 +428,7 @@ const TasksPage = () => {
                     <Checkbox
                       checked={selectedTasks.some(t => t.id === task.id)}
                       onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
-                      className="mt-4 hidden sm:flex"
+                      className="mt-5 hidden sm:flex"
                     />
                     <div className="flex-1">
                       <TaskCardImproved 
