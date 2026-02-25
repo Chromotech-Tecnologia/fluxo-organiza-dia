@@ -301,18 +301,18 @@ const TasksPage = () => {
   const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestão de Tarefas</h1>
-          <p className="text-muted-foreground">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">Gestão de Tarefas</h1>
+          <p className="text-muted-foreground text-xs md:text-sm hidden sm:block">
             Controle e organize suas tarefas diárias
           </p>
         </div>
-        <Button className="gap-2" onClick={() => openTaskModal()}>
+        <Button className="gap-2 flex-shrink-0" size="sm" onClick={() => openTaskModal()}>
           <Plus className="h-4 w-4" />
-          Nova Tarefa
+          <span className="hidden sm:inline">Nova Tarefa</span>
         </Button>
       </div>
 
@@ -367,12 +367,13 @@ const TasksPage = () => {
               <Checkbox
                 checked={selectedTasks.length === displayTasks.length}
                 onCheckedChange={handleSelectAll}
+                className="hidden sm:flex"
               />
-              <label className="text-sm text-muted-foreground">
-                Selecionar todas ({displayTasks.length} tarefas)
+              <label className="text-xs sm:text-sm text-muted-foreground">
+                {displayTasks.length} tarefas
                 {hasFiltersApplied && (
-                  <span className="text-orange-600 ml-2">
-                    ⚠️ Drag & Drop desabilitado (filtros ativos)
+                  <span className="text-orange-600 ml-1 hidden sm:inline">
+                    ⚠️ D&D desabilitado
                   </span>
                 )}
               </label>
@@ -386,11 +387,11 @@ const TasksPage = () => {
             >
               <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
                 {displayTasks.map((task, index) => (
-                  <div key={task.id} className="flex items-start gap-3">
+                  <div key={task.id} className="flex items-start gap-1 sm:gap-3">
                     <Checkbox
                       checked={selectedTasks.some(t => t.id === task.id)}
                       onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
-                      className="mt-4"
+                      className="mt-4 hidden sm:flex"
                     />
                     <div className="flex-1">
                       <TaskCardImproved 

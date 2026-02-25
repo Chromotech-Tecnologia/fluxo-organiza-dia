@@ -125,13 +125,14 @@ export function TaskFiltersHorizontal({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/30 rounded-lg border">
-      {/* Busca */}
-      <div className="flex items-center gap-2 min-w-[200px]">
-        <div className="relative flex-1">
+    <div className="space-y-2 p-3 md:p-4 bg-muted/30 rounded-lg border">
+      {/* Linha 1: Busca + Datas rápidas + Período */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        {/* Busca */}
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar tarefas..."
+            placeholder="Buscar..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-8 pr-8 h-9"
@@ -147,208 +148,114 @@ export function TaskFiltersHorizontal({
             </Button>
           )}
         </div>
+
+        {/* Quick date filters */}
+        <div className="flex gap-1 flex-shrink-0">
+          <Button
+            size="sm"
+            variant={isDateActive(yesterday) ? "default" : "outline"}
+            onClick={() => handleDateSelect(yesterday)}
+            className="h-9 px-2.5 text-xs"
+          >
+            Ontem
+          </Button>
+          <Button
+            size="sm"
+            variant={isDateActive(today) ? "default" : "outline"}
+            onClick={() => handleDateSelect(today)}
+            className="h-9 px-2.5 text-xs"
+          >
+            Hoje
+          </Button>
+          <Button
+            size="sm"
+            variant={isDateActive(tomorrow) ? "default" : "outline"}
+            onClick={() => handleDateSelect(tomorrow)}
+            className="h-9 px-2.5 text-xs"
+          >
+            Amanhã
+          </Button>
+        </div>
+
+        {/* Período personalizado */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Input
+            type="date"
+            value={currentFilters.dateRange?.start || today}
+            onChange={(e) => handleDateRangeChange('start', e.target.value)}
+            className="h-9 w-[130px] text-xs"
+          />
+          <span className="text-xs text-muted-foreground">-</span>
+          <Input
+            type="date"
+            value={currentFilters.dateRange?.end || today}
+            onChange={(e) => handleDateRangeChange('end', e.target.value)}
+            className="h-9 w-[130px] text-xs"
+          />
+        </div>
       </div>
 
-      {/* Separador visual */}
-      <div className="h-6 w-px bg-border" />
+      {/* Linha 2: Filtros rápidos em scroll horizontal no mobile */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+        {/* Status */}
+        <div className="flex gap-1 flex-shrink-0">
+          <Button size="sm" variant={currentFilters.status?.includes('pending') ? "default" : "outline"} onClick={() => handleStatusFilter('pending')} className="h-7 px-2 text-xs whitespace-nowrap">
+            Pendente
+          </Button>
+          <Button size="sm" variant={currentFilters.status?.includes('completed') ? "default" : "outline"} onClick={() => handleStatusFilter('completed')} className="h-7 px-2 text-xs whitespace-nowrap">
+            Feito
+          </Button>
+          <Button size="sm" variant={currentFilters.status?.includes('not-done') ? "default" : "outline"} onClick={() => handleStatusFilter('not-done')} className="h-7 px-2 text-xs whitespace-nowrap">
+            N.Feito
+          </Button>
+        </div>
 
-      {/* Quick date filters */}
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant={isDateActive(yesterday) ? "default" : "outline"}
-          onClick={() => handleDateSelect(yesterday)}
-          className="h-8 px-3 text-xs"
-        >
-          Ontem
-        </Button>
-        <Button
-          size="sm"
-          variant={isDateActive(today) ? "default" : "outline"}
-          onClick={() => handleDateSelect(today)}
-          className="h-8 px-3 text-xs"
-        >
-          Hoje
-        </Button>
-        <Button
-          size="sm"
-          variant={isDateActive(tomorrow) ? "default" : "outline"}
-          onClick={() => handleDateSelect(tomorrow)}
-          className="h-8 px-3 text-xs"
-        >
-          Amanhã
-        </Button>
-      </div>
+        <div className="h-5 w-px bg-border flex-shrink-0" />
 
-      {/* Período personalizado */}
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-muted-foreground">De:</span>
-        <Input
-          type="date"
-          value={currentFilters.dateRange?.start || today}
-          onChange={(e) => handleDateRangeChange('start', e.target.value)}
-          className="h-8 w-32 text-xs"
-        />
-        <span className="text-xs text-muted-foreground">Até:</span>
-        <Input
-          type="date"
-          value={currentFilters.dateRange?.end || today}
-          onChange={(e) => handleDateRangeChange('end', e.target.value)}
-          className="h-8 w-32 text-xs"
-        />
-      </div>
+        {/* Reagendamento */}
+        <div className="flex gap-1 flex-shrink-0">
+          <Button size="sm" variant={currentFilters.isForwarded === true ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('isForwarded', currentFilters.isForwarded === true ? undefined : true)} className="h-7 px-2 text-xs whitespace-nowrap">
+            Reag.
+          </Button>
+          <Button size="sm" variant={currentFilters.isConcluded === true ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('isConcluded', currentFilters.isConcluded === true ? undefined : true)} className="h-7 px-2 text-xs whitespace-nowrap">
+            Concluído
+          </Button>
+        </div>
 
-      {/* Separador visual */}
-      <div className="h-6 w-px bg-border" />
+        <div className="h-5 w-px bg-border flex-shrink-0" />
 
-      {/* Título Status */}
-      <span className="text-sm font-medium text-muted-foreground">Status:</span>
+        {/* Compartilhadas */}
+        <div className="flex gap-1 flex-shrink-0">
+          <Button size="sm" variant={currentFilters.sharedByMe === true ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('sharedByMe', currentFilters.sharedByMe === true ? undefined : true)} className="h-7 px-2 text-xs whitespace-nowrap">
+            Compart.
+          </Button>
+        </div>
 
-      {/* Status buttons */}
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant={currentFilters.status?.includes('pending') ? "default" : "outline"}
-          onClick={() => handleStatusFilter('pending')}
-          className="h-8 px-3 text-xs"
-        >
-          Pendente
-        </Button>
-        <Button
-          size="sm"
-          variant={currentFilters.status?.includes('completed') ? "default" : "outline"}
-          onClick={() => handleStatusFilter('completed')}
-          className="h-8 px-3 text-xs"
-        >
-          Feito
-        </Button>
-        <Button
-          size="sm"
-          variant={currentFilters.status?.includes('not-done') ? "default" : "outline"}
-          onClick={() => handleStatusFilter('not-done')}
-          className="h-8 px-3 text-xs"
-        >
-          Não feito
-        </Button>
-      </div>
+        <div className="h-5 w-px bg-border flex-shrink-0" />
 
-      {/* Separador visual */}
-      <div className="h-6 w-px bg-border" />
+        {/* Ordenação */}
+        <Select value={sortBy} onValueChange={(value: SortOption) => onSortChange(value)}>
+          <SelectTrigger className="w-[110px] h-7 text-xs flex-shrink-0">
+            <SortAsc className="h-3 w-3 mr-1" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="order">Ordem</SelectItem>
+            <SelectItem value="priority">Prioridade</SelectItem>
+            <SelectItem value="title">Título</SelectItem>
+            <SelectItem value="type">Tipo</SelectItem>
+            <SelectItem value="timeInvestment">Tempo</SelectItem>
+          </SelectContent>
+        </Select>
 
-      {/* Reagendamento buttons */}
-      <span className="text-sm font-medium text-muted-foreground">Reagendar:</span>
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant={currentFilters.isForwarded === true ? "default" : "outline"}
-          onClick={() => {
-            const newValue = currentFilters.isForwarded === true ? undefined : true;
-            handleAdvancedFilterChange('isForwarded', newValue);
-          }}
-          className="h-8 px-3 text-xs"
-        >
-          Reagendadas
-        </Button>
-        <Button
-          size="sm"
-          variant={currentFilters.isForwarded === false ? "default" : "outline"}
-          onClick={() => {
-            const newValue = currentFilters.isForwarded === false ? undefined : false;
-            handleAdvancedFilterChange('isForwarded', newValue);
-          }}
-          className="h-8 px-3 text-xs"
-        >
-          Não reagendadas
-        </Button>
-      </div>
-
-      {/* Separador visual */}
-      <div className="h-6 w-px bg-border" />
-
-      {/* Conclusão buttons */}
-      <span className="text-sm font-medium text-muted-foreground">Conclusão:</span>
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant={currentFilters.isConcluded === true ? "default" : "outline"}
-          onClick={() => {
-            const newValue = currentFilters.isConcluded === true ? undefined : true;
-            handleAdvancedFilterChange('isConcluded', newValue);
-          }}
-          className="h-8 px-3 text-xs"
-        >
-          Concluído
-        </Button>
-        <Button
-          size="sm"
-          variant={currentFilters.isConcluded === false ? "default" : "outline"}
-          onClick={() => {
-            const newValue = currentFilters.isConcluded === false ? undefined : false;
-            handleAdvancedFilterChange('isConcluded', newValue);
-          }}
-          className="h-8 px-3 text-xs"
-        >
-          Não Concluído
-        </Button>
-      </div>
-
-      {/* Separador visual */}
-      <div className="h-6 w-px bg-border" />
-
-      {/* Compartilhamento buttons */}
-      <span className="text-sm font-medium text-muted-foreground">Compartilhadas:</span>
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant={currentFilters.sharedByMe === true ? "default" : "outline"}
-          onClick={() => {
-            const newValue = currentFilters.sharedByMe === true ? undefined : true;
-            handleAdvancedFilterChange('sharedByMe', newValue);
-          }}
-          className="h-8 px-3 text-xs"
-        >
-          Por Mim
-        </Button>
-        <Button
-          size="sm"
-          variant={currentFilters.sharedWithMe === true ? "default" : "outline"}
-          onClick={() => {
-            const newValue = currentFilters.sharedWithMe === true ? undefined : true;
-            handleAdvancedFilterChange('sharedWithMe', newValue);
-          }}
-          className="h-8 px-3 text-xs"
-        >
-          Comigo
-        </Button>
-      </div>
-
-      {/* Separador visual */}
-      <div className="h-6 w-px bg-border" />
-
-      {/* Ordenação */}
-      <Select value={sortBy} onValueChange={(value: SortOption) => onSortChange(value)}>
-        <SelectTrigger className="w-[140px] h-8 text-xs">
-          <SortAsc className="h-3 w-3 mr-1" />
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="order">Por Ordem</SelectItem>
-          <SelectItem value="priority">Por Prioridade</SelectItem>
-          <SelectItem value="title">Por Título</SelectItem>
-          <SelectItem value="type">Por Tipo</SelectItem>
-          <SelectItem value="timeInvestment">Por Tempo</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Filtros avançados */}
-      {(activeFiltersCount > 0 || searchQuery) && (
-        <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-8 gap-1">
-          <X className="h-3 w-3" />
-          Limpar
-        </Button>
-      )}
-      
-      <Popover>
+        {/* Limpar + Filtros avançados */}
+        {(activeFiltersCount > 0 || searchQuery) && (
+          <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 gap-1 flex-shrink-0">
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+        
+        <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-8 gap-1">
             <Filter className="h-3 w-3" />
@@ -521,17 +428,7 @@ export function TaskFiltersHorizontal({
         </PopoverContent>
       </Popover>
 
-      {/* Indicador de período selecionado */}
-      {currentFilters.dateRange && (
-        <Badge variant="secondary" className="text-xs">
-          {currentFilters.dateRange.start === currentFilters.dateRange.end
-            ? (currentFilters.dateRange.start === today ? 'Hoje' : 
-               currentFilters.dateRange.start === tomorrow ? 'Amanhã' : 
-               currentFilters.dateRange.start === yesterday ? 'Ontem' : 
-               currentFilters.dateRange.start)
-            : `${currentFilters.dateRange.start} - ${currentFilters.dateRange.end}`}
-        </Badge>
-      )}
+      </div>
     </div>
   );
 }
