@@ -93,7 +93,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </header>
             
             {/* Content */}
-            <div className="flex-1 p-3 md:p-6 overflow-auto">
+            <div className="flex-1 p-6 overflow-auto">
               <TrialBanner />
               {children}
             </div>
