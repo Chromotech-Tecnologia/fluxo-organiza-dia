@@ -321,59 +321,57 @@ export function TaskCardImproved({
               </Badge>}
           </div>
 
-          <div className="flex justify-between items-end gap-4">
-            <div className="flex gap-1 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 sm:gap-4">
+            <div className="flex gap-1 flex-shrink-0 flex-wrap">
               {!task.isConcluded && <>
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('completed');
-              }} className={`h-7 px-2 text-xs min-w-[50px] ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
+              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
                     {lastCompletion?.status === 'completed' ? '✓ Feito' : 'Feito'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('not-done');
-              }} className={`h-7 px-2 text-xs min-w-[80px] ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
-                    {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
+              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
+                    {lastCompletion?.status === 'not-done' ? '✗ N.Feito' : 'N.Feito'}
                   </Button>
                   
-                  {/* Botão reagendar com cor laranja se foi reagendada desta data */}
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-7 px-2 text-xs min-w-[90px] ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
-                    {shouldShowOrangeRescheduleButton ? '✓ Reagendada' : 'Reagendar'}
+              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+                    {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onConclude();
-              }} className="h-7 px-2 text-xs min-w-[60px] text-blue-600 border-blue-600 hover:bg-blue-50">
+              }} className="h-8 sm:h-7 px-2.5 sm:px-2 text-xs text-blue-600 border-blue-600 hover:bg-blue-50">
                     Concluir
                   </Button>
                 </>}
 
               {task.isConcluded && <>
-                  {/* Mostrar botão reagendar mesmo para tarefas concluídas */}
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-7 px-2 text-xs min-w-[90px] ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
-                    {shouldShowOrangeRescheduleButton ? '✓ Reagendada' : 'Reagendar'}
+              }} className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+                    {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
 
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onUnconclude();
-              }} className="h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50">
+              }} className="h-8 sm:h-7 px-2.5 sm:px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50">
                     <Undo className="h-3 w-3 mr-1" />
                     Desfazer
                   </Button>
                 </>}
             </div>
 
-            {totalSubItems > 0 && <div className="flex-shrink-0 min-w-[120px] max-w-[200px]">
+            {totalSubItems > 0 && <div className="flex-shrink-0 w-full sm:w-auto sm:min-w-[120px] sm:max-w-[200px]">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-muted-foreground">Checklist</span>
                   <div className="flex items-center gap-2">

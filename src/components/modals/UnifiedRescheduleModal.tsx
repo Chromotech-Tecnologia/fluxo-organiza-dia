@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { calendarDateToString, getCurrentDateInSaoPaulo } from "@/lib/utils";
 import { Task } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UnifiedRescheduleModalProps {
   onRescheduleComplete?: () => void;
@@ -153,7 +154,26 @@ export function UnifiedRescheduleModal({ onRescheduleComplete }: UnifiedReschedu
             updatedAt: new Date().toISOString()
           };
 
-          await addTask(newTask);
+          const newTaskResult = await addTask(newTask);
+          
+          // Manter compartilhamentos da tarefa original na nova tarefa
+          if (newTaskResult?.id) {
+            const { data: existingShares } = await supabase
+              .from('task_shares')
+              .select('*')
+              .eq('task_id', task.id);
+            
+            if (existingShares && existingShares.length > 0) {
+              for (const share of existingShares) {
+                await supabase.from('task_shares').insert({
+                  task_id: newTaskResult.id,
+                  owner_user_id: share.owner_user_id,
+                  shared_with_user_id: share.shared_with_user_id,
+                });
+              }
+            }
+          }
+          
           successCount++;
         } catch (taskError) {
           console.error(`Erro ao reagendar tarefa ${task.id}:`, taskError);

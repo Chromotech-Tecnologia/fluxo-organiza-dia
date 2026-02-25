@@ -82,7 +82,7 @@ export function TaskStatsCompact({
   const calculatePercentage = (value: number) => {
     return totalTasks > 0 ? Math.round(value / totalTasks * 100) : 0;
   };
-  return <div className="grid grid-cols-4 gap-4">
+  return <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
       {/* Status das Tarefas */}
       <Card className="border-l-4 border-l-blue-500">
         <CardHeader className="pb-2">
