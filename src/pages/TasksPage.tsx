@@ -303,14 +303,14 @@ const TasksPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestão de Tarefas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">Gestão de Tarefas</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Controle e organize suas tarefas diárias
           </p>
         </div>
-        <Button className="gap-2" onClick={() => openTaskModal()}>
+        <Button className="gap-2 w-full md:w-auto" onClick={() => openTaskModal()}>
           <Plus className="h-4 w-4" />
           Nova Tarefa
         </Button>
