@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Task } from "@/types";
-import { CheckCircle, RotateCcw, User, Timer } from "lucide-react";
+import { CheckCircle, RotateCcw, User, Timer, ChevronDown } from "lucide-react";
 import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
