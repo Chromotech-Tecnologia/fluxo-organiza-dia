@@ -111,15 +111,6 @@ export function AttachmentPreviewModal({ attachment, isOpen, onClose }: Attachme
             <Button variant="outline" size="sm" onClick={handleDownload} title="Baixar">
               <Download className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleClose}
-              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-              title="Fechar"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </div>
         
