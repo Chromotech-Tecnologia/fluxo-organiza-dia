@@ -339,7 +339,7 @@ const TasksPage = () => {
 
       <TaskStatsCompact tasks={displayTasks} />
 
-      <div className="grid gap-4">
+      <div className="grid gap-2 md:gap-4 min-w-0">
         {displayTasks.length === 0 ? (
           <Card>
             <CardContent className="p-6">
