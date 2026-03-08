@@ -178,7 +178,7 @@ export function TaskCardImproved({
 
   const shouldShowOrangeRescheduleButton = wasRescheduledFromThisDate || isRescheduling || justRescheduled;
 
-  return <Card ref={setNodeRef} style={style} className={`cursor-pointer hover:shadow-md transition-all duration-200 ${getCardColor()}`} onClick={handleCardClick}>
+  return <Card ref={setNodeRef} style={style} className={`cursor-pointer hover:shadow-md transition-all duration-200 overflow-hidden ${getCardColor()}`} onClick={handleCardClick}>
       <CardContent className="p-2 md:p-3">
         <div className="space-y-2 md:space-y-3">
           {/* Top row: drag handle, order, title, menu */}
