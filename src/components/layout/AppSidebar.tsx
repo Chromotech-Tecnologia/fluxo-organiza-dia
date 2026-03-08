@@ -57,7 +57,7 @@ export function AppSidebar() {
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 text-foreground font-medium"
+      ? "!bg-gradient-to-r !from-green-50 !to-emerald-50 dark:!from-green-950/20 dark:!to-emerald-950/20 !text-foreground font-medium border-l-2 border-primary rounded-l-none"
       : "text-muted-foreground hover:bg-muted transition-all duration-200";
 
   const renderMenuItems = (items: typeof menuItems) =>
