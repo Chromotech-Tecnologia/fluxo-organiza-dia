@@ -336,28 +336,28 @@ export function TaskCardImproved({
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('completed');
-              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
+              }} className={`h-8 md:h-7 px-2 text-xs ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
                     {lastCompletion?.status === 'completed' ? '✓ Feito' : 'Feito'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('not-done');
-              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
+              }} className={`h-8 md:h-7 px-2 text-xs ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
                     {lastCompletion?.status === 'not-done' ? '✓ N. feito' : 'N. feito'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+              }} className={`h-8 md:h-7 px-2 text-xs ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
                     {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onConclude();
-              }} className="h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none text-blue-600 border-blue-600 hover:bg-blue-50">
+              }} className="h-8 md:h-7 px-2 text-xs text-blue-600 border-blue-600 hover:bg-blue-50">
                     Concluir
                   </Button>
                 </>}
@@ -366,14 +366,14 @@ export function TaskCardImproved({
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+              }} className={`h-8 md:h-7 px-2 text-xs ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
                     {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
 
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onUnconclude();
-              }} className="h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none text-orange-600 border-orange-600 hover:bg-orange-50">
+              }} className="h-8 md:h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50">
                     <Undo className="h-3 w-3 mr-1" />
                     Desfazer
                   </Button>
