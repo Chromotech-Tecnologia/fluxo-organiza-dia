@@ -331,7 +331,7 @@ export function TaskCardImproved({
 
           {/* Action buttons + checklist */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-2 md:gap-4">
-            <div className="flex flex-wrap gap-1 flex-shrink-0">
+            <div className="grid grid-cols-2 md:flex md:flex-wrap gap-1 flex-shrink-0">
               {!task.isConcluded && <>
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
