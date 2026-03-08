@@ -301,7 +301,7 @@ const TasksPage = () => {
   const allTasksConcluded = tasks.length > 0 && tasks.every(task => task.isConcluded);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 min-w-0 w-full">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
@@ -339,7 +339,7 @@ const TasksPage = () => {
 
       <TaskStatsCompact tasks={displayTasks} />
 
-      <div className="grid gap-4">
+      <div className="grid gap-2 md:gap-4 min-w-0">
         {displayTasks.length === 0 ? (
           <Card>
             <CardContent className="p-6">
@@ -386,13 +386,13 @@ const TasksPage = () => {
             >
               <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
                 {displayTasks.map((task, index) => (
-                  <div key={task.id} className="flex items-start gap-3">
+                  <div key={task.id} className="flex items-start gap-1.5 md:gap-3 min-w-0">
                     <Checkbox
                       checked={selectedTasks.some(t => t.id === task.id)}
                       onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
-                      className="mt-4"
+                      className="mt-4 flex-shrink-0"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <TaskCardImproved 
                         task={task} 
                         taskIndex={isMultipleDays ? undefined : index}

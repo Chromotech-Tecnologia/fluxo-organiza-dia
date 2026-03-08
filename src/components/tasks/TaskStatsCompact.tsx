@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Task } from "@/types";
-import { CheckCircle, RotateCcw, User, Timer } from "lucide-react";
+import { CheckCircle, RotateCcw, User, Timer, ChevronDown } from "lucide-react";
 import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -57,91 +57,88 @@ export function TaskStatsCompact({ tasks }: TaskStatsCompactProps) {
   const stats = useTaskStats(tasks);
   const { calculatePercentage: pct } = stats;
 
-  // ===== MOBILE: Accordion =====
+  // ===== MOBILE: Dropdown-style collapsibles =====
   if (isMobile) {
+    const sections = [
+      {
+        icon: <User className="h-4 w-4 text-purple-500" />,
+        label: 'Tipos',
+        summary: `${stats.totalTasks} tarefas`,
+        borderColor: 'border-l-purple-500',
+        content: (
+          <div className="space-y-1.5">
+            <div className="flex justify-between"><span className="text-xs text-zinc-600">Pessoais</span><span className="text-sm font-medium text-gray-600">{stats.personalTasks} ({pct(stats.personalTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-orange-600">Reuniões</span><span className="text-sm font-medium text-orange-600">{stats.meetingTasks} ({pct(stats.meetingTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-fuchsia-900">Delegadas</span><span className="text-sm font-medium text-fuchsia-900">{stats.delegatedTasks} ({pct(stats.delegatedTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-blue-600">Profissional</span><span className="text-sm font-medium text-blue-600">{stats.professionalTasks} ({pct(stats.professionalTasks)}%)</span></div>
+          </div>
+        )
+      },
+      {
+        icon: <Timer className="h-4 w-4 text-indigo-500" />,
+        label: 'Tempo',
+        summary: formatTime(stats.totalEstimatedMinutes),
+        borderColor: 'border-l-indigo-500',
+        content: (
+          <div className="space-y-1.5">
+            <div className="flex justify-between"><span className="text-xs text-indigo-600">Total</span><span className="text-sm font-medium text-indigo-600">{formatTime(stats.totalEstimatedMinutes)}</span></div>
+            <div className="flex justify-between"><span className="text-xs text-green-600">Feitas</span><span className="text-sm font-medium text-green-600">{formatTime(stats.completedEstimatedMinutes)}</span></div>
+            <div className="flex justify-between"><span className="text-xs text-red-600">Não Feitas</span><span className="text-sm font-medium text-red-600">{formatTime(stats.notDoneEstimatedMinutes)}</span></div>
+            <div className="flex justify-between"><span className="text-xs text-yellow-600">Pendentes</span><span className="text-sm font-medium text-yellow-600">{formatTime(stats.pendingEstimatedMinutes)}</span></div>
+          </div>
+        )
+      },
+      {
+        icon: <CheckCircle className="h-4 w-4 text-blue-500" />,
+        label: 'Status',
+        summary: `${stats.completedTasks}/${stats.totalTasks} feitas`,
+        borderColor: 'border-l-blue-500',
+        content: (
+          <div className="space-y-1.5">
+            <div className="flex justify-between"><span className="text-xs text-blue-600">Total</span><span className="text-sm font-medium text-blue-600">{stats.totalTasks} (100%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-green-600">Feitas</span><span className="text-sm font-medium text-green-600">{stats.completedTasks} ({pct(stats.completedTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-blue-900">Definitivo</span><span className="text-sm font-medium text-blue-900">{stats.definitiveTasks} ({pct(stats.definitiveTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-red-600">Não Feitas</span><span className="text-sm font-medium text-red-600">{stats.notDoneTasks} ({pct(stats.notDoneTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-yellow-600">Pendentes</span><span className="text-sm font-medium text-yellow-600">{stats.pendingTasks} ({pct(stats.pendingTasks)}%)</span></div>
+          </div>
+        )
+      },
+      {
+        icon: <RotateCcw className="h-4 w-4 text-orange-500" />,
+        label: 'Reagendamentos',
+        summary: `${stats.rescheduledTasks} reag.`,
+        borderColor: 'border-l-orange-500',
+        content: (
+          <div className="space-y-1.5">
+            <div className="flex justify-between"><span className="text-xs text-gray-600">Não Reagendadas</span><span className="text-sm font-medium text-gray-600">{stats.notRescheduledTasks} ({pct(stats.notRescheduledTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-orange-600">Reagendadas</span><span className="text-sm font-medium text-orange-600">{stats.rescheduledTasks} ({pct(stats.rescheduledTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-green-600">Concluídas</span><span className="text-sm font-medium text-green-600">{stats.totalConcludedTasks} ({pct(stats.totalConcludedTasks)}%)</span></div>
+            <div className="flex justify-between"><span className="text-xs text-red-600">Não Concluídas</span><span className="text-sm font-medium text-red-600">{stats.totalNotConcludedTasks} ({pct(stats.totalNotConcludedTasks)}%)</span></div>
+          </div>
+        )
+      }
+    ];
+
     return (
-      <Accordion type="multiple" className="space-y-2">
-        <AccordionItem value="status" className="border rounded-lg border-l-4 border-l-blue-500">
-          <AccordionTrigger className="px-3 py-2 text-sm hover:no-underline">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-blue-500" />
-              <span className="font-medium">Status</span>
-              <span className="text-xs text-muted-foreground ml-auto mr-2">
-                {stats.completedTasks}/{stats.totalTasks} feitas
-              </span>
+      <div className="space-y-2">
+        {sections.map((section, idx) => (
+          <Collapsible key={idx}>
+            <div className={`border rounded-lg ${section.borderColor} border-l-4`}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 text-sm">
+                <div className="flex items-center gap-2">
+                  {section.icon}
+                  <span className="font-medium">{section.label}</span>
+                  <span className="text-xs text-muted-foreground">{section.summary}</span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
+                {section.content}
+              </CollapsibleContent>
             </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-3 pb-3">
-            <div className="space-y-1.5">
-              <div className="flex justify-between"><span className="text-xs text-blue-600">Total</span><span className="text-sm font-medium text-blue-600">{stats.totalTasks} (100%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-green-600">Feitas</span><span className="text-sm font-medium text-green-600">{stats.completedTasks} ({pct(stats.completedTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-blue-900">Definitivo</span><span className="text-sm font-medium text-blue-900">{stats.definitiveTasks} ({pct(stats.definitiveTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-red-600">Não Feitas</span><span className="text-sm font-medium text-red-600">{stats.notDoneTasks} ({pct(stats.notDoneTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-yellow-600">Pendentes</span><span className="text-sm font-medium text-yellow-600">{stats.pendingTasks} ({pct(stats.pendingTasks)}%)</span></div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="reschedule" className="border rounded-lg border-l-4 border-l-orange-500">
-          <AccordionTrigger className="px-3 py-2 text-sm hover:no-underline">
-            <div className="flex items-center gap-2">
-              <RotateCcw className="h-4 w-4 text-orange-500" />
-              <span className="font-medium">Reagendamentos</span>
-              <span className="text-xs text-muted-foreground ml-auto mr-2">
-                {stats.rescheduledTasks} reag.
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-3 pb-3">
-            <div className="space-y-1.5">
-              <div className="flex justify-between"><span className="text-xs text-gray-600">Não Reagendadas</span><span className="text-sm font-medium text-gray-600">{stats.notRescheduledTasks} ({pct(stats.notRescheduledTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-orange-600">Reagendadas</span><span className="text-sm font-medium text-orange-600">{stats.rescheduledTasks} ({pct(stats.rescheduledTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-green-600">Concluídas</span><span className="text-sm font-medium text-green-600">{stats.totalConcludedTasks} ({pct(stats.totalConcludedTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-red-600">Não Concluídas</span><span className="text-sm font-medium text-red-600">{stats.totalNotConcludedTasks} ({pct(stats.totalNotConcludedTasks)}%)</span></div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="types" className="border rounded-lg border-l-4 border-l-purple-500">
-          <AccordionTrigger className="px-3 py-2 text-sm hover:no-underline">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-purple-500" />
-              <span className="font-medium">Tipos</span>
-              <span className="text-xs text-muted-foreground ml-auto mr-2">
-                {stats.totalTasks} tarefas
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-3 pb-3">
-            <div className="space-y-1.5">
-              <div className="flex justify-between"><span className="text-xs text-zinc-600">Pessoais</span><span className="text-sm font-medium text-gray-600">{stats.personalTasks} ({pct(stats.personalTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-orange-600">Reuniões</span><span className="text-sm font-medium text-orange-600">{stats.meetingTasks} ({pct(stats.meetingTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-fuchsia-900">Delegadas</span><span className="text-sm font-medium text-fuchsia-900">{stats.delegatedTasks} ({pct(stats.delegatedTasks)}%)</span></div>
-              <div className="flex justify-between"><span className="text-xs text-blue-600">Profissional</span><span className="text-sm font-medium text-blue-600">{stats.professionalTasks} ({pct(stats.professionalTasks)}%)</span></div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="time" className="border rounded-lg border-l-4 border-l-indigo-500">
-          <AccordionTrigger className="px-3 py-2 text-sm hover:no-underline">
-            <div className="flex items-center gap-2">
-              <Timer className="h-4 w-4 text-indigo-500" />
-              <span className="font-medium">Tempo</span>
-              <span className="text-xs text-muted-foreground ml-auto mr-2">
-                {formatTime(stats.totalEstimatedMinutes)}
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-3 pb-3">
-            <div className="space-y-1.5">
-              <div className="flex justify-between"><span className="text-xs text-indigo-600">Total</span><span className="text-sm font-medium text-indigo-600">{formatTime(stats.totalEstimatedMinutes)}</span></div>
-              <div className="flex justify-between"><span className="text-xs text-green-600">Feitas</span><span className="text-sm font-medium text-green-600">{formatTime(stats.completedEstimatedMinutes)}</span></div>
-              <div className="flex justify-between"><span className="text-xs text-red-600">Não Feitas</span><span className="text-sm font-medium text-red-600">{formatTime(stats.notDoneEstimatedMinutes)}</span></div>
-              <div className="flex justify-between"><span className="text-xs text-yellow-600">Pendentes</span><span className="text-sm font-medium text-yellow-600">{formatTime(stats.pendingEstimatedMinutes)}</span></div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          </Collapsible>
+        ))}
+      </div>
     );
   }
 
