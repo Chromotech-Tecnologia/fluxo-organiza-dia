@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Calendar, ChevronDown, Filter, Search, X, SortAsc } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Filter, Search, X, SortAsc } from "lucide-react";
 import { TaskFilter, TaskPriority, TaskStatus, TaskType, SortOption } from "@/types";
-import { getCurrentDateInSaoPaulo, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo } from "@/lib/utils";
+import { getCurrentDateInSaoPaulo, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo, offsetDateString, formatDateForDisplay } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { useIsMobile } from "@/hooks/use-mobile";
 
