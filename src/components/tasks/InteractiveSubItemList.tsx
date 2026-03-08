@@ -232,23 +232,27 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete, onSubjec
 export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: InteractiveSubItemListProps) {
   const storageKey = taskId ? `checklist-prefs-${taskId}` : null;
 
-  const loadPrefs = () => {
-    if (!storageKey) return { hideCompleted: false, hideNotDone: false, groupBySubject: false };
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return { hideCompleted: false, hideNotDone: false, groupBySubject: false };
-  };
-
   const [newItemText, setNewItemText] = useState('');
   const [newItemSubject, setNewItemSubject] = useState('');
   const [customSubject, setCustomSubject] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const initialPrefs = loadPrefs();
-  const [hideCompleted, setHideCompleted] = useState(initialPrefs.hideCompleted);
-  const [hideNotDone, setHideNotDone] = useState(initialPrefs.hideNotDone);
-  const [groupBySubject, setGroupBySubject] = useState(initialPrefs.groupBySubject);
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [hideNotDone, setHideNotDone] = useState(false);
+  const [groupBySubject, setGroupBySubject] = useState(false);
+
+  // Load preferences from localStorage when taskId is available
+  React.useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const prefs = JSON.parse(saved);
+        setHideCompleted(!!prefs.hideCompleted);
+        setHideNotDone(!!prefs.hideNotDone);
+        setGroupBySubject(!!prefs.groupBySubject);
+      }
+    } catch {}
+  }, [storageKey]);
 
   const savePrefs = (hc: boolean, hnd: boolean, gbs: boolean) => {
     if (storageKey) {
