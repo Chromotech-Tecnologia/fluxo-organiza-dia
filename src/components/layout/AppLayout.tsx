@@ -25,27 +25,17 @@ export function AppLayout({ children }: AppLayoutProps) {
         <SidebarProvider>
           <div className="min-h-screen flex w-full bg-background">
             <AppSidebar />
-            <main className="flex-1 flex flex-col">
+            <main className="flex-1 flex flex-col min-w-0">
               {isImpersonating && <ImpersonationBar />}
-              <header className="h-14 border-b border-border flex items-center px-4 bg-card">
-                <SidebarTrigger className="mr-4" />
-                <div className="flex items-center justify-between w-full">
-                  <h1 className="text-lg font-semibold text-foreground">
-                    Sistema de Controle de Tarefas
+              <header className="h-12 md:h-14 border-b border-border flex items-center px-3 md:px-4 bg-card sticky top-0 z-30">
+                <SidebarTrigger className="mr-3 h-9 w-9 md:h-7 md:w-7" />
+                <div className="flex items-center justify-between w-full min-w-0">
+                  <h1 className="text-base md:text-lg font-semibold text-foreground truncate">
+                    Organize-se
                   </h1>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {new Date().toLocaleDateString('pt-BR', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
                 </div>
               </header>
-              <div className="flex-1 p-6 overflow-auto">
+              <div className="flex-1 p-3 md:p-6 overflow-auto">
                 {children}
               </div>
             </main>
