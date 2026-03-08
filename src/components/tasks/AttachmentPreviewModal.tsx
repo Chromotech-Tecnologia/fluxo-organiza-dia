@@ -87,34 +87,41 @@ export function AttachmentPreviewModal({ attachment, isOpen, onClose }: Attachme
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-        <DialogHeader className="p-4 border-b">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="truncate pr-4">
-              {attachment?.name || 'Anexo'}
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-              {isImage && (
-                <>
-                  <Button variant="outline" size="sm" onClick={handleZoomOut} title="Diminuir zoom">
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-muted-foreground min-w-12 text-center">
-                    {Math.round(zoom * 100)}%
-                  </span>
-                  <Button variant="outline" size="sm" onClick={handleZoomIn} title="Aumentar zoom">
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleRotate} title="Rotacionar">
-                    <RotateCw className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-              <Button variant="outline" size="sm" onClick={handleDownload} title="Baixar">
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
+        <div className="flex items-center justify-between p-4 border-b">
+          <DialogTitle className="truncate flex-1">
+            {attachment?.name || 'Anexo'}
+          </DialogTitle>
+          <div className="flex items-center gap-2 ml-4">
+            {isImage && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleZoomOut} title="Diminuir zoom">
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground min-w-12 text-center">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <Button variant="outline" size="sm" onClick={handleZoomIn} title="Aumentar zoom">
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleRotate} title="Rotacionar">
+                  <RotateCw className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            <Button variant="outline" size="sm" onClick={handleDownload} title="Baixar">
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleClose}
+              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+              title="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-        </DialogHeader>
+        </div>
         
         <div className="flex-1 overflow-auto p-4 flex items-center justify-center min-h-[400px] max-h-[calc(90vh-80px)] bg-muted/30">
           {loading ? (
