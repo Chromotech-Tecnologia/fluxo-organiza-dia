@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Calendar, ChevronDown, Filter, Search, X, SortAsc } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Filter, Search, X, SortAsc } from "lucide-react";
 import { TaskFilter, TaskPriority, TaskStatus, TaskType, SortOption } from "@/types";
-import { getCurrentDateInSaoPaulo, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo } from "@/lib/utils";
+import { getCurrentDateInSaoPaulo, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo, offsetDateString, formatDateForDisplay } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -294,8 +294,31 @@ export function TaskFiltersHorizontal({
     </div>
   );
 
+  // Helper to get label for current date
+  const getDateLabel = (dateStr: string) => {
+    if (dateStr === today) return 'Hoje';
+    if (dateStr === yesterday) return 'Ontem';
+    if (dateStr === tomorrow) return 'Amanhã';
+    return formatDateForDisplay(dateStr);
+  };
+
+  const handlePrevDay = () => {
+    const currentStart = currentFilters.dateRange?.start || today;
+    const newDate = offsetDateString(currentStart, -1);
+    onFiltersChange({ ...currentFilters, dateRange: { start: newDate, end: newDate } });
+  };
+
+  const handleNextDay = () => {
+    const currentStart = currentFilters.dateRange?.start || today;
+    const newDate = offsetDateString(currentStart, 1);
+    onFiltersChange({ ...currentFilters, dateRange: { start: newDate, end: newDate } });
+  };
+
   // ===== MOBILE LAYOUT =====
   if (isMobile) {
+    const currentDate = currentFilters.dateRange?.start || today;
+    const isSingleDay = currentFilters.dateRange?.start === currentFilters.dateRange?.end;
+
     return (
       <div className="space-y-2">
         {/* Search + Filter button row */}
@@ -332,30 +355,6 @@ export function TaskFiltersHorizontal({
                 <SheetTitle className="text-lg font-bold text-center">Filtros</SheetTitle>
               </SheetHeader>
               <div className="space-y-6 pt-2 pb-6">
-                {/* Data */}
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-foreground">Data:</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button size="sm" variant={isDateActive(yesterday) ? "default" : "outline"} onClick={() => handleDateSelect(yesterday)} className="h-9 text-xs">
-                      Ontem
-                    </Button>
-                    <Button size="sm" variant={isDateActive(today) ? "default" : "outline"} onClick={() => handleDateSelect(today)} className="h-9 text-xs">
-                      Hoje
-                    </Button>
-                    <Button size="sm" variant={isDateActive(tomorrow) ? "default" : "outline"} onClick={() => handleDateSelect(tomorrow)} className="h-9 text-xs">
-                      Amanhã
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">De:</span>
-                    <Input type="date" value={currentFilters.dateRange?.start || today} onChange={(e) => handleDateRangeChange('start', e.target.value)} className="h-9 flex-1 text-xs" />
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">Até:</span>
-                    <Input type="date" value={currentFilters.dateRange?.end || today} onChange={(e) => handleDateRangeChange('end', e.target.value)} className="h-9 flex-1 text-xs" />
-                  </div>
-                </div>
-
-                <div className="border-t border-border" />
-
                 {/* Status */}
                 <div className="space-y-3">
                   <label className="text-sm font-semibold text-foreground">Status:</label>
@@ -448,6 +447,34 @@ export function TaskFiltersHorizontal({
               </div>
             </SheetContent>
           </Sheet>
+        </div>
+
+        {/* Date navigation bar - outside filter sheet */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={handlePrevDay}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 text-center">
+            <span className="text-sm font-medium text-foreground">
+              {isSingleDay ? getDateLabel(currentDate) : `${formatDateForDisplay(currentFilters.dateRange?.start || today)} - ${formatDateForDisplay(currentFilters.dateRange?.end || today)}`}
+            </span>
+            {isSingleDay && currentDate !== today && (
+              <span className="text-xs text-muted-foreground ml-1">
+                ({formatDateForDisplay(currentDate)})
+              </span>
+            )}
+          </div>
+          <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={handleNextDay}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Date range inputs */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">De:</span>
+          <Input type="date" value={currentFilters.dateRange?.start || today} onChange={(e) => handleDateRangeChange('start', e.target.value)} className="h-8 flex-1 text-xs" />
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Até:</span>
+          <Input type="date" value={currentFilters.dateRange?.end || today} onChange={(e) => handleDateRangeChange('end', e.target.value)} className="h-8 flex-1 text-xs" />
         </div>
       </div>
     );
