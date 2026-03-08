@@ -86,7 +86,7 @@ export function AttachmentPreviewModal({ attachment, isOpen, onClose }: Attachme
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden [&>button.absolute]:hidden">
         <div className="flex items-center justify-between p-4 border-b">
           <DialogTitle className="truncate flex-1">
             {attachment?.name || 'Anexo'}
@@ -110,6 +110,10 @@ export function AttachmentPreviewModal({ attachment, isOpen, onClose }: Attachme
             )}
             <Button variant="outline" size="sm" onClick={handleDownload} title="Baixar">
               <Download className="h-4 w-4" />
+            </Button>
+            <div className="w-px h-6 bg-border" />
+            <Button variant="ghost" size="sm" onClick={handleClose} className="h-8 w-8 p-0" title="Fechar">
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
