@@ -300,7 +300,7 @@ export function TaskFiltersHorizontal({
       <div className="space-y-2">
         {/* Search + Filter button row */}
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar tarefas..."
@@ -327,40 +327,121 @@ export function TaskFiltersHorizontal({
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Filtros</SheetTitle>
+            <SheetContent side="bottom" className="h-[80vh] overflow-y-auto rounded-t-2xl">
+              <SheetHeader className="pb-2">
+                <SheetTitle className="text-lg font-bold text-center">Filtros</SheetTitle>
               </SheetHeader>
-              <div className="space-y-5 pt-4">
-                {/* Date filters */}
-                <div className="space-y-2">
-                  <span className="text-sm font-medium text-muted-foreground">Data:</span>
-                  {renderDateFilters()}
+              <div className="space-y-6 pt-2 pb-6">
+                {/* Data */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">Data:</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button size="sm" variant={isDateActive(yesterday) ? "default" : "outline"} onClick={() => handleDateSelect(yesterday)} className="h-9 text-xs">
+                      Ontem
+                    </Button>
+                    <Button size="sm" variant={isDateActive(today) ? "default" : "outline"} onClick={() => handleDateSelect(today)} className="h-9 text-xs">
+                      Hoje
+                    </Button>
+                    <Button size="sm" variant={isDateActive(tomorrow) ? "default" : "outline"} onClick={() => handleDateSelect(tomorrow)} className="h-9 text-xs">
+                      Amanhã
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">De:</span>
+                    <Input type="date" value={currentFilters.dateRange?.start || today} onChange={(e) => handleDateRangeChange('start', e.target.value)} className="h-9 flex-1 text-xs" />
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">Até:</span>
+                    <Input type="date" value={currentFilters.dateRange?.end || today} onChange={(e) => handleDateRangeChange('end', e.target.value)} className="h-9 flex-1 text-xs" />
+                  </div>
                 </div>
 
-                {renderStatusFilters()}
-                {renderRescheduleFilters()}
-                {renderConclusionFilters()}
-                {renderShareFilters()}
+                <div className="border-t border-border" />
 
-                <div className="space-y-2">
-                  <span className="text-sm font-medium text-muted-foreground">Ordenação:</span>
+                {/* Status */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">Status:</label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant={currentFilters.status?.includes('pending') ? "default" : "outline"} onClick={() => handleStatusFilter('pending')} className="h-9 px-4 text-xs">
+                      Pendente
+                    </Button>
+                    <Button size="sm" variant={currentFilters.status?.includes('completed') ? "default" : "outline"} onClick={() => handleStatusFilter('completed')} className="h-9 px-4 text-xs">
+                      Feito
+                    </Button>
+                    <Button size="sm" variant={currentFilters.status?.includes('not-done') ? "default" : "outline"} onClick={() => handleStatusFilter('not-done')} className="h-9 px-4 text-xs">
+                      Não feito
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-t border-border" />
+
+                {/* Reagendar */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">Reagendar:</label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant={currentFilters.isForwarded === true ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('isForwarded', currentFilters.isForwarded === true ? undefined : true)} className="h-9 px-4 text-xs">
+                      Reagendadas
+                    </Button>
+                    <Button size="sm" variant={currentFilters.isForwarded === false ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('isForwarded', currentFilters.isForwarded === false ? undefined : false)} className="h-9 px-4 text-xs">
+                      Não reagendadas
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-t border-border" />
+
+                {/* Conclusão */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">Conclusão:</label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant={currentFilters.isConcluded === true ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('isConcluded', currentFilters.isConcluded === true ? undefined : true)} className="h-9 px-4 text-xs">
+                      Concluído
+                    </Button>
+                    <Button size="sm" variant={currentFilters.isConcluded === false ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('isConcluded', currentFilters.isConcluded === false ? undefined : false)} className="h-9 px-4 text-xs">
+                      Não Concluído
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-t border-border" />
+
+                {/* Compartilhadas */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">Compartilhadas:</label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant={currentFilters.sharedByMe === true ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('sharedByMe', currentFilters.sharedByMe === true ? undefined : true)} className="h-9 px-4 text-xs">
+                      Por Mim
+                    </Button>
+                    <Button size="sm" variant={currentFilters.sharedWithMe === true ? "default" : "outline"} onClick={() => handleAdvancedFilterChange('sharedWithMe', currentFilters.sharedWithMe === true ? undefined : true)} className="h-9 px-4 text-xs">
+                      Comigo
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-t border-border" />
+
+                {/* Ordenação */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">Ordenação:</label>
                   {renderSortSelect()}
                 </div>
 
-                <div className="space-y-2">
-                  <span className="text-sm font-medium text-foreground">Filtros Avançados</span>
+                <div className="border-t border-border" />
+
+                {/* Filtros Avançados */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">Filtros Avançados:</label>
                   {renderAdvancedFilters()}
                 </div>
 
-                <div className="flex gap-2 pt-2 pb-4">
+                {/* Action buttons */}
+                <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-2">
                   {(activeFiltersCount > 0 || searchQuery) && (
-                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-9 gap-1 flex-1">
+                    <Button variant="outline" size="sm" onClick={clearAllFilters} className="h-10 gap-1 flex-1">
                       <X className="h-4 w-4" />
-                      Limpar Filtros
+                      Limpar
                     </Button>
                   )}
-                  <Button size="sm" onClick={() => setSheetOpen(false)} className="h-9 flex-1">
+                  <Button size="sm" onClick={() => setSheetOpen(false)} className="h-10 flex-1">
                     Aplicar
                   </Button>
                 </div>
@@ -368,18 +449,6 @@ export function TaskFiltersHorizontal({
             </SheetContent>
           </Sheet>
         </div>
-
-        {/* Date indicator */}
-        {currentFilters.dateRange && (
-          <Badge variant="secondary" className="text-xs">
-            {currentFilters.dateRange.start === currentFilters.dateRange.end
-              ? (currentFilters.dateRange.start === today ? 'Hoje' : 
-                 currentFilters.dateRange.start === tomorrow ? 'Amanhã' : 
-                 currentFilters.dateRange.start === yesterday ? 'Ontem' : 
-                 currentFilters.dateRange.start)
-              : `${currentFilters.dateRange.start} - ${currentFilters.dateRange.end}`}
-          </Badge>
-        )}
       </div>
     );
   }
