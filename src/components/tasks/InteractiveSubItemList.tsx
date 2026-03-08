@@ -364,8 +364,9 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
   const allSubjects = useMemo(() => {
     const set = new Set<string>();
     subItems.forEach(item => { if (item.subject) set.add(item.subject); });
+    if (newItemSubject) set.add(newItemSubject);
     return Array.from(set).sort();
-  }, [subItems]);
+  }, [subItems, newItemSubject]);
 
   const addSubItem = () => {
     if (newItemText.trim()) {
