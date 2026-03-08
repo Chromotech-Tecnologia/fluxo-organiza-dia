@@ -386,13 +386,13 @@ const TasksPage = () => {
             >
               <SortableContext items={displayTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
                 {displayTasks.map((task, index) => (
-                  <div key={task.id} className="flex items-start gap-3">
+                  <div key={task.id} className="flex items-start gap-1.5 md:gap-3 min-w-0">
                     <Checkbox
                       checked={selectedTasks.some(t => t.id === task.id)}
                       onCheckedChange={(checked) => handleTaskSelection(task, checked as boolean)}
-                      className="mt-4"
+                      className="mt-4 flex-shrink-0"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <TaskCardImproved 
                         task={task} 
                         taskIndex={isMultipleDays ? undefined : index}
