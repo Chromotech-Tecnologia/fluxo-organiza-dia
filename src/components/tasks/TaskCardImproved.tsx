@@ -65,13 +65,10 @@ export function TaskCardImproved({
     transition
   };
 
-  // Buscar informações da pessoa/equipe atribuída
   const getAssignedTeam = () => {
-    // Primeiro verifica no novo campo assignedTeamMemberId
     if (task.assignedTeamMemberId) {
       return teamMembers.find(team => team.id === task.assignedTeamMemberId);
     }
-    // Fallback para assignedPersonId (compatibilidade)
     if (task.assignedPersonId) {
       return teamMembers.find(team => team.id === task.assignedPersonId);
     }
@@ -79,7 +76,6 @@ export function TaskCardImproved({
   };
   const assignedTeam = getAssignedTeam();
 
-  // Buscar nome do usuário que compartilhou
   React.useEffect(() => {
     const fetchSharedByUser = async () => {
       if (isTaskSharedWithMe(task.id)) {
@@ -92,51 +88,37 @@ export function TaskCardImproved({
     fetchSharedByUser();
   }, [task.id, isTaskSharedWithMe, getTaskSharedByUser]);
 
-  // Nova lógica: verificar se a tarefa foi reagendada usando o histórico
   const wasRescheduledFromThisDate = React.useMemo(() => {
     if (!task.forwardHistory || task.forwardHistory.length === 0) return false;
-
-    // Verificar se algum reagendamento tem a data original igual à data agendada atual da tarefa
     return task.forwardHistory.some(forward => {
-      const originalDate = forward.originalDate; // Data original no histórico
-      return originalDate === task.scheduledDate; // Se corresponde à data atual da tarefa
+      const originalDate = forward.originalDate;
+      return originalDate === task.scheduledDate;
     });
   }, [task.forwardHistory, task.scheduledDate]);
+
   const getCardColor = () => {
     const hasCompletion = task.completionHistory && task.completionHistory.length > 0;
     const lastCompletion = hasCompletion ? task.completionHistory[task.completionHistory.length - 1] : null;
-
-    // Verificar se já foi marcada como "não feita" alguma vez - PRIORIDADE MÁXIMA
     const hasNotDoneCompletion = task.completionHistory?.some(completion => completion.status === 'not-done');
-
-    // Se já foi marcada como "não feita", manter cor vermelha sempre
     if (hasNotDoneCompletion) {
       return 'border-red-500 bg-red-50';
     }
-
-    // Só depois verificar outros status
     if (task.isConcluded) return 'border-green-500 bg-green-50';
     if (lastCompletion?.status === 'completed') {
       return 'border-green-500 bg-green-50';
     }
-
-    // Verificar se é uma tarefa compartilhada
     const sharedByMe = isTaskSharedByMe(task.id);
     const sharedWithMe = isTaskSharedWithMe(task.id);
-    
     if (sharedByMe || sharedWithMe) {
       return 'border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50/50 to-cyan-50/30';
     }
-
     return 'border-border bg-background';
   };
-  // Calculate progress for sub-items using completed and notDone properties
+
   const completedSubItems = task.subItems?.filter(item => item.completed === true).length || 0;
   const notCompletedSubItems = task.subItems?.filter(item => item.notDone === true).length || 0;
   const pendingSubItems = task.subItems?.filter(item => !item.completed && !item.notDone).length || 0;
   const totalSubItems = task.subItems?.length || 0;
-
-  // Calculate percentages ensuring they add up to 100%
   const completedProgress = totalSubItems > 0 ? Math.round((completedSubItems / totalSubItems) * 100) : 0;
   const notCompletedProgress = totalSubItems > 0 ? Math.round((notCompletedSubItems / totalSubItems) * 100) : 0;
   const pendingProgress = totalSubItems > 0 ? 100 - completedProgress - notCompletedProgress : 0;
@@ -146,12 +128,14 @@ export function TaskCardImproved({
   const historyCount = (task.completionHistory?.length || 0) + (task.forwardHistory?.length || 0);
   const timeMinutes = getTimeInMinutes(task.timeInvestment, task.customTimeMinutes);
   const formattedTime = formatTime(timeMinutes);
+
   const handleCardClick = (e: React.MouseEvent) => {
     if (e.target instanceof HTMLElement && (e.target.closest('button') || e.target.closest('[data-dropdown-trigger]') || e.target.closest('.cursor-grab'))) {
       return;
     }
     onEdit?.();
   };
+
   const handleStatusClick = (status: 'completed' | 'not-done') => {
     console.log('Mudando status para:', status, 'Tarefa:', task.title, 'Assigned Person:', task.assignedPersonId);
     if (lastCompletion?.status === status) {
@@ -160,52 +144,46 @@ export function TaskCardImproved({
     }
     onStatusChange(status);
   };
+
   const handleRescheduleClick = () => {
     console.log('Clicou reagendar - mudando estado local imediatamente');
     setIsRescheduling(true);
     setJustRescheduled(true);
     onForward();
-
-    // Reset after a delay to allow UI to update
     setTimeout(() => {
       setIsRescheduling(false);
-      // Manter justRescheduled por mais tempo para garantir que seja visível
       setTimeout(() => {
         setJustRescheduled(false);
       }, 1000);
     }, 500);
   };
 
-  // Função para lidar com a exclusão sem abrir o formulário
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Clicou excluir - chamando onDelete diretamente');
     onDelete?.();
   };
 
-  // Função para lidar com a edição
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Clicou editar - chamando onEdit');
     onEdit?.();
   };
 
   const handleDuplicateClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Clicou duplicar - chamando onDuplicate');
     onDuplicate?.();
   };
 
-  // Botão reagendar laranja se foi reagendada desta data OU se acabou de ser reagendada
   const shouldShowOrangeRescheduleButton = wasRescheduledFromThisDate || isRescheduling || justRescheduled;
+
   return <Card ref={setNodeRef} style={style} className={`cursor-pointer hover:shadow-md transition-all duration-200 ${getCardColor()}`} onClick={handleCardClick}>
-      <CardContent className="p-3">
-        <div className="space-y-3">
-          <div className="flex justify-between items-start gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+      <CardContent className="p-2 md:p-3">
+        <div className="space-y-2 md:space-y-3">
+          {/* Top row: drag handle, order, title, menu */}
+          <div className="flex justify-between items-start gap-1 md:gap-2">
+            <div className="flex items-center gap-1 md:gap-2 flex-1 min-w-0">
               <div {...attributes} {...listeners} className="cursor-grab hover:cursor-grabbing flex-shrink-0">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
@@ -214,39 +192,13 @@ export function TaskCardImproved({
                   {task.order || taskIndex + 1}
                 </Badge>}
               
-              {task.type === 'meeting' && task.meetingStartTime && task.meetingEndTime && (
-                <Badge variant="outline" className="text-xs px-2 py-0.5 bg-blue-50 text-blue-800 border-blue-300 flex-shrink-0 font-mono">
-                  {task.meetingStartTime} - {task.meetingEndTime}
-                </Badge>
-              )}
-              
-              {task.type === 'delegated-task' && assignedTeam && <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300 flex-shrink-0">
-                  {assignedTeam.name}
-                </Badge>}
-              
-              {(isTaskSharedByMe(task.id) || isTaskSharedWithMe(task.id)) && (
-                <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-300 flex-shrink-0">
-                  {isTaskSharedWithMe(task.id) 
-                    ? `Compartilhado comigo${sharedByUserName ? ` - ${sharedByUserName}` : ''}` 
-                    : 'Compartilhei'}
-                </Badge>
-              )}
-
-              {/* Ícone de anexos */}
-              {task.attachments && task.attachments.length > 0 && (
-                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-800 border-amber-300 flex-shrink-0 gap-1">
-                  <Paperclip className="h-3 w-3" />
-                  {task.attachments.length}
-                </Badge>
-              )}
-              
-              <div className="font-semibold text-sm truncate flex-1">
+              <div className="font-semibold text-sm truncate flex-1 min-w-0">
                 {task.title}
               </div>
             </div>
 
             <div className="flex items-center gap-1 flex-shrink-0">
-              {onHistory && historyCount > 0 && <Button variant="ghost" size="sm" className="h-6 w-6 p-0 relative" onClick={e => {
+              {onHistory && historyCount > 0 && <Button variant="ghost" size="sm" className="h-7 w-7 md:h-6 md:w-6 p-0 relative" onClick={e => {
               e.stopPropagation();
               onHistory();
             }}>
@@ -258,7 +210,7 @@ export function TaskCardImproved({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild data-dropdown-trigger>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 md:h-6 md:w-6 p-0">
                     <MoreVertical className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -283,6 +235,62 @@ export function TaskCardImproved({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+          </div>
+
+          {/* Mobile badges row - hidden on desktop since they show inline */}
+          <div className="flex gap-1 flex-wrap md:hidden">
+            {task.type === 'meeting' && task.meetingStartTime && task.meetingEndTime && (
+              <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-800 border-blue-300 font-mono">
+                {task.meetingStartTime} - {task.meetingEndTime}
+              </Badge>
+            )}
+            
+            {task.type === 'delegated-task' && assignedTeam && <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-800 border-purple-300">
+                {assignedTeam.name}
+              </Badge>}
+            
+            {(isTaskSharedByMe(task.id) || isTaskSharedWithMe(task.id)) && (
+              <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-300">
+                {isTaskSharedWithMe(task.id) 
+                  ? `Compartilhado${sharedByUserName ? ` - ${sharedByUserName}` : ''}` 
+                  : 'Compartilhei'}
+              </Badge>
+            )}
+
+            {task.attachments && task.attachments.length > 0 && (
+              <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-amber-50 text-amber-800 border-amber-300 gap-1">
+                <Paperclip className="h-3 w-3" />
+                {task.attachments.length}
+              </Badge>
+            )}
+          </div>
+
+          {/* Desktop inline badges - hidden on mobile */}
+          <div className="hidden md:flex gap-1 flex-wrap items-center -mt-1">
+            {task.type === 'meeting' && task.meetingStartTime && task.meetingEndTime && (
+              <Badge variant="outline" className="text-xs px-2 py-0.5 bg-blue-50 text-blue-800 border-blue-300 font-mono">
+                {task.meetingStartTime} - {task.meetingEndTime}
+              </Badge>
+            )}
+            
+            {task.type === 'delegated-task' && assignedTeam && <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300">
+                {assignedTeam.name}
+              </Badge>}
+            
+            {(isTaskSharedByMe(task.id) || isTaskSharedWithMe(task.id)) && (
+              <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-300">
+                {isTaskSharedWithMe(task.id) 
+                  ? `Compartilhado comigo${sharedByUserName ? ` - ${sharedByUserName}` : ''}` 
+                  : 'Compartilhei'}
+              </Badge>
+            )}
+
+            {task.attachments && task.attachments.length > 0 && (
+              <Badge variant="outline" className="text-xs bg-amber-50 text-amber-800 border-amber-300 gap-1">
+                <Paperclip className="h-3 w-3" />
+                {task.attachments.length}
+              </Badge>
+            )}
           </div>
 
           {task.description && <div className="text-xs text-muted-foreground line-clamp-2">
@@ -321,59 +329,58 @@ export function TaskCardImproved({
               </Badge>}
           </div>
 
-          <div className="flex justify-between items-end gap-4">
-            <div className="flex gap-1 flex-shrink-0">
+          {/* Action buttons + checklist */}
+          <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-2 md:gap-4">
+            <div className="flex flex-wrap gap-1 flex-shrink-0">
               {!task.isConcluded && <>
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('completed');
-              }} className={`h-7 px-2 text-xs min-w-[50px] ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
+              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${lastCompletion?.status === 'completed' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'text-green-600 border-green-600 hover:bg-green-50'}`}>
                     {lastCompletion?.status === 'completed' ? '✓ Feito' : 'Feito'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleStatusClick('not-done');
-              }} className={`h-7 px-2 text-xs min-w-[80px] ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
-                    {lastCompletion?.status === 'not-done' ? '✓ Não feito' : 'Não feito'}
+              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${lastCompletion?.status === 'not-done' ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'text-red-600 border-red-600 hover:bg-red-50'}`}>
+                    {lastCompletion?.status === 'not-done' ? '✓ N. feito' : 'N. feito'}
                   </Button>
                   
-                  {/* Botão reagendar com cor laranja se foi reagendada desta data */}
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-7 px-2 text-xs min-w-[90px] ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
-                    {shouldShowOrangeRescheduleButton ? '✓ Reagendada' : 'Reagendar'}
+              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+                    {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
                   
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onConclude();
-              }} className="h-7 px-2 text-xs min-w-[60px] text-blue-600 border-blue-600 hover:bg-blue-50">
+              }} className="h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none text-blue-600 border-blue-600 hover:bg-blue-50">
                     Concluir
                   </Button>
                 </>}
 
               {task.isConcluded && <>
-                  {/* Mostrar botão reagendar mesmo para tarefas concluídas */}
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 handleRescheduleClick();
-              }} className={`h-7 px-2 text-xs min-w-[90px] ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
-                    {shouldShowOrangeRescheduleButton ? '✓ Reagendada' : 'Reagendar'}
+              }} className={`h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none ${shouldShowOrangeRescheduleButton ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'text-orange-600 border-orange-600 hover:bg-orange-50'}`}>
+                    {shouldShowOrangeRescheduleButton ? '✓ Reag.' : 'Reag.'}
                   </Button>
 
                   <Button size="sm" variant="outline" onClick={e => {
                 e.stopPropagation();
                 onUnconclude();
-              }} className="h-7 px-2 text-xs text-orange-600 border-orange-600 hover:bg-orange-50">
+              }} className="h-8 md:h-7 px-3 md:px-2 text-xs flex-1 md:flex-none text-orange-600 border-orange-600 hover:bg-orange-50">
                     <Undo className="h-3 w-3 mr-1" />
                     Desfazer
                   </Button>
                 </>}
             </div>
 
-            {totalSubItems > 0 && <div className="flex-shrink-0 min-w-[120px] max-w-[200px]">
+            {totalSubItems > 0 && <div className="flex-shrink-0 w-full md:w-auto md:min-w-[120px] md:max-w-[200px]">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-muted-foreground">Checklist</span>
                   <div className="flex items-center gap-2">
