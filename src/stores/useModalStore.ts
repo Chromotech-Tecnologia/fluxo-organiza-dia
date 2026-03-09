@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Task, Person, Skill, TeamMember, TaskType, TimeInvestment } from '@/types';
+import { Task, Person, Skill, TeamMember, TaskType, TaskTimeInvestment } from '@/types';
 
 interface TaskDefaults {
   type?: TaskType;
