@@ -319,7 +319,7 @@ const DailyClosePage = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-4 mb-3">
+                    <div className="grid grid-cols-3 gap-4 mb-2">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-foreground">{stats.total}</div>
                         <div className="text-xs text-muted-foreground">Total</div>
@@ -331,6 +331,21 @@ const DailyClosePage = () => {
                       <div className="text-center">
                         <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
                         <div className="text-xs text-muted-foreground">Pendentes</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 mb-3">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-blue-600">{formatTime(stats.totalTime)}</div>
+                        <div className="text-xs text-muted-foreground">Horas Previstas</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-green-600">{formatTime(stats.completedTime)}</div>
+                        <div className="text-xs text-muted-foreground">Horas Feitas</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-red-600">{formatTime(stats.notDoneTime)}</div>
+                        <div className="text-xs text-muted-foreground">Horas Não Feitas</div>
                       </div>
                     </div>
                     
