@@ -112,60 +112,58 @@ export function TaskFiltersHorizontal({
     const isSpecialDay = currentDate === today || currentDate === yesterday || currentDate === tomorrow;
     
     return (
-      <div className="flex flex-col items-center gap-0.5">
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8 flex-shrink-0" 
-            onClick={handlePrevDay}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <Button 
-            size="sm" 
-            variant={isDateActive(yesterday) ? "default" : "outline"} 
-            onClick={() => handleDateSelect(yesterday)} 
-            className="h-8 px-3 text-xs"
-          >
-            Ontem
-          </Button>
-          
-          <Button 
-            size="sm" 
-            variant={isTodaySelected ? "default" : "secondary"} 
-            onClick={() => handleDateSelect(today)} 
-            className={`h-8 px-4 text-xs font-medium ${!isTodaySelected ? "border border-primary/50" : ""}`}
-          >
-            Hoje
-          </Button>
-          
-          <Button 
-            size="sm" 
-            variant={isDateActive(tomorrow) ? "default" : "outline"} 
-            onClick={() => handleDateSelect(tomorrow)} 
-            className="h-8 px-3 text-xs"
-          >
-            Amanhã
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8 flex-shrink-0" 
-            onClick={handleNextDay}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        {/* Discrete weekday and date indicator */}
+      <div className="flex items-center gap-1">
+        {/* Weekday indicator above the nav */}
         {isSingleDay && (
-          <span className="text-[10px] text-muted-foreground/60">
+          <span className="text-[10px] text-muted-foreground/60 mr-1">
             {weekday}{!isSpecialDay && `, ${formatDateForDisplay(currentDate)}`}
           </span>
         )}
+        
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="h-8 w-8 flex-shrink-0" 
+          onClick={handlePrevDay}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <Button 
+          size="sm" 
+          variant={isDateActive(yesterday) ? "default" : "outline"} 
+          onClick={() => handleDateSelect(yesterday)} 
+          className="h-8 px-3 text-xs"
+        >
+          Ontem
+        </Button>
+        
+        <Button 
+          size="sm" 
+          variant={isTodaySelected ? "default" : "secondary"} 
+          onClick={() => handleDateSelect(today)} 
+          className={`h-8 px-4 text-xs font-medium ${!isTodaySelected ? "border border-primary/50" : ""}`}
+        >
+          Hoje
+        </Button>
+        
+        <Button 
+          size="sm" 
+          variant={isDateActive(tomorrow) ? "default" : "outline"} 
+          onClick={() => handleDateSelect(tomorrow)} 
+          className="h-8 px-3 text-xs"
+        >
+          Amanhã
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="h-8 w-8 flex-shrink-0" 
+          onClick={handleNextDay}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     );
   };
