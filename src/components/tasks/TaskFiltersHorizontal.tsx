@@ -94,28 +94,69 @@ export function TaskFiltersHorizontal({
     onSearchChange('');
   };
 
-  // Shared filter content used by both mobile sheet and desktop inline
-  const renderDateFilters = () => (
-    <>
-      <div className="flex gap-1">
-        <Button size="sm" variant={isDateActive(yesterday) ? "default" : "outline"} onClick={() => handleDateSelect(yesterday)} className="h-8 px-3 text-xs flex-1 md:flex-none">
+  // Unified date navigation: [◀] [Ontem] [HOJE] [Amanhã] [▶]
+  const renderDateNavigation = () => {
+    const currentDate = currentFilters.dateRange?.start || today;
+    const isTodaySelected = isDateActive(today);
+    
+    return (
+      <div className="flex items-center gap-1">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="h-8 w-8 flex-shrink-0" 
+          onClick={handlePrevDay}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <Button 
+          size="sm" 
+          variant={isDateActive(yesterday) ? "default" : "outline"} 
+          onClick={() => handleDateSelect(yesterday)} 
+          className="h-8 px-3 text-xs"
+        >
           Ontem
         </Button>
-        <Button size="sm" variant={isDateActive(today) ? "default" : "outline"} onClick={() => handleDateSelect(today)} className="h-8 px-3 text-xs flex-1 md:flex-none">
+        
+        <Button 
+          size="sm" 
+          variant={isTodaySelected ? "default" : "secondary"} 
+          onClick={() => handleDateSelect(today)} 
+          className={`h-8 px-4 text-xs font-medium ${!isTodaySelected ? "border border-primary/50" : ""}`}
+        >
           Hoje
         </Button>
-        <Button size="sm" variant={isDateActive(tomorrow) ? "default" : "outline"} onClick={() => handleDateSelect(tomorrow)} className="h-8 px-3 text-xs flex-1 md:flex-none">
+        
+        <Button 
+          size="sm" 
+          variant={isDateActive(tomorrow) ? "default" : "outline"} 
+          onClick={() => handleDateSelect(tomorrow)} 
+          className="h-8 px-3 text-xs"
+        >
           Amanhã
         </Button>
+        
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="h-8 w-8 flex-shrink-0" 
+          onClick={handleNextDay}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
+    );
+  };
 
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-muted-foreground">De:</span>
-        <Input type="date" value={currentFilters.dateRange?.start || today} onChange={(e) => handleDateRangeChange('start', e.target.value)} className="h-8 flex-1 md:w-32 text-xs" />
-        <span className="text-xs text-muted-foreground">Até:</span>
-        <Input type="date" value={currentFilters.dateRange?.end || today} onChange={(e) => handleDateRangeChange('end', e.target.value)} className="h-8 flex-1 md:w-32 text-xs" />
-      </div>
-    </>
+  // Date range inputs for both layouts
+  const renderDateRangeInputs = () => (
+    <div className="flex items-center gap-1">
+      <span className="text-xs text-muted-foreground">De:</span>
+      <Input type="date" value={currentFilters.dateRange?.start || today} onChange={(e) => handleDateRangeChange('start', e.target.value)} className="h-8 flex-1 md:w-32 text-xs" />
+      <span className="text-xs text-muted-foreground">Até:</span>
+      <Input type="date" value={currentFilters.dateRange?.end || today} onChange={(e) => handleDateRangeChange('end', e.target.value)} className="h-8 flex-1 md:w-32 text-xs" />
+    </div>
   );
 
   const renderStatusFilters = () => (
