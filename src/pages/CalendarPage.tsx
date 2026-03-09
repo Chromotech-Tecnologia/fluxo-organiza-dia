@@ -367,15 +367,12 @@ const CalendarPage = () => {
 
           {viewType === 'day' && (
             <div className="space-y-4">
-              {/* Cabeçalho do dia */}
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <h3 className="text-2xl font-bold text-foreground">
-                  {format(currentDate, 'EEEE', { locale: ptBR })}
-                </h3>
-                <p className="text-muted-foreground">
-                  {format(currentDate, 'dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })}
-                </p>
-              </div>
+             {/* Cabeçalho do dia */}
+               <div className="text-center p-4 bg-muted rounded-lg">
+                 <h3 className="text-2xl font-bold text-foreground">
+                   {format(currentDate, 'EEE', { locale: ptBR })}, {format(currentDate, 'dd/MM', { locale: ptBR })}
+                 </h3>
+               </div>
 
               {/* Tarefas do dia */}
               <div className="space-y-3">
