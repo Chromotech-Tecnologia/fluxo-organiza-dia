@@ -524,7 +524,11 @@ export function TaskFiltersHorizontal({
 
       <div className="h-6 w-px bg-border" />
 
-      {renderDateFilters()}
+      {renderDateNavigation()}
+
+      <div className="h-6 w-px bg-border" />
+
+      {renderDateRangeInputs()}
 
       <div className="h-6 w-px bg-border" />
 
