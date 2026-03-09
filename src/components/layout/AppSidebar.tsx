@@ -111,16 +111,25 @@ export function AppSidebar() {
             <SidebarMenu>
               {settingsItems
                 .filter(item => !item.adminOnly || isAdmin)
-                .map(item => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild size={isMobile ? "lg" : "default"}>
-                      <NavLink to={item.url} className={getNavClass} onClick={handleNavClick}>
-                        <item.icon className="h-5 w-5 md:h-4 md:w-4 mr-2 flex-shrink-0" />
-                        {!collapsed && <span className="text-sm">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                .map(item => {
+                  const isActive = location.pathname.startsWith(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton 
+                        asChild 
+                        size={isMobile ? "lg" : "default"}
+                        isActive={isActive}
+                        className={isActive ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 text-foreground font-medium border-l-2 border-primary rounded-l-none" : ""}
+                      >
+                        <NavLink to={item.url} onClick={handleNavClick}>
+                          <item.icon className="h-5 w-5 md:h-4 md:w-4 mr-2 flex-shrink-0" />
+                          {!collapsed && <span className="text-sm">{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+            </SidebarMenu>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
