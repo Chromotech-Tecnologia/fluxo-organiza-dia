@@ -310,10 +310,20 @@ const TasksPage = () => {
             Controle e organize suas tarefas diárias
           </p>
         </div>
-        <Button className="gap-2 w-full md:w-auto" onClick={() => openTaskModal()}>
-          <Plus className="h-4 w-4" />
-          Nova Tarefa
-        </Button>
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button className="gap-2 flex-1 md:flex-none" onClick={() => openTaskModal()}>
+            <Plus className="h-4 w-4" />
+            Nova Tarefa
+          </Button>
+          <Button 
+            variant="outline" 
+            className="gap-2 flex-1 md:flex-none" 
+            onClick={() => openTaskModal(undefined, { type: 'meeting', timeInvestment: 'low' })}
+          >
+            <Calendar className="h-4 w-4" />
+            Agendar Reunião
+          </Button>
+        </div>
       </div>
 
       {/* Indicador de Dia Fechado */}
