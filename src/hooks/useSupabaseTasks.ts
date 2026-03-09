@@ -360,6 +360,23 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       if (updates.isForwarded !== undefined) updateData.is_forwarded = updates.isForwarded;
       if (updates.isConcluded !== undefined) updateData.is_concluded = updates.isConcluded;
       if (updates.concludedAt !== undefined) updateData.concluded_at = updates.concludedAt;
+      if (updates.meetingStartTime !== undefined) updateData.meeting_start_time = updates.meetingStartTime || null;
+      if (updates.meetingEndTime !== undefined) updateData.meeting_end_time = updates.meetingEndTime || null;
+      
+      // Persist routine config
+      if (updates.isRoutine !== undefined || updates.routineCycle !== undefined) {
+        const isRoutine = updates.isRoutine ?? currentTask.isRoutine;
+        if (isRoutine) {
+          updateData.routine_config = {
+            cycle: updates.routineCycle ?? currentTask.routineCycle,
+            startDate: updates.routineStartDate ?? currentTask.routineStartDate,
+            endDate: updates.routineEndDate ?? currentTask.routineEndDate,
+            includeWeekends: updates.includeWeekends ?? currentTask.includeWeekends ?? true,
+          };
+        } else {
+          updateData.routine_config = null;
+        }
+      }
       
       if (updates.assignedPersonId !== undefined) {
         updateData.assigned_person_id = updates.assignedPersonId;

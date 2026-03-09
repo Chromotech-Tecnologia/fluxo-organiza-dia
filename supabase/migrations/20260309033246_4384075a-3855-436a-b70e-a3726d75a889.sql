@@ -1,0 +1,1 @@
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS meeting_start_time text, ADD COLUMN IF NOT EXISTS meeting_end_time text;
