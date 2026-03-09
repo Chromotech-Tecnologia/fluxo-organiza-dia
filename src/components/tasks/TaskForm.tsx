@@ -3,11 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Task, TaskFormValues, SubItem, TaskType, TaskPriority, TaskTimeInvestment, TaskCategory, TaskAttachment } from "@/types";
 import { taskFormSchema } from "@/lib/validations/task";
 import { getCurrentDateInSaoPaulo } from "@/lib/utils";
@@ -93,7 +93,7 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
       ...data,
       subItems,
       attachments,
-      pendingShares: !task ? pendingShares : undefined, // Only include for new tasks
+      pendingShares: !task ? pendingShares : undefined,
     });
   };
 
@@ -138,178 +138,24 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
   return (
     <div className="max-h-[80vh] overflow-y-auto">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 p-1">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Título da Tarefa</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Digite o título da tarefa" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 p-1">
+          <Tabs defaultValue="geral" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="geral">Geral</TabsTrigger>
+              <TabsTrigger value="checklist">Checklist e Anexos</TabsTrigger>
+              <TabsTrigger value="rotina">Rotina e Compartilhamento</TabsTrigger>
+            </TabsList>
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Descrição</FormLabel>
-                <FormControl>
-                  <Textarea {...field} placeholder="Descrição opcional da tarefa" rows={3} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="scheduledDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data Agendada</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="order"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ordem</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                      min={1}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          form.handleSubmit(handleSubmit)();
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="meeting">Reunião</SelectItem>
-                      <SelectItem value="own-task">Tarefa Própria</SelectItem>
-                      <SelectItem value="delegated-task">Tarefa Delegada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="assignedPersonId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pessoa Responsável</FormLabel>
-                  <FormControl>
-                    <PeopleSelectWithSearch
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder="Selecione uma pessoa"
-                      disabled={taskType !== 'delegated-task'}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prioridade</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a prioridade" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">Nenhuma</SelectItem>
-                      <SelectItem value="priority">Prioridade</SelectItem>
-                      <SelectItem value="extreme">Extrema</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Categoria</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a categoria" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="personal">Pessoal</SelectItem>
-                      <SelectItem value="business">Profissional</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {taskType === 'meeting' && (
-            <div className="grid grid-cols-2 gap-4">
+            {/* === TAB GERAL === */}
+            <TabsContent value="geral" className="space-y-4 mt-4">
               <FormField
                 control={form.control}
-                name="meetingStartTime"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Hora de Início</FormLabel>
+                    <FormLabel>Título da Tarefa</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} value={field.value || ""} />
+                      <Input {...field} placeholder="Digite o título da tarefa" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -318,125 +164,13 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
 
               <FormField
                 control={form.control}
-                name="meetingEndTime"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Hora de Fim</FormLabel>
+                    <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} value={field.value || ""} />
+                      <Textarea {...field} placeholder="Descrição opcional da tarefa" rows={2} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="timeInvestment"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tempo de Investimento</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                    disabled={taskType === 'meeting' && !!meetingStartTime && !!meetingEndTime}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tempo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="custom-5">5 minutos</SelectItem>
-                      <SelectItem value="custom-30">30 minutos</SelectItem>
-                      <SelectItem value="low">1 hora</SelectItem>
-                      <SelectItem value="medium">2 horas</SelectItem>
-                      <SelectItem value="high">4 horas</SelectItem>
-                      <SelectItem value="custom-4h">4 horas</SelectItem>
-                      <SelectItem value="custom-8h">8 horas</SelectItem>
-                      <SelectItem value="custom">Personalizado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {timeInvestment === "custom" && (
-              <FormField
-                control={form.control}
-                name="customTimeMinutes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tempo Personalizado (minutos)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        placeholder="Ex: 90"
-                        disabled={taskType === 'meeting' && !!meetingStartTime && !!meetingEndTime}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </div>
-
-          <InteractiveSubItemList 
-            taskId={task?.id}
-            subItems={subItems}
-            onSubItemsChange={handleSubItemsChange}
-          />
-
-          <FormField
-            control={form.control}
-            name="isRoutine"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">É uma rotina?</FormLabel>
-                  <div className="text-sm text-muted-foreground">
-                    Marque se esta tarefa se repete regularmente
-                  </div>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          {isRoutine && (
-            <div className="space-y-4 border rounded-lg p-4">
-              <h4 className="font-medium">Configurações de Rotina</h4>
-              
-              <FormField
-                control={form.control}
-                name="routineCycle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ciclo da Rotina</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o ciclo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="daily">Diário</SelectItem>
-                        <SelectItem value="weekly">Semanal</SelectItem>
-                        <SelectItem value="monthly">Mensal</SelectItem>
-                        <SelectItem value="quarterly">Trimestral</SelectItem>
-                        <SelectItem value="biannual">Semestral</SelectItem>
-                        <SelectItem value="annual">Anual</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -445,12 +179,12 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="routineStartDate"
+                  name="scheduledDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data de Início</FormLabel>
+                      <FormLabel>Data Agendada</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} value={field.value || ""} />
+                        <Input type="date" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -459,12 +193,24 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
 
                 <FormField
                   control={form.control}
-                  name="routineEndDate"
+                  name="order"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data de Fim (opcional)</FormLabel>
+                      <FormLabel>Ordem</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} value={field.value || ""} />
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                          min={1}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              form.handleSubmit(handleSubmit)();
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -472,15 +218,226 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="meeting">Reunião</SelectItem>
+                          <SelectItem value="own-task">Tarefa Própria</SelectItem>
+                          <SelectItem value="delegated-task">Tarefa Delegada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="assignedPersonId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pessoa Responsável</FormLabel>
+                      <FormControl>
+                        <PeopleSelectWithSearch
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Selecione uma pessoa"
+                          disabled={taskType !== 'delegated-task'}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prioridade</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a prioridade" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhuma</SelectItem>
+                          <SelectItem value="priority">Prioridade</SelectItem>
+                          <SelectItem value="extreme">Extrema</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a categoria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="personal">Pessoal</SelectItem>
+                          <SelectItem value="business">Profissional</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {taskType === 'meeting' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="meetingStartTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hora de Início</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="meetingEndTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hora de Fim</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="timeInvestment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tempo de Investimento</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={taskType === 'meeting' && !!meetingStartTime && !!meetingEndTime}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tempo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="custom-5">5 minutos</SelectItem>
+                          <SelectItem value="custom-30">30 minutos</SelectItem>
+                          <SelectItem value="low">1 hora</SelectItem>
+                          <SelectItem value="medium">2 horas</SelectItem>
+                          <SelectItem value="high">4 horas</SelectItem>
+                          <SelectItem value="custom-4h">4 horas</SelectItem>
+                          <SelectItem value="custom-8h">8 horas</SelectItem>
+                          <SelectItem value="custom">Personalizado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {timeInvestment === "custom" && (
+                  <FormField
+                    control={form.control}
+                    name="customTimeMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tempo Personalizado (minutos)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            placeholder="Ex: 90"
+                            disabled={taskType === 'meeting' && !!meetingStartTime && !!meetingEndTime}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </TabsContent>
+
+            {/* === TAB CHECKLIST E ANEXOS === */}
+            <TabsContent value="checklist" className="space-y-4 mt-4">
+              <InteractiveSubItemList 
+                taskId={task?.id}
+                subItems={subItems}
+                onSubItemsChange={handleSubItemsChange}
+              />
+
               <FormField
                 control={form.control}
-                name="includeWeekends"
+                name="observations"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Observações adicionais" rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <TaskAttachments
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
+                taskId={task?.id}
+              />
+            </TabsContent>
+
+            {/* === TAB ROTINA E COMPARTILHAMENTO === */}
+            <TabsContent value="rotina" className="space-y-4 mt-4">
+              <FormField
+                control={form.control}
+                name="isRoutine"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm">Incluir sábados e domingos?</FormLabel>
-                      <div className="text-xs text-muted-foreground">
-                        Marque para incluir finais de semana na rotina
+                      <FormLabel className="text-base">É uma rotina?</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Marque se esta tarefa se repete regularmente
                       </div>
                     </div>
                     <FormControl>
@@ -489,49 +446,109 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
                   </FormItem>
                 )}
               />
-            </div>
-          )}
 
-          <FormField
-            control={form.control}
-            name="observations"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Observações</FormLabel>
-                <FormControl>
-                  <Textarea {...field} placeholder="Observações adicionais" rows={3} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              {isRoutine && (
+                <div className="space-y-4 border rounded-lg p-4">
+                  <h4 className="font-medium">Configurações de Rotina</h4>
+                  
+                  <FormField
+                    control={form.control}
+                    name="routineCycle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ciclo da Rotina</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o ciclo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="daily">Diário</SelectItem>
+                            <SelectItem value="weekly">Semanal</SelectItem>
+                            <SelectItem value="monthly">Mensal</SelectItem>
+                            <SelectItem value="quarterly">Trimestral</SelectItem>
+                            <SelectItem value="biannual">Semestral</SelectItem>
+                            <SelectItem value="annual">Anual</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          <TaskAttachments
-            attachments={attachments}
-            onAttachmentsChange={setAttachments}
-            taskId={task?.id}
-          />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="routineStartDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Início</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-          {task ? (
-            <div className="border rounded-lg p-4 space-y-2">
-              <h4 className="font-medium text-sm">Compartilhar Tarefa</h4>
-              <p className="text-xs text-muted-foreground mb-3">
-                Compartilhe esta tarefa com colaboradores que aceitaram seu convite
-              </p>
-              <ShareTaskSelect taskId={task.id} />
-            </div>
-          ) : (
-            <div className="border rounded-lg p-4 space-y-2">
-              <h4 className="font-medium text-sm">Compartilhar Tarefa</h4>
-              <p className="text-xs text-muted-foreground mb-3">
-                Selecione colaboradores para compartilhar esta tarefa após criá-la
-              </p>
-              <ShareTaskSelectNew 
-                pendingShares={pendingShares}
-                onPendingSharesChange={setPendingShares}
-              />
-            </div>
-          )}
+                    <FormField
+                      control={form.control}
+                      name="routineEndDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Fim (opcional)</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="includeWeekends"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-sm">Incluir sábados e domingos?</FormLabel>
+                          <div className="text-xs text-muted-foreground">
+                            Marque para incluir finais de semana na rotina
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {task ? (
+                <div className="border rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm">Compartilhar Tarefa</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Compartilhe esta tarefa com colaboradores que aceitaram seu convite
+                  </p>
+                  <ShareTaskSelect taskId={task.id} />
+                </div>
+              ) : (
+                <div className="border rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm">Compartilhar Tarefa</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Selecione colaboradores para compartilhar esta tarefa após criá-la
+                  </p>
+                  <ShareTaskSelectNew 
+                    pendingShares={pendingShares}
+                    onPendingSharesChange={setPendingShares}
+                  />
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
