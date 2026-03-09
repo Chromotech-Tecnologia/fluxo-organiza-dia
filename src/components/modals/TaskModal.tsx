@@ -19,7 +19,7 @@ interface PendingShare {
 }
 
 export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
-  const { isTaskModalOpen, taskToEdit, closeTaskModal } = useModalStore();
+  const { isTaskModalOpen, taskToEdit, taskDefaults, closeTaskModal } = useModalStore();
   const { addTask, updateTask } = useSupabaseTasks();
   const { shareTask } = useTaskShares();
   const { toast } = useToast();
