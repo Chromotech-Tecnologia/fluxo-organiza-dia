@@ -91,7 +91,12 @@ const DailyClosePage = () => {
     const completed = dayTasks.filter(t => t.isConcluded).length;
     const pending = total - completed;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, pending, rate };
+    
+    const totalTime = dayTasks.reduce((sum, t) => sum + getTimeInMinutes(t.timeInvestment, t.customTimeMinutes), 0);
+    const completedTime = dayTasks.filter(t => t.status === 'completed').reduce((sum, t) => sum + getTimeInMinutes(t.timeInvestment, t.customTimeMinutes), 0);
+    const notDoneTime = dayTasks.filter(t => t.completionHistory?.some(c => c.status === 'not-done')).reduce((sum, t) => sum + getTimeInMinutes(t.timeInvestment, t.customTimeMinutes), 0);
+    
+    return { total, completed, pending, rate, totalTime, completedTime, notDoneTime };
   };
 
   return (
