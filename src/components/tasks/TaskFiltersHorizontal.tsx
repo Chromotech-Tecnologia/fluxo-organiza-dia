@@ -116,7 +116,7 @@ export function TaskFiltersHorizontal({
         {/* Weekday indicator above the nav */}
         {isSingleDay && (
           <span className="text-[10px] text-muted-foreground/60 mr-1">
-            {weekday}{!isSpecialDay && `, ${formatDateForDisplay(currentDate)}`}
+            {weekday}
           </span>
         )}
         
