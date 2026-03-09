@@ -11,6 +11,7 @@ import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Task } from "@/types";
 import { cn } from "@/lib/utils";
+import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 
 const DailyClosePage = () => {
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'custom'>('week');
