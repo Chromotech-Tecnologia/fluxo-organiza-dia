@@ -24,13 +24,19 @@ interface PendingShare {
   userName: string;
 }
 
+interface TaskDefaults {
+  type?: TaskType;
+  timeInvestment?: TaskTimeInvestment;
+}
+
 interface TaskFormProps {
   task?: Task | null;
+  defaults?: TaskDefaults | null;
   onSubmit: (data: TaskFormValues & { subItems: SubItem[]; pendingShares?: PendingShare[] }) => void;
   onCancel: () => void;
 }
 
-export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) {
   const { teamMembers } = useSupabaseTeamMembers();
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
   const [attachments, setAttachments] = useState<TaskAttachment[]>(task?.attachments || []);
@@ -62,9 +68,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
     defaultValues: {
       title: task?.title || "",
       description: task?.description || "",
-      type: task?.type || "own-task",
+      type: task?.type || defaults?.type || "own-task",
       priority: task?.priority || "priority",
-      timeInvestment: task?.timeInvestment || "custom-5",
+      timeInvestment: task?.timeInvestment || defaults?.timeInvestment || "custom-5",
       customTimeMinutes: task?.customTimeMinutes || undefined,
       category: task?.category || "business",
       assignedPersonId: task?.assignedPersonId || undefined,

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, CheckCircle } from "lucide-react";
+import { Plus, CheckCircle, Calendar } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useToast } from "@/hooks/use-toast";
@@ -310,10 +310,20 @@ const TasksPage = () => {
             Controle e organize suas tarefas diárias
           </p>
         </div>
-        <Button className="gap-2 w-full md:w-auto" onClick={() => openTaskModal()}>
-          <Plus className="h-4 w-4" />
-          Nova Tarefa
-        </Button>
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button className="gap-2 flex-1 md:flex-none" onClick={() => openTaskModal()}>
+            <Plus className="h-4 w-4" />
+            Nova Tarefa
+          </Button>
+          <Button 
+            variant="outline" 
+            className="gap-2 flex-1 md:flex-none" 
+            onClick={() => openTaskModal(undefined, { type: 'meeting', timeInvestment: 'low' })}
+          >
+            <Calendar className="h-4 w-4" />
+            Agendar Reunião
+          </Button>
+        </div>
       </div>
 
       {/* Indicador de Dia Fechado */}

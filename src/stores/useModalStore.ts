@@ -1,11 +1,17 @@
 import { create } from 'zustand';
-import { Task, Person, Skill, TeamMember } from '@/types';
+import { Task, Person, Skill, TeamMember, TaskType, TaskTimeInvestment } from '@/types';
+
+interface TaskDefaults {
+  type?: TaskType;
+  timeInvestment?: TaskTimeInvestment;
+}
 
 interface ModalState {
   // Task Modal
   isTaskModalOpen: boolean;
   taskToEdit: Task | null;
-  openTaskModal: (task?: Task) => void;
+  taskDefaults: TaskDefaults | null;
+  openTaskModal: (task?: Task, defaults?: TaskDefaults) => void;
   closeTaskModal: () => void;
   
   // Person Modal
@@ -57,8 +63,9 @@ export const useModalStore = create<ModalState>((set) => ({
   // Task Modal
   isTaskModalOpen: false,
   taskToEdit: null,
-  openTaskModal: (task) => set({ isTaskModalOpen: true, taskToEdit: task || null }),
-  closeTaskModal: () => set({ isTaskModalOpen: false, taskToEdit: null }),
+  taskDefaults: null,
+  openTaskModal: (task, defaults) => set({ isTaskModalOpen: true, taskToEdit: task || null, taskDefaults: defaults || null }),
+  closeTaskModal: () => set({ isTaskModalOpen: false, taskToEdit: null, taskDefaults: null }),
   
   // Person Modal
   isPersonModalOpen: false,
