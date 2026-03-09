@@ -77,34 +77,43 @@ export function useSupabaseTasks(filters?: TaskFilter) {
       }
 
       // Converter dados do Supabase para o tipo Task
-      const convertedTasks: Task[] = (data || []).map(task => ({
-        id: task.id,
-        title: task.title,
-        description: task.description || '',
-        observations: task.observations || '',
-        scheduledDate: String(task.scheduled_date).slice(0, 10), // Normalizar para YYYY-MM-DD
-        type: task.type as Task['type'],
-        priority: task.priority as Task['priority'],
-        status: task.status as Task['status'],
-        assignedPersonId: task.assigned_person_id || undefined,
-        timeInvestment: task.time_investment as Task['timeInvestment'],
-        customTimeMinutes: task.custom_time_minutes || undefined,
-        category: task.category as Task['category'],
-        subItems: (task.sub_items as unknown as SubItem[]) || [],
-        attachments: (task.attachments as unknown as Task['attachments']) || [],
-        completionHistory: (task.completion_history as unknown as CompletionRecord[]) || [],
-        forwardHistory: (task.forward_history as unknown as Task['forwardHistory']) || [],
-        forwardCount: task.forward_count || 0,
-        order: task.task_order || 0,
-        deliveryDates: task.delivery_dates || [],
-        isRecurrent: false,
-        isRoutine: task.is_routine || false,
-        isForwarded: task.is_forwarded || false,
-        isConcluded: task.is_concluded || false,
-        concludedAt: task.concluded_at || undefined,
-        createdAt: task.created_at,
-        updatedAt: task.updated_at
-      }));
+      const convertedTasks: Task[] = (data || []).map(task => {
+        const routineConfig = task.routine_config as any;
+        return {
+          id: task.id,
+          title: task.title,
+          description: task.description || '',
+          observations: task.observations || '',
+          scheduledDate: String(task.scheduled_date).slice(0, 10),
+          type: task.type as Task['type'],
+          priority: task.priority as Task['priority'],
+          status: task.status as Task['status'],
+          assignedPersonId: task.assigned_person_id || undefined,
+          timeInvestment: task.time_investment as Task['timeInvestment'],
+          customTimeMinutes: task.custom_time_minutes || undefined,
+          category: task.category as Task['category'],
+          subItems: (task.sub_items as unknown as SubItem[]) || [],
+          attachments: (task.attachments as unknown as Task['attachments']) || [],
+          completionHistory: (task.completion_history as unknown as CompletionRecord[]) || [],
+          forwardHistory: (task.forward_history as unknown as Task['forwardHistory']) || [],
+          forwardCount: task.forward_count || 0,
+          order: task.task_order || 0,
+          deliveryDates: task.delivery_dates || [],
+          isRecurrent: false,
+          isRoutine: task.is_routine || false,
+          routineCycle: routineConfig?.cycle || undefined,
+          routineStartDate: routineConfig?.startDate || undefined,
+          routineEndDate: routineConfig?.endDate || undefined,
+          includeWeekends: routineConfig?.includeWeekends ?? true,
+          isForwarded: task.is_forwarded || false,
+          isConcluded: task.is_concluded || false,
+          concludedAt: task.concluded_at || undefined,
+          meetingStartTime: (task as any).meeting_start_time || undefined,
+          meetingEndTime: (task as any).meeting_end_time || undefined,
+          createdAt: task.created_at,
+          updatedAt: task.updated_at
+        };
+      });
 
       setAllTasks(convertedTasks);
       return convertedTasks;
