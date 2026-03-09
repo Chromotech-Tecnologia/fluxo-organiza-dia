@@ -490,33 +490,13 @@ export function TaskFiltersHorizontal({
           </Sheet>
         </div>
 
-        {/* Date navigation bar - outside filter sheet */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={handlePrevDay}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex-1 text-center">
-            <span className="text-sm font-medium text-foreground">
-              {isSingleDay ? getDateLabel(currentDate) : `${formatDateForDisplay(currentFilters.dateRange?.start || today)} - ${formatDateForDisplay(currentFilters.dateRange?.end || today)}`}
-            </span>
-            {isSingleDay && currentDate !== today && (
-              <span className="text-xs text-muted-foreground ml-1">
-                ({formatDateForDisplay(currentDate)})
-              </span>
-            )}
-          </div>
-          <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={handleNextDay}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        {/* Date navigation bar - unified layout */}
+        <div className="flex justify-center">
+          {renderDateNavigation()}
         </div>
 
         {/* Date range inputs */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">De:</span>
-          <Input type="date" value={currentFilters.dateRange?.start || today} onChange={(e) => handleDateRangeChange('start', e.target.value)} className="h-8 flex-1 text-xs" />
-          <span className="text-xs text-muted-foreground whitespace-nowrap">Até:</span>
-          <Input type="date" value={currentFilters.dateRange?.end || today} onChange={(e) => handleDateRangeChange('end', e.target.value)} className="h-8 flex-1 text-xs" />
-        </div>
+        {renderDateRangeInputs()}
       </div>
     );
   }
