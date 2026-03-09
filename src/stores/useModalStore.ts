@@ -3,7 +3,7 @@ import { Task, Person, Skill, TeamMember, TaskType, TaskTimeInvestment } from '@
 
 interface TaskDefaults {
   type?: TaskType;
-  timeInvestment?: TimeInvestment;
+  timeInvestment?: TaskTimeInvestment;
 }
 
 interface ModalState {

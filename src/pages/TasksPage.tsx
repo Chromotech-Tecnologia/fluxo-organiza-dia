@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, CheckCircle } from "lucide-react";
+import { Plus, CheckCircle, Calendar } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useToast } from "@/hooks/use-toast";
