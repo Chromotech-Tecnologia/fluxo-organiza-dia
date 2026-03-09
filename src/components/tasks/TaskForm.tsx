@@ -68,9 +68,9 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
     defaultValues: {
       title: task?.title || "",
       description: task?.description || "",
-      type: task?.type || "own-task",
+      type: task?.type || defaults?.type || "own-task",
       priority: task?.priority || "priority",
-      timeInvestment: task?.timeInvestment || "custom-5",
+      timeInvestment: task?.timeInvestment || defaults?.timeInvestment || "custom-5",
       customTimeMinutes: task?.customTimeMinutes || undefined,
       category: task?.category || "business",
       assignedPersonId: task?.assignedPersonId || undefined,

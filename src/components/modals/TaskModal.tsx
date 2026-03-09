@@ -159,6 +159,7 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
         </DialogHeader>
         <TaskForm
           task={taskToEdit}
+          defaults={taskDefaults}
           onSubmit={handleSubmit}
           onCancel={closeTaskModal}
         />
