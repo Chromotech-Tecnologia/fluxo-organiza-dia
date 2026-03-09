@@ -151,7 +151,7 @@ export function TaskModal({ onTaskSaved }: TaskModalProps = {}) {
 
   return (
     <Dialog open={isTaskModalOpen} onOpenChange={(open) => !open && closeTaskModal()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {taskToEdit ? "Editar Tarefa" : "Nova Tarefa"}
