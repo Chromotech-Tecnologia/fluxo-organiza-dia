@@ -267,7 +267,14 @@ export function useSupabaseTasks(filters?: TaskFilter) {
     if (!currentUserId) return null;
     
     try {
-      const taskData = {
+      const routineConfig = newTask.isRoutine ? {
+        cycle: newTask.routineCycle,
+        startDate: newTask.routineStartDate,
+        endDate: newTask.routineEndDate,
+        includeWeekends: newTask.includeWeekends ?? true,
+      } : null;
+
+      const taskData: any = {
         title: newTask.title,
         description: newTask.description || '',
         observations: newTask.observations || '',
@@ -287,9 +294,12 @@ export function useSupabaseTasks(filters?: TaskFilter) {
         task_order: newTask.order || 0,
         delivery_dates: newTask.deliveryDates || [],
         is_routine: newTask.isRoutine || false,
+        routine_config: routineConfig,
         is_forwarded: newTask.isForwarded || false,
         is_concluded: newTask.isConcluded || false,
         concluded_at: newTask.concludedAt || null,
+        meeting_start_time: newTask.meetingStartTime || null,
+        meeting_end_time: newTask.meetingEndTime || null,
         user_id: currentUserId
       };
 
