@@ -67,7 +67,7 @@ export function AppSidebar() {
             asChild 
             size={isMobile ? "lg" : "default"}
             isActive={isActive}
-            className={isActive ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 text-foreground font-medium border-l-2 border-green-700 dark:border-green-600 rounded-l-none" : ""}
+            className={isActive ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 text-foreground font-medium border-l-[3px] border-green-700 dark:border-green-600 rounded-md" : ""}
           >
             <NavLink to={item.url} onClick={handleNavClick}>
               <item.icon className="h-5 w-5 md:h-4 md:w-4 mr-2 flex-shrink-0" />
