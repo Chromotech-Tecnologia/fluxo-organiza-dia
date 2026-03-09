@@ -130,7 +130,6 @@ export function AppSidebar() {
                   );
                 })}
             </SidebarMenu>
-            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
