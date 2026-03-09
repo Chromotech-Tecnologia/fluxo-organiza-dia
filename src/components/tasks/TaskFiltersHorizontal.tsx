@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Filter, Search, X, SortAsc } from "lucide-react";
 import { TaskFilter, TaskPriority, TaskStatus, TaskType, SortOption } from "@/types";
-import { getCurrentDateInSaoPaulo, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo, offsetDateString, formatDateForDisplay } from "@/lib/utils";
+import { getCurrentDateInSaoPaulo, getTomorrowInSaoPaulo, getYesterdayInSaoPaulo, offsetDateString, formatDateForDisplay, createLocalDate } from "@/lib/utils";
 import { useSupabaseTeamMembers } from "@/hooks/useSupabaseTeamMembers";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -94,57 +94,78 @@ export function TaskFiltersHorizontal({
     onSearchChange('');
   };
 
+  // Helper to get weekday abbreviation
+  const getWeekdayShort = (dateStr: string): string => {
+    const date = createLocalDate(dateStr);
+    const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    return weekdays[date.getDay()];
+  };
+
   // Unified date navigation: [◀] [Ontem] [HOJE] [Amanhã] [▶]
   const renderDateNavigation = () => {
     const currentDate = currentFilters.dateRange?.start || today;
     const isTodaySelected = isDateActive(today);
+    const isSingleDay = currentFilters.dateRange?.start === currentFilters.dateRange?.end;
+    
+    // Get weekday for the selected date
+    const weekday = getWeekdayShort(currentDate);
+    const isSpecialDay = currentDate === today || currentDate === yesterday || currentDate === tomorrow;
     
     return (
-      <div className="flex items-center gap-1">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="h-8 w-8 flex-shrink-0" 
-          onClick={handlePrevDay}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-col items-center gap-0.5">
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="h-8 w-8 flex-shrink-0" 
+            onClick={handlePrevDay}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant={isDateActive(yesterday) ? "default" : "outline"} 
+            onClick={() => handleDateSelect(yesterday)} 
+            className="h-8 px-3 text-xs"
+          >
+            Ontem
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant={isTodaySelected ? "default" : "secondary"} 
+            onClick={() => handleDateSelect(today)} 
+            className={`h-8 px-4 text-xs font-medium ${!isTodaySelected ? "border border-primary/50" : ""}`}
+          >
+            Hoje
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant={isDateActive(tomorrow) ? "default" : "outline"} 
+            onClick={() => handleDateSelect(tomorrow)} 
+            className="h-8 px-3 text-xs"
+          >
+            Amanhã
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="h-8 w-8 flex-shrink-0" 
+            onClick={handleNextDay}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
         
-        <Button 
-          size="sm" 
-          variant={isDateActive(yesterday) ? "default" : "outline"} 
-          onClick={() => handleDateSelect(yesterday)} 
-          className="h-8 px-3 text-xs"
-        >
-          Ontem
-        </Button>
-        
-        <Button 
-          size="sm" 
-          variant={isTodaySelected ? "default" : "secondary"} 
-          onClick={() => handleDateSelect(today)} 
-          className={`h-8 px-4 text-xs font-medium ${!isTodaySelected ? "border border-primary/50" : ""}`}
-        >
-          Hoje
-        </Button>
-        
-        <Button 
-          size="sm" 
-          variant={isDateActive(tomorrow) ? "default" : "outline"} 
-          onClick={() => handleDateSelect(tomorrow)} 
-          className="h-8 px-3 text-xs"
-        >
-          Amanhã
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="h-8 w-8 flex-shrink-0" 
-          onClick={handleNextDay}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        {/* Discrete weekday and date indicator */}
+        {isSingleDay && (
+          <span className="text-[10px] text-muted-foreground/60">
+            {weekday}{!isSpecialDay && `, ${formatDateForDisplay(currentDate)}`}
+          </span>
+        )}
       </div>
     );
   };
