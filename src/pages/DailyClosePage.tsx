@@ -11,6 +11,7 @@ import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Task } from "@/types";
 import { cn } from "@/lib/utils";
+import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 
 const DailyClosePage = () => {
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'custom'>('week');
@@ -90,7 +91,12 @@ const DailyClosePage = () => {
     const completed = dayTasks.filter(t => t.isConcluded).length;
     const pending = total - completed;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, pending, rate };
+    
+    const totalTime = dayTasks.reduce((sum, t) => sum + getTimeInMinutes(t.timeInvestment, t.customTimeMinutes), 0);
+    const completedTime = dayTasks.filter(t => t.status === 'completed').reduce((sum, t) => sum + getTimeInMinutes(t.timeInvestment, t.customTimeMinutes), 0);
+    const notDoneTime = dayTasks.filter(t => t.completionHistory?.some(c => c.status === 'not-done')).reduce((sum, t) => sum + getTimeInMinutes(t.timeInvestment, t.customTimeMinutes), 0);
+    
+    return { total, completed, pending, rate, totalTime, completedTime, notDoneTime };
   };
 
   return (
@@ -313,7 +319,7 @@ const DailyClosePage = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-4 mb-3">
+                    <div className="grid grid-cols-3 gap-4 mb-2">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-foreground">{stats.total}</div>
                         <div className="text-xs text-muted-foreground">Total</div>
@@ -325,6 +331,21 @@ const DailyClosePage = () => {
                       <div className="text-center">
                         <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
                         <div className="text-xs text-muted-foreground">Pendentes</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 mb-3">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-blue-600">{formatTime(stats.totalTime)}</div>
+                        <div className="text-xs text-muted-foreground">Horas Previstas</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-green-600">{formatTime(stats.completedTime)}</div>
+                        <div className="text-xs text-muted-foreground">Horas Feitas</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-red-600">{formatTime(stats.notDoneTime)}</div>
+                        <div className="text-xs text-muted-foreground">Horas Não Feitas</div>
                       </div>
                     </div>
                     
