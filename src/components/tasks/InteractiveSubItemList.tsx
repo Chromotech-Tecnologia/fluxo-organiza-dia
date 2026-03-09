@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, GripVertical, Check, X, Circle, Trash2, ExternalLink, Tag, Calendar, Pencil, ArrowUp, ArrowDown } from "lucide-react";
 import { SubItem } from "@/types";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
