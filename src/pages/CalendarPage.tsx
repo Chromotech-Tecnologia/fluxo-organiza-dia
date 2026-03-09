@@ -370,7 +370,7 @@ const CalendarPage = () => {
              {/* Cabeçalho do dia */}
                <div className="text-center p-4 bg-muted rounded-lg">
                  <h3 className="text-2xl font-bold text-foreground">
-                   {format(currentDate, 'EEEE', { locale: ptBR })}
+                   {format(currentDate, 'EEE', { locale: ptBR })}
                  </h3>
                </div>
 
