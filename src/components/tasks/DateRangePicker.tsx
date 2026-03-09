@@ -47,7 +47,7 @@ export function DateRangePicker({
             className="h-6 px-2 py-0 text-xs gap-1"
           >
             <CalendarIcon className="h-3 w-3" />
-            {format(startDateObj, 'dd/MM/yyyy', { locale: ptBR })}
+            {format(startDateObj, 'EEE', { locale: ptBR })}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -72,7 +72,7 @@ export function DateRangePicker({
             className="h-6 px-2 py-0 text-xs gap-1"
           >
             <CalendarIcon className="h-3 w-3" />
-            {format(endDateObj, 'dd/MM/yyyy', { locale: ptBR })}
+            {format(endDateObj, 'EEE', { locale: ptBR })}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
