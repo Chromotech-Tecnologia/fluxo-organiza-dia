@@ -24,13 +24,19 @@ interface PendingShare {
   userName: string;
 }
 
+interface TaskDefaults {
+  type?: TaskType;
+  timeInvestment?: TaskTimeInvestment;
+}
+
 interface TaskFormProps {
   task?: Task | null;
+  defaults?: TaskDefaults | null;
   onSubmit: (data: TaskFormValues & { subItems: SubItem[]; pendingShares?: PendingShare[] }) => void;
   onCancel: () => void;
 }
 
-export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) {
   const { teamMembers } = useSupabaseTeamMembers();
   const [subItems, setSubItems] = useState<SubItem[]>(task?.subItems || []);
   const [attachments, setAttachments] = useState<TaskAttachment[]>(task?.attachments || []);
