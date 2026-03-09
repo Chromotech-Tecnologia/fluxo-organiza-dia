@@ -213,6 +213,8 @@ export type Database = {
           is_external_delegation: boolean | null
           is_forwarded: boolean | null
           is_routine: boolean | null
+          meeting_end_time: string | null
+          meeting_start_time: string | null
           observations: string | null
           order_index: number | null
           priority: string
@@ -246,6 +248,8 @@ export type Database = {
           is_external_delegation?: boolean | null
           is_forwarded?: boolean | null
           is_routine?: boolean | null
+          meeting_end_time?: string | null
+          meeting_start_time?: string | null
           observations?: string | null
           order_index?: number | null
           priority?: string
@@ -279,6 +283,8 @@ export type Database = {
           is_external_delegation?: boolean | null
           is_forwarded?: boolean | null
           is_routine?: boolean | null
+          meeting_end_time?: string | null
+          meeting_start_time?: string | null
           observations?: string | null
           order_index?: number | null
           priority?: string
@@ -570,6 +576,8 @@ export type Database = {
           is_external_delegation: boolean | null
           is_forwarded: boolean | null
           is_routine: boolean | null
+          meeting_end_time: string | null
+          meeting_start_time: string | null
           observations: string | null
           order_index: number | null
           priority: string

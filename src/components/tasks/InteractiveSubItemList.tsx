@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, GripVertical, Check, X, Circle, Trash2, ExternalLink, Tag, Calendar, Pencil, ArrowUp, ArrowDown } from "lucide-react";
 import { SubItem } from "@/types";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -545,69 +546,71 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
 
       {/* Item list */}
       {sortedItems.length > 0 && (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={sortedItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
-            {groupedItems ? (
-              <div className="space-y-4">
-                {Object.entries(groupedItems).map(([subject, items], groupIdx) => {
-                  const isRealSubject = subject !== 'Sem assunto';
-                  const tagColor = isRealSubject ? getTagColor(subject, allSubjects) : null;
-                  return (
-                    <div key={subject} className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        {tagColor ? (
-                          <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${tagColor.bg} ${tagColor.text} ${tagColor.border}`}>
-                            <Tag className="h-2.5 w-2.5" />
-                            {subject}
-                          </span>
-                        ) : (
-                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                            <Tag className="h-3 w-3" />
-                            {subject}
-                          </span>
-                        )}
-                        <Badge variant="outline" className="text-[10px] h-4">{items.length}</Badge>
-                        {isRealSubject && allSubjects.length > 1 && (
-                          <div className="flex items-center gap-0.5 ml-auto">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => moveTagUp(subject)}
-                              className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                              title="Mover para cima"
-                              disabled={allSubjects.indexOf(subject) === 0}
-                            >
-                              <ArrowUp className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => moveTagDown(subject)}
-                              className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                              title="Mover para baixo"
-                              disabled={allSubjects.indexOf(subject) === allSubjects.length - 1}
-                            >
-                              <ArrowDown className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
+        <ScrollArea className={sortedItems.length > 5 ? "max-h-[300px]" : ""}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={sortedItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
+              {groupedItems ? (
+                <div className="space-y-4">
+                  {Object.entries(groupedItems).map(([subject, items], groupIdx) => {
+                    const isRealSubject = subject !== 'Sem assunto';
+                    const tagColor = isRealSubject ? getTagColor(subject, allSubjects) : null;
+                    return (
+                      <div key={subject} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          {tagColor ? (
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${tagColor.bg} ${tagColor.text} ${tagColor.border}`}>
+                              <Tag className="h-2.5 w-2.5" />
+                              {subject}
+                            </span>
+                          ) : (
+                            <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                              <Tag className="h-3 w-3" />
+                              {subject}
+                            </span>
+                          )}
+                          <Badge variant="outline" className="text-[10px] h-4">{items.length}</Badge>
+                          {isRealSubject && allSubjects.length > 1 && (
+                            <div className="flex items-center gap-0.5 ml-auto">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => moveTagUp(subject)}
+                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                title="Mover para cima"
+                                disabled={allSubjects.indexOf(subject) === 0}
+                              >
+                                <ArrowUp className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => moveTagDown(subject)}
+                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                title="Mover para baixo"
+                                disabled={allSubjects.indexOf(subject) === allSubjects.length - 1}
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-2 pl-2 border-l-2 border-muted">
+                          {items.map(renderItem)}
+                        </div>
                       </div>
-                      <div className="space-y-2 pl-2 border-l-2 border-muted">
-                        {items.map(renderItem)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {sortedItems.map(renderItem)}
-              </div>
-            )}
-          </SortableContext>
-        </DndContext>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {sortedItems.map(renderItem)}
+                </div>
+              )}
+            </SortableContext>
+          </DndContext>
+        </ScrollArea>
       )}
     </div>
   );
