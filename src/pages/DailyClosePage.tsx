@@ -69,6 +69,20 @@ const DailyClosePage = () => {
     return sortedGrouped;
   }, [tasks]);
 
+  // Filtrar dias incompletos
+  const displayTasksByDate = useMemo(() => {
+    if (!showOnlyIncomplete) return tasksByDate;
+    const filtered: Record<string, Task[]> = {};
+    Object.entries(tasksByDate).forEach(([date, dayTasks]) => {
+      const completed = dayTasks.filter(t => t.isConcluded).length;
+      const total = dayTasks.length;
+      if (total === 0 || completed < total) {
+        filtered[date] = dayTasks;
+      }
+    });
+    return filtered;
+  }, [tasksByDate, showOnlyIncomplete]);
+
   // Calcular estatísticas gerais
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.isConcluded).length;
