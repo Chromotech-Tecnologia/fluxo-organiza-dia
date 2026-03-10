@@ -17,9 +17,11 @@ import { cn } from "@/lib/utils";
 import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 
 const DailyClosePage = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState<Date>();
   const [customEndDate, setCustomEndDate] = useState<Date>();
+  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
   
   // Definir período com base no modo de visualização
   const today = new Date();
