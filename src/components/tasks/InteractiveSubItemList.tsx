@@ -164,7 +164,18 @@ function SortableSubItem({ subItem, onStatusChange, onUpdate, onDelete, onSubjec
             <textarea
               value={subItem.text}
               onChange={(e) => onUpdate(subItem.id, e.target.value)}
-              onBlur={onEditEnd}
+              onBlur={(e) => {
+                // Delay to allow clicking on SubjectPicker without closing edit mode
+                setTimeout(() => {
+                  const active = document.activeElement;
+                  const popover = document.querySelector('[data-radix-popper-content-wrapper]');
+                  if (popover?.contains(active)) return;
+                  // Check if focus moved to another element inside this item's edit area
+                  const parent = e.target.closest('.group');
+                  if (parent?.contains(document.activeElement)) return;
+                  onEditEnd();
+                }, 150);
+              }}
               autoFocus
               className="w-full border rounded-md bg-background px-2 py-1 text-sm leading-snug min-w-0 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
               placeholder="Item do checklist"
