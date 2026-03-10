@@ -610,7 +610,7 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
               )}
             </SortableContext>
           </DndContext>
-        </ScrollArea>
+        </div>
       )}
     </div>
   );
