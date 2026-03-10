@@ -136,7 +136,6 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
   }, [task]);
 
   return (
-    <div className="max-h-[80vh] overflow-y-auto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 p-1">
           <Tabs defaultValue="geral" className="w-full">
