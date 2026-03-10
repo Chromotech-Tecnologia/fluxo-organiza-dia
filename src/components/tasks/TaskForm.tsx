@@ -138,6 +138,20 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
   return (
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 p-1">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Título da Tarefa</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Digite o título da tarefa" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <Tabs defaultValue="geral" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="geral">Geral</TabsTrigger>
@@ -147,19 +161,6 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
 
             {/* === TAB GERAL === */}
             <TabsContent value="geral" className="space-y-4 mt-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Título da Tarefa</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Digite o título da tarefa" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}
