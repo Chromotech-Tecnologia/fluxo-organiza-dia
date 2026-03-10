@@ -1,11 +1,14 @@
 
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, TrendingUp, CheckCircle, Clock, Target, BarChart3 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Calendar as CalendarIcon, TrendingUp, CheckCircle, Clock, Target, BarChart3, Filter } from "lucide-react";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,9 +17,11 @@ import { cn } from "@/lib/utils";
 import { getTimeInMinutes, formatTime } from "@/lib/taskUtils";
 
 const DailyClosePage = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState<Date>();
   const [customEndDate, setCustomEndDate] = useState<Date>();
+  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
   
   // Definir período com base no modo de visualização
   const today = new Date();
@@ -63,6 +68,20 @@ const DailyClosePage = () => {
     
     return sortedGrouped;
   }, [tasks]);
+
+  // Filtrar dias incompletos
+  const displayTasksByDate = useMemo(() => {
+    if (!showOnlyIncomplete) return tasksByDate;
+    const filtered: Record<string, Task[]> = {};
+    Object.entries(tasksByDate).forEach(([date, dayTasks]) => {
+      const completed = dayTasks.filter(t => t.isConcluded).length;
+      const total = dayTasks.length;
+      if (total === 0 || completed < total) {
+        filtered[date] = dayTasks;
+      }
+    });
+    return filtered;
+  }, [tasksByDate, showOnlyIncomplete]);
 
   // Calcular estatísticas gerais
   const totalTasks = tasks.length;
@@ -281,23 +300,34 @@ const DailyClosePage = () => {
 
       {/* Resumo por Dia */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Resumo Diário</CardTitle>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="filter-incomplete" className="text-sm font-normal cursor-pointer">
+              Apenas dias incompletos
+            </Label>
+            <Switch
+              id="filter-incomplete"
+              checked={showOnlyIncomplete}
+              onCheckedChange={setShowOnlyIncomplete}
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          {Object.keys(tasksByDate).length === 0 ? (
+          {Object.keys(displayTasksByDate).length === 0 ? (
             <div className="text-center py-12">
               <CalendarIcon className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                Nenhuma atividade encontrada
+                {showOnlyIncomplete ? "Todos os dias estão 100%! 🎉" : "Nenhuma atividade encontrada"}
               </h3>
               <p className="text-muted-foreground">
-                Não há registros para o período selecionado
+                {showOnlyIncomplete ? "Parabéns pela produtividade!" : "Não há registros para o período selecionado"}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {Object.entries(tasksByDate).map(([date, dayTasks]) => {
+              {Object.entries(displayTasksByDate).map(([date, dayTasks]) => {
                 const stats = getDayStats(dayTasks);
                 const dateObj = new Date(date + 'T00:00:00');
                 
