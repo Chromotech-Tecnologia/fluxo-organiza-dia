@@ -559,6 +559,5 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
           </div>
         </form>
       </Form>
-    </div>
   );
 }
