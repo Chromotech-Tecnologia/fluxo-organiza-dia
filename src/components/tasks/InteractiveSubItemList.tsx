@@ -546,7 +546,7 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
 
       {/* Item list */}
       {sortedItems.length > 0 && (
-        <ScrollArea className={sortedItems.length > 5 ? "max-h-[300px]" : ""}>
+        <div>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={sortedItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
               {groupedItems ? (
