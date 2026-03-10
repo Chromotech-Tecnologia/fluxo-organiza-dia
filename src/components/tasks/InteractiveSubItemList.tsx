@@ -263,7 +263,7 @@ function SubjectPicker({ value, subjects, onChange }: { value: string; subjects:
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <button
           type="button"
