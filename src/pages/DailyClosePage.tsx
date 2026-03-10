@@ -300,23 +300,34 @@ const DailyClosePage = () => {
 
       {/* Resumo por Dia */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Resumo Diário</CardTitle>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="filter-incomplete" className="text-sm font-normal cursor-pointer">
+              Apenas dias incompletos
+            </Label>
+            <Switch
+              id="filter-incomplete"
+              checked={showOnlyIncomplete}
+              onCheckedChange={setShowOnlyIncomplete}
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          {Object.keys(tasksByDate).length === 0 ? (
+          {Object.keys(displayTasksByDate).length === 0 ? (
             <div className="text-center py-12">
               <CalendarIcon className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                Nenhuma atividade encontrada
+                {showOnlyIncomplete ? "Todos os dias estão 100%! 🎉" : "Nenhuma atividade encontrada"}
               </h3>
               <p className="text-muted-foreground">
-                Não há registros para o período selecionado
+                {showOnlyIncomplete ? "Parabéns pela produtividade!" : "Não há registros para o período selecionado"}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {Object.entries(tasksByDate).map(([date, dayTasks]) => {
+              {Object.entries(displayTasksByDate).map(([date, dayTasks]) => {
                 const stats = getDayStats(dayTasks);
                 const dateObj = new Date(date + 'T00:00:00');
                 
