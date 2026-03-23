@@ -590,21 +590,46 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
                   {Object.entries(groupedItems).map(([subject, items], groupIdx) => {
                     const isRealSubject = subject !== 'Sem assunto';
                     const tagColor = isRealSubject ? getTagColor(subject, allSubjects) : null;
+                    const isCollapsed = collapsedSubjects.has(subject);
+                    const toggleCollapse = () => {
+                      setCollapsedSubjects(prev => {
+                        const next = new Set(prev);
+                        if (next.has(subject)) next.delete(subject);
+                        else next.add(subject);
+                        return next;
+                      });
+                    };
+                    const groupCompleted = items.filter(i => i.completed).length;
                     return (
                       <div key={subject} className="space-y-2">
                         <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={toggleCollapse}
+                            className="p-0.5 hover:bg-muted rounded transition-colors"
+                          >
+                            {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                          </button>
                           {tagColor ? (
-                            <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${tagColor.bg} ${tagColor.text} ${tagColor.border}`}>
+                            <button
+                              type="button"
+                              onClick={toggleCollapse}
+                              className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border cursor-pointer ${tagColor.bg} ${tagColor.text} ${tagColor.border}`}
+                            >
                               <Tag className="h-2.5 w-2.5" />
                               {subject}
-                            </span>
+                            </button>
                           ) : (
-                            <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={toggleCollapse}
+                              className="text-xs font-medium text-muted-foreground flex items-center gap-1 cursor-pointer"
+                            >
                               <Tag className="h-3 w-3" />
                               {subject}
-                            </span>
+                            </button>
                           )}
-                          <Badge variant="outline" className="text-[10px] h-4">{items.length}</Badge>
+                          <Badge variant="outline" className="text-[10px] h-4">{groupCompleted}/{items.length}</Badge>
                           {isRealSubject && allSubjects.length > 1 && (
                             <div className="flex items-center gap-0.5 ml-auto">
                               <Button
@@ -632,9 +657,11 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
                             </div>
                           )}
                         </div>
-                        <div className="space-y-2 pl-2 border-l-2 border-muted">
-                          {items.map(renderItem)}
-                        </div>
+                        {!isCollapsed && (
+                          <div className="space-y-2 pl-2 border-l-2 border-muted">
+                            {items.map(renderItem)}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
