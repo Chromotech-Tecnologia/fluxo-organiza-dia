@@ -19,7 +19,36 @@ import { ShareTaskSelect } from "./ShareTaskSelect";
 import { ShareTaskSelectNew } from "./ShareTaskSelectNew";
 import { TaskAttachments } from "./TaskAttachments";
 import { LinkifyMultilineText } from "@/components/ui/linkify-text";
-import { useState as useStateAlias } from "react";
+
+function DescriptionField({ value, onChange, onBlur, name }: { value: string; onChange: (v: string) => void; onBlur: () => void; name: string }) {
+  const [focused, setFocused] = useState(false);
+  const hasLinks = /https?:\/\//.test(value || '');
+
+  if (!focused && value?.trim() && hasLinks) {
+    return (
+      <div
+        tabIndex={0}
+        onFocus={() => setFocused(true)}
+        className="min-h-[4rem] w-full rounded-md border border-input bg-background px-3 py-2 text-sm cursor-text whitespace-pre-wrap break-words"
+      >
+        <LinkifyMultilineText text={value} />
+      </div>
+    );
+  }
+
+  return (
+    <Textarea
+      name={name}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => { setFocused(false); onBlur(); }}
+      placeholder="Descrição opcional da tarefa"
+      rows={2}
+      autoFocus={focused}
+    />
+  );
+}
 
 interface PendingShare {
   userId: string;
