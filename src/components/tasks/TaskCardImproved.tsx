@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LinkifyText } from "@/components/ui/linkify-text";
 import { CheckCircle, ArrowRight, Calendar, User, GripVertical, Forward, Edit2, Trash2, History, MoreVertical, Undo, Clock, Copy, Paperclip } from "lucide-react";
 import { Task } from "@/types";
 import { format } from 'date-fns';
@@ -294,7 +295,7 @@ export function TaskCardImproved({
           </div>
 
           {task.description && <div className="text-xs text-muted-foreground line-clamp-2">
-              {task.description}
+              <LinkifyText text={task.description} />
             </div>}
 
           <div className="flex gap-1 flex-wrap">
