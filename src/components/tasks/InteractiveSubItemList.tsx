@@ -374,12 +374,28 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
+  const orderedSubItems = useMemo(
+    () => [...subItems].sort((a, b) => (a.order || 0) - (b.order || 0)),
+    [subItems]
+  );
+
   const allSubjects = useMemo(() => {
-    const set = new Set<string>();
-    subItems.forEach(item => { if (item.subject) set.add(item.subject); });
-    if (newItemSubject) set.add(newItemSubject);
-    return Array.from(set).sort();
-  }, [subItems, newItemSubject]);
+    const seen = new Set<string>();
+    const subjectsInOrder: string[] = [];
+
+    orderedSubItems.forEach((item) => {
+      if (item.subject && !seen.has(item.subject)) {
+        seen.add(item.subject);
+        subjectsInOrder.push(item.subject);
+      }
+    });
+
+    if (newItemSubject && !seen.has(newItemSubject)) {
+      subjectsInOrder.push(newItemSubject);
+    }
+
+    return subjectsInOrder;
+  }, [orderedSubItems, newItemSubject]);
 
   const addSubItem = () => {
     if (newItemText.trim()) {
