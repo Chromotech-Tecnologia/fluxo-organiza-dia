@@ -347,6 +347,7 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
   const [hideCompleted, setHideCompleted] = useState(false);
   const [hideNotDone, setHideNotDone] = useState(false);
   const [groupBySubject, setGroupBySubject] = useState(false);
+  const [collapsedSubjects, setCollapsedSubjects] = useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     if (!storageKey) return;
