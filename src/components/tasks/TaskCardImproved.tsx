@@ -295,7 +295,7 @@ export function TaskCardImproved({
           </div>
 
           {task.description && <div className="text-xs text-muted-foreground line-clamp-2">
-              {task.description}
+              <LinkifyText text={task.description} />
             </div>}
 
           <div className="flex gap-1 flex-wrap">
