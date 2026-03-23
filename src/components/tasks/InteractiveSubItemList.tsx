@@ -358,19 +358,27 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
         setHideCompleted(!!prefs.hideCompleted);
         setHideNotDone(!!prefs.hideNotDone);
         setGroupBySubject(!!prefs.groupBySubject);
+        if (prefs.collapsedSubjects) {
+          setCollapsedSubjects(new Set(prefs.collapsedSubjects));
+        }
       }
     } catch {}
   }, [storageKey]);
 
-  const savePrefs = (hc: boolean, hnd: boolean, gbs: boolean) => {
+  const savePrefs = (hc: boolean, hnd: boolean, gbs: boolean, cs?: Set<string>) => {
     if (storageKey) {
-      localStorage.setItem(storageKey, JSON.stringify({ hideCompleted: hc, hideNotDone: hnd, groupBySubject: gbs }));
+      localStorage.setItem(storageKey, JSON.stringify({ hideCompleted: hc, hideNotDone: hnd, groupBySubject: gbs, collapsedSubjects: cs ? Array.from(cs) : Array.from(collapsedSubjects) }));
     }
   };
 
   const toggleHideCompleted = () => { const n = !hideCompleted; setHideCompleted(n); savePrefs(n, hideNotDone, groupBySubject); };
   const toggleHideNotDone = () => { const n = !hideNotDone; setHideNotDone(n); savePrefs(hideCompleted, n, groupBySubject); };
   const toggleGroupBySubject = () => { const n = !groupBySubject; setGroupBySubject(n); savePrefs(hideCompleted, hideNotDone, n); };
+
+  const updateCollapsedSubjects = (newSet: Set<string>) => {
+    setCollapsedSubjects(newSet);
+    savePrefs(hideCompleted, hideNotDone, groupBySubject, newSet);
+  };
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
@@ -537,7 +545,7 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setCollapsedSubjects(new Set([...allSubjects, 'Sem assunto']))}
+                onClick={() => updateCollapsedSubjects(new Set([...allSubjects, 'Sem assunto']))}
                 className="text-xs h-6 px-2 gap-1"
                 title="Recolher todos"
               >
@@ -547,7 +555,7 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setCollapsedSubjects(new Set())}
+                onClick={() => updateCollapsedSubjects(new Set())}
                 className="text-xs h-6 px-2 gap-1"
                 title="Expandir todos"
               >
@@ -608,12 +616,13 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
                     const tagColor = isRealSubject ? getTagColor(subject, allSubjects) : null;
                     const isCollapsed = collapsedSubjects.has(subject);
                     const toggleCollapse = () => {
-                      setCollapsedSubjects(prev => {
+                      updateCollapsedSubjects((() => {
+                        const prev = collapsedSubjects;
                         const next = new Set(prev);
                         if (next.has(subject)) next.delete(subject);
                         else next.add(subject);
                         return next;
-                      });
+                      })());
                     };
                     const groupCompleted = items.filter(i => i.completed).length;
                     return (

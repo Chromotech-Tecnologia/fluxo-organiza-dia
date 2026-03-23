@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Task, TaskFormValues, SubItem, TaskType, TaskPriority, TaskTimeInvestment, TaskCategory, TaskAttachment } from "@/types";
 import { taskFormSchema } from "@/lib/validations/task";
@@ -19,6 +19,36 @@ import { ShareTaskSelect } from "./ShareTaskSelect";
 import { ShareTaskSelectNew } from "./ShareTaskSelectNew";
 import { TaskAttachments } from "./TaskAttachments";
 import { LinkifyMultilineText } from "@/components/ui/linkify-text";
+
+function DescriptionField({ value, onChange, onBlur, name }: { value: string; onChange: (v: string) => void; onBlur: () => void; name: string }) {
+  const [focused, setFocused] = useState(false);
+  const hasLinks = /https?:\/\//.test(value || '');
+
+  if (!focused && value?.trim() && hasLinks) {
+    return (
+      <div
+        tabIndex={0}
+        onFocus={() => setFocused(true)}
+        className="min-h-[4rem] w-full rounded-md border border-input bg-background px-3 py-2 text-sm cursor-text whitespace-pre-wrap break-words"
+      >
+        <LinkifyMultilineText text={value} />
+      </div>
+    );
+  }
+
+  return (
+    <Textarea
+      name={name}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => { setFocused(false); onBlur(); }}
+      placeholder="Descrição opcional da tarefa"
+      rows={2}
+      autoFocus={focused}
+    />
+  );
+}
 
 interface PendingShare {
   userId: string;
@@ -170,16 +200,8 @@ export function TaskForm({ task, defaults, onSubmit, onCancel }: TaskFormProps) 
                   <FormItem>
                     <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Descrição opcional da tarefa" rows={2} />
+                      <DescriptionField value={field.value || ''} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
                     </FormControl>
-                    {field.value?.trim() ? (
-                      <FormDescription>
-                        <span className="mb-1 block text-xs">Links detectados na descrição:</span>
-                        <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm text-foreground">
-                          <LinkifyMultilineText text={field.value} />
-                        </div>
-                      </FormDescription>
-                    ) : null}
                     <FormMessage />
                   </FormItem>
                 )}
