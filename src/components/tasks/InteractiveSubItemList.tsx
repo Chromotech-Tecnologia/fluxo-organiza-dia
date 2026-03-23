@@ -515,6 +515,30 @@ export function InteractiveSubItemList({ taskId, subItems, onSubItemsChange }: I
               Agrupar
             </Button>
           )}
+          {groupBySubject && allSubjects.length > 0 && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCollapsedSubjects(new Set([...allSubjects, 'Sem assunto']))}
+                className="text-xs h-6 px-2 gap-1"
+                title="Recolher todos"
+              >
+                <ChevronsDownUp className="h-3 w-3" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCollapsedSubjects(new Set())}
+                className="text-xs h-6 px-2 gap-1"
+                title="Expandir todos"
+              >
+                <ChevronsUpDown className="h-3 w-3" />
+              </Button>
+            </>
+          )}
           {completedCount > 0 && (
             <Button type="button" variant={hideCompleted ? "default" : "outline"} size="sm" onClick={toggleHideCompleted} className="text-xs h-6 px-2 gap-1">
               <Check className="h-3 w-3" />
